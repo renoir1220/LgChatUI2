@@ -1,0 +1,20 @@
+{
+  "name": "lgchatui2",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -ws",
+    "dev:shared": "npm run dev -w @lg/shared",
+    "build:shared": "npm run build -w @lg/shared",
+    "dev:fe": "npm run dev -w frontend",
+    "dev:be": "npm run start:dev -w backend",
+    "postinstall": "npm run build:shared"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
