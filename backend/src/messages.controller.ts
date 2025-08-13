@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import { UserRole, MessageCreateSchema } from '@lg/shared';
+import { ChatRole, ChatRequest } from '@lg/shared';
 
 @Controller('messages')
 export class MessagesController {
@@ -9,22 +9,22 @@ export class MessagesController {
     return {
       id: randomUUID(),
       userId: 'demo-user',
-      role: UserRole.User,
+      role: ChatRole.User,
       content: 'Hello from backend (@lg/shared)!',
-      createdAt: new Date(),
+      createdAt: new Date().toISOString(),
     };
   }
 
   @Post()
-  async create(@Body() body: unknown) {
-    const input = await MessageCreateSchema.parseAsync(body);
-    const created = {
+  async create(@Body() body: Partial<ChatRequest> & { role?: string; content?: string }) {
+    const role = (body?.role || '').toLowerCase() === 'assistant' ? ChatRole.Assistant : ChatRole.User;
+    const content = (body?.message ?? body?.content ?? '').toString();
+    return {
       id: randomUUID(),
       userId: 'u-1',
-      role: input.role,
-      content: input.content,
-      createdAt: new Date(),
+      role,
+      content,
+      createdAt: new Date().toISOString(),
     };
-    return created;
   }
 }
