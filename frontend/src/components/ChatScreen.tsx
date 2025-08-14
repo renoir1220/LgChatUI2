@@ -201,14 +201,14 @@ const ChatScreen: React.FC = () => {
 
       console.log('发送请求到后端:', {
         message: val,
-        knowledge_base_id: currentKnowledgeBase,
+        knowledgeBaseId: currentKnowledgeBase,
         currentKnowledgeBaseValue: currentKnowledgeBase
       });
       
       const isValidUUID = (s?: string) => !!s && /^[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$/.test(s);
-      const baseBody: any = { message: val, knowledge_base_id: currentKnowledgeBase };
+      const baseBody: any = { message: val, knowledgeBaseId: currentKnowledgeBase };
       const sentConvId = isValidUUID(conversationId) ? conversationId : undefined;
-      const makeBody = (withConv: boolean) => JSON.stringify(withConv && sentConvId ? { ...baseBody, conversation_id: sentConvId } : baseBody);
+      const makeBody = (withConv: boolean) => JSON.stringify(withConv && sentConvId ? { ...baseBody, conversationId: sentConvId } : baseBody);
 
       let response = await apiFetch(`/api/chat`, {
         method: 'POST',

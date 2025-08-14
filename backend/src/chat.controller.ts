@@ -61,6 +61,7 @@ export class ChatController {
       'Cache-Control': 'no-cache',
       Connection: 'keep-alive',
       'Access-Control-Allow-Origin': '*',
+      'Access-Control-Expose-Headers': 'X-Conversation-ID',
     });
 
     try {
@@ -85,6 +86,9 @@ export class ChatController {
           throw new BadRequestException('Conversation not found');
         }
       }
+
+      // 设置会话ID响应头
+      res.setHeader('X-Conversation-ID', conversationId);
 
       // 2. 保存用户消息
       console.log('保存用户消息到数据库...');
