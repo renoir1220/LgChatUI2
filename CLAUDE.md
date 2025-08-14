@@ -97,3 +97,86 @@ npm run lint                   # ESLint 检查
 
 - 每次完成任务，都获取一下IDE中是否有报错，有的话解决掉
 - 每次完成改动都commit一下，改动说明用中文
+
+## TypeScript 常见错误和正确写法
+
+### import 语法规范
+
+**❌ 错误写法：运行时值使用 `import type`**
+```typescript
+// 错误：Zod schema 和 enum 在运行时需要使用，不能用 import type
+import type { ChatRequestSchema, ChatRole } from '@lg/shared';
+
+// 使用时报错：'ChatRequestSchema' cannot be used as a value
+new ZodValidationPipe(ChatRequestSchema)  // ❌
+```
+
+**✅ 正确写法：区分类型和值的导入**
+```typescript
+// 运行时需要的值（schema、enum、常量）用普通 import
+import { ChatRequestSchema, ChatRole } from '@lg/shared';
+
+// 仅用于类型声明的接口用 import type  
+import type { ChatRequest, ChatMessage, Conversation } from '@lg/shared';
+
+// 使用正确
+new ZodValidationPipe(ChatRequestSchema)  // ✅
+```
+
+### 装饰器中的类型引用
+
+**❌ 错误写法：装饰器中直接导入类型**
+```typescript
+import { Response } from 'express';
+
+@Res() res: Response  // ❌ TS1272 错误
+```
+
+**✅ 正确写法：使用 namespace 导入**
+```typescript
+import * as express from 'express';
+
+@Res() res: express.Response  // ✅
+```
+
+### 类型定义规范
+
+**❌ 错误写法：混用不同库的同名类型**
+```typescript
+import { Response } from 'express';
+import type { Response } from '@lg/shared';  // 冲突！
+
+private writeSSE(res: Response) {}  // 不明确是哪个 Response
+```
+
+**✅ 正确写法：明确类型来源**
+```typescript
+import * as express from 'express';
+import type { ChatMessage } from '@lg/shared';
+
+private writeSSE(res: express.Response) {}  // ✅ 明确来源
+```
+
+### ESLint 配置要点
+
+- **react-refresh/only-export-components**: UI组件文件同时导出组件和工具函数是正常的，可以忽略此警告
+- **react-hooks/exhaustive-deps**: useEffect 依赖数组必须包含所有使用的值，避免闭包陷阱
+- **@typescript-eslint/no-explicit-any**: 避免使用 `any` 类型，使用具体类型或 `unknown`
+
+### 依赖管理规范
+
+```typescript
+// ❌ 错误：useEffect 依赖缺失
+useEffect(() => {
+  actions.loadData();  // actions 没有在依赖数组中
+}, []);
+
+// ✅ 正确：包含所有依赖或直接调用 API
+useEffect(() => {
+  const loadData = async () => {
+    const data = await api.getData();  // 直接调用，无需依赖
+    dispatch({ type: 'SET_DATA', payload: data });
+  };
+  loadData();
+}, []);  // 空依赖数组是安全的
+```

@@ -7,17 +7,19 @@ import {
   Res,
   BadRequestException,
 } from '@nestjs/common';
-import { Response } from 'express';
+import * as express from 'express';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { ConversationsRepository } from './repositories/conversations.repository';
 import { MessagesRepository } from './repositories/messages.repository';
 import { ZodValidationPipe } from './pipes/zod-validation.pipe';
+import {
+  ChatRequestSchema,
+  ChatRole,
+} from '@lg/shared';
 import type {
   ChatRequest,
-  ChatRole,
   ChatMessage,
   Conversation,
-  ChatRequestSchema,
 } from '@lg/shared';
 
 interface AuthenticatedRequest {
@@ -39,7 +41,7 @@ export class ChatController {
   async chat(
     @Body(new ZodValidationPipe(ChatRequestSchema)) body: ChatRequest,
     @Request() req: AuthenticatedRequest,
-    @Res() res: Response,
+    @Res() res: express.Response,
   ): Promise<void> {
     const username = req.user.username;
     const userId = `user_${username}`;
@@ -109,7 +111,7 @@ export class ChatController {
   }
 
   private async generateStreamingResponse(
-    res: Response,
+    res: express.Response,
     conversationId: string,
     userMessage: string,
     knowledgeBaseId?: string,
@@ -162,7 +164,7 @@ ${knowledgeBaseId ? `当前使用知识库：${knowledgeBaseId}` : '未选择知
     return title;
   }
 
-  private writeSSE(res: Response, event: string, data: any): void {
+  private writeSSE(res: express.Response, event: string, data: any): void {
     res.write(`event: ${event}\n`);
     res.write(`data: ${JSON.stringify(data)}\n\n`);
   }
