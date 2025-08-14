@@ -45,6 +45,43 @@ export function saveCitationsToCache(conversationId: string, messageIndex: numbe
 }
 
 /**
+ * 基于“助手消息序号”保存引用信息（更稳定的键）
+ * 例如第1条助手消息 -> 键为 a:1
+ */
+export function saveAssistantCitationsToCache(
+  conversationId: string,
+  assistantOrdinal: number,
+  citations: any[],
+) {
+  try {
+    if (!conversationId || citations.length === 0) return;
+
+    const cache = getCacheFromCookie();
+
+    if (!cache[conversationId]) {
+      cache[conversationId] = {};
+    }
+
+    const key = `a:${assistantOrdinal}`;
+    cache[conversationId][key] = citations;
+
+    // 保存到Cookie
+    const expires = new Date();
+    expires.setTime(expires.getTime() + CACHE_EXPIRE_DAYS * 24 * 60 * 60 * 1000);
+
+    document.cookie = `${CACHE_KEY}=${encodeURIComponent(
+      JSON.stringify(cache),
+    )}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
+
+    console.log(
+      `保存引用信息到缓存(助手序号): 对话${conversationId}, 助手序号${assistantOrdinal}, 引用数量${citations.length}`,
+    );
+  } catch (error) {
+    console.warn('保存引用信息到缓存(助手序号)失败:', error);
+  }
+}
+
+/**
  * 从Cookie获取对话的所有引用信息
  * @param conversationId 对话ID
  * @returns 消息引用信息映射

@@ -38,7 +38,7 @@ import { CitationList } from './CitationList';
 import { useKnowledgeBases } from '../hooks/useKnowledgeBases';
 import { apiFetch, apiGet } from '../lib/api';
 import { clearAuth, getUsername } from '../utils/auth';
-import { saveCitationsToCache, getCitationsFromCache, batchSaveCitations, cleanupExpiredCache } from '../utils/messageCache';
+import { saveCitationsToCache, saveAssistantCitationsToCache, getCitationsFromCache, batchSaveCitations, cleanupExpiredCache } from '../utils/messageCache';
 
 const { Text } = Typography;
 
@@ -195,7 +195,8 @@ const ChatScreen: React.FC = () => {
     setLoading(true);
     
     const userMessage = { role: 'user', content: val };
-    const botMessageIndex = messages.length + 1;
+    const botMessageIndex = messages.length + 1; // 旧的按数组下标
+    const assistantOrdinal = messages.filter((m) => m.role === 'assistant').length + 1; // 第N条助手消息
     setMessages(prev => [...prev, userMessage, { role: 'assistant', content: '', citations: [] }]);
     
     try {
@@ -302,11 +303,13 @@ const ChatScreen: React.FC = () => {
 
                   setMessages(prev => prev.map((msg, index) => {
                     if (index === botMessageIndex && msg.role === 'assistant') {
-                      // 保存引用信息到Cookie缓存
+                      // 保存引用信息到Cookie缓存（使用更稳定的助手序号作为键，并兼容旧键）
                       if (respConvId) {
+                        saveAssistantCitationsToCache(respConvId, assistantOrdinal, withCitations);
+                        // 兼容旧版本：同时写入旧的数组下标键，便于过渡
                         saveCitationsToCache(respConvId, botMessageIndex, withCitations);
                       }
-                      
+
                       return {
                         ...msg,
                         citations: withCitations,
@@ -411,10 +414,16 @@ const ChatScreen: React.FC = () => {
           try {
             const msgs = await apiGet<any[]>(`/api/conversations/${list[0].id}`);
             const cachedCitations = getCitationsFromCache(list[0].id);
-            
+            let assistantCount = 0;
             const mapped = msgs.map((m, index) => {
               const role = m.role === 'USER' ? 'user' : 'assistant';
-              const citations = role === 'user' ? [] : (cachedCitations[index.toString()] || []);
+              let citations: any[] = [];
+              if (role === 'assistant') {
+                assistantCount += 1;
+                const byAssistantKey = cachedCitations[`a:${assistantCount}`] || [];
+                const byLegacyIndex = cachedCitations[index.toString()] || [];
+                citations = (byAssistantKey.length ? byAssistantKey : byLegacyIndex) as any[];
+              }
               
               if (role === 'assistant' && citations.length > 0) {
                 console.log(`恢复历史消息引用: 索引${index}, 引用数量${citations.length}`, citations);
@@ -483,10 +492,16 @@ const ChatScreen: React.FC = () => {
                 
                 apiGet<any[]>(`/api/conversations/${val}`).then(msgs => {
                   const cachedCitations = getCitationsFromCache(val as string);
-                  
+                  let assistantCount = 0;
                   const mapped = msgs.map((m, index) => {
                     const role = m.role === 'USER' ? 'user' : 'assistant';
-                    const citations = role === 'user' ? [] : (cachedCitations[index.toString()] || []);
+                    let citations: any[] = [];
+                    if (role === 'assistant') {
+                      assistantCount += 1;
+                      const byAssistantKey = cachedCitations[`a:${assistantCount}`] || [];
+                      const byLegacyIndex = cachedCitations[index.toString()] || [];
+                      citations = (byAssistantKey.length ? byAssistantKey : byLegacyIndex) as any[];
+                    }
                     
                     if (role === 'assistant' && citations.length > 0) {
                       console.log(`恢复历史消息引用: 索引${index}, 引用数量${citations.length}`, citations);
@@ -564,7 +579,9 @@ const ChatScreen: React.FC = () => {
                     <div className="message-container" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                       {msg.citations && msg.citations.length > 0 ? (
                         <CitationList citations={msg.citations} />
-                      ) : null}
+                      ) : (
+                        console.log('ChatScreen: 跳过引用显示，citations=', msg.citations, 'length=', msg.citations?.length), null
+                      )}
                     <div className="message-actions" style={{ display: 'flex', gap: 4 }}>
                       <Button 
                         type="text" 
@@ -670,8 +687,10 @@ const ChatScreen: React.FC = () => {
                                           position: r.position,
                                         }));
 
-                                        // 保存重新生成的引用信息到缓存
+                                        // 保存重新生成的引用信息到缓存，按助手序号键；兼容旧键
                                         if (conversationId) {
+                                          const assistantOrdinalForIndex = (messages.slice(0, index + 1).filter((m) => m.role === 'assistant').length) || 1;
+                                          saveAssistantCitationsToCache(conversationId, assistantOrdinalForIndex, withCitations);
                                           saveCitationsToCache(conversationId, index, withCitations);
                                         }
 
@@ -709,7 +728,7 @@ const ChatScreen: React.FC = () => {
                 )
               : undefined,
             };
-          }))}
+          })}
           style={{ 
             height: '100%', 
             paddingInline: 'calc(calc(100% - 800px) /2)', // 稍微增加宽度
