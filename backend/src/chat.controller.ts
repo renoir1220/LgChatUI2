@@ -14,7 +14,7 @@ import { MessagesRepository } from './repositories/messages.repository';
 import { DifyService } from './services/dify.service';
 import { ZodValidationPipe } from './pipes/zod-validation.pipe';
 import { ChatRequestSchema, ChatRole } from '@lg/shared';
-import type { ChatRequest, ChatMessage, Conversation } from '@lg/shared';
+import type { ChatRequest, Conversation } from '@lg/shared';
 
 interface AuthenticatedRequest {
   user: {
@@ -184,8 +184,9 @@ export class ChatController {
                 // 发送流式内容到前端
                 res.write(
                   `data: ${JSON.stringify({
-                    event: 'message',
+                    event: streamData.event,
                     answer: streamData.answer,
+                    metadata: streamData.metadata,
                   })}\n\n`,
                 );
               }
@@ -194,6 +195,17 @@ export class ChatController {
             // 处理消息结束事件
             if (streamData.event === 'message_end') {
               console.log('收到消息结束事件');
+
+              // 如果消息结束事件包含知识库引用信息，也要发送给前端
+              if (streamData.metadata?.retriever_resources) {
+                res.write(
+                  `data: ${JSON.stringify({
+                    event: 'message_end',
+                    metadata: streamData.metadata,
+                  })}\n\n`,
+                );
+              }
+
               resolve();
               return;
             }

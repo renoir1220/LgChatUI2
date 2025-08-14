@@ -264,6 +264,8 @@ const ChatScreen: React.FC = () => {
               }
               try {
                 const jsonData = JSON.parse(rawData);
+                console.log('收到流式数据:', jsonData); // 调试日志
+                
                 // 文本增量
                 if (jsonData.event === 'agent_message' || jsonData.event === 'message') {
                   setMessages(prev => prev.map((msg, index) => {
@@ -274,14 +276,14 @@ const ChatScreen: React.FC = () => {
                   }));
                 }
 
-                // 引用可能出现在 message_end 或 message.metadata 中
-                const fromMeta = jsonData?.metadata?.retriever_resources;
-                const fromEnd = jsonData?.retriever_resources;
-                const resources = Array.isArray(fromMeta) ? fromMeta : (Array.isArray(fromEnd) ? fromEnd : null);
-                if (resources) {
+                // 处理知识库引用数据 - 检查所有可能的来源
+                const retrieverResources = jsonData?.metadata?.retriever_resources;
+                if (retrieverResources && Array.isArray(retrieverResources) && retrieverResources.length > 0) {
+                  console.log('发现知识库引用数据:', retrieverResources); // 调试日志
+                  
                   setMessages(prev => prev.map((msg, index) => {
                     if (index === botMessageIndex && msg.role === 'assistant') {
-                      const withCitations = resources.map((r: any) => ({
+                      const withCitations = retrieverResources.map((r: any) => ({
                         source: r.document_name || r.dataset_name || '未知来源',
                         content: r.content,
                         document_name: r.document_name,
@@ -291,9 +293,9 @@ const ChatScreen: React.FC = () => {
                         segment_id: r.segment_id,
                         position: r.position,
                       }));
+                      console.log('解析后的引用数据:', withCitations); // 调试日志
                       return {
                         ...msg,
-                        content: msg.content,
                         citations: withCitations,
                       };
                     }

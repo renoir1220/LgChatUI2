@@ -31,6 +31,27 @@ interface DifyStreamResponse {
   conversation_id?: string;
   answer?: string;
   created_at?: number;
+  metadata?: {
+    retriever_resources?: Array<{
+      position: number;
+      dataset_id: string;
+      dataset_name: string;
+      document_id: string;
+      document_name: string;
+      data_source_type: string;
+      segment_id: string;
+      retriever_from: string;
+      score: number;
+      hit_count: number;
+      word_count: number;
+      segment_position: number;
+      index_node_hash: string;
+      content: string;
+      page?: number | null;
+      doc_metadata?: any;
+      title?: string | null;
+    }>;
+  };
 }
 
 @Injectable()
@@ -93,9 +114,14 @@ export class DifyService {
       console.error('Dify API error:', error);
       // 打印详细的错误信息
       if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as { response: { status: number; headers: unknown; data: unknown } };
+        const axiosError = error as {
+          response: { status: number; headers: unknown; data: unknown };
+        };
         console.error('Dify API response status:', axiosError.response.status);
-        console.error('Dify API response headers:', axiosError.response.headers);
+        console.error(
+          'Dify API response headers:',
+          axiosError.response.headers,
+        );
         console.error('Dify API response data:', axiosError.response.data);
       }
       throw new Error('Failed to call Dify API');
@@ -154,9 +180,14 @@ export class DifyService {
       console.error('Dify API error:', error);
       // 打印详细的错误信息
       if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as { response: { status: number; headers: unknown; data: unknown } };
+        const axiosError = error as {
+          response: { status: number; headers: unknown; data: unknown };
+        };
         console.error('Dify API response status:', axiosError.response.status);
-        console.error('Dify API response headers:', axiosError.response.headers);
+        console.error(
+          'Dify API response headers:',
+          axiosError.response.headers,
+        );
         console.error('Dify API response data:', axiosError.response.data);
       }
       throw new Error('Failed to call Dify API');
