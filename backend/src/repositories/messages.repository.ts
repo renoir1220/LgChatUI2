@@ -6,14 +6,18 @@ import { ChatMessage, ChatRole } from '@lg/shared';
 export class MessagesRepository {
   constructor(private readonly db: DatabaseService) {}
 
-  async listByConversation(conversationId: string, page = 1, pageSize = 50): Promise<ChatMessage[]> {
+  async listByConversation(
+    conversationId: string,
+    page = 1,
+    pageSize = 50,
+  ): Promise<ChatMessage[]> {
     const offset = (page - 1) * pageSize + 1;
     const end = page * pageSize;
     const rows = await this.db.query<any>(
       `WITH M AS (
         SELECT id, conversation_id, user_id, role, content, created_at,
                ROW_NUMBER() OVER (ORDER BY created_at ASC) AS rn
-        FROM Messages WHERE conversation_id = @p0
+        FROM T_AI_MESSAGES WHERE conversation_id = @p0
       )
       SELECT CONVERT(varchar(36), id) AS id,
              CONVERT(varchar(36), conversation_id) AS conversationId,
@@ -30,7 +34,7 @@ export class MessagesRepository {
       id: r.id,
       conversationId: r.conversationId,
       userId: r.userId,
-      role: (r.role as string) as ChatRole,
+      role: r.role as string as ChatRole,
       content: r.content,
       createdAt: r.createdAt,
     }));
@@ -44,7 +48,7 @@ export class MessagesRepository {
   ): Promise<ChatMessage> {
     const rows = await this.db.query<any>(
       `DECLARE @id uniqueidentifier = NEWID();
-       INSERT INTO Messages (id, conversation_id, user_id, role, content, created_at)
+       INSERT INTO T_AI_MESSAGES (id, conversation_id, user_id, role, content, created_at)
        VALUES (@id, @p0, @p1, @p2, @p3, GETUTCDATE());
        SELECT CONVERT(varchar(36), @id) AS id,
               CONVERT(varchar(36), @p0) AS conversationId,
@@ -67,5 +71,17 @@ export class MessagesRepository {
       createdAt: r.createdAt,
     };
   }
-}
 
+  // 检查某会话是否属于指定用户（依据 Messages.user_id 存在关联消息）
+  async isConversationOwnedByUser(
+    conversationId: string,
+    userId: string,
+  ): Promise<boolean> {
+    const rows = await this.db.query<any>(
+      `SELECT TOP 1 1 AS ok FROM T_AI_MESSAGES WHERE conversation_id = @p0 AND user_id = @p1`,
+      conversationId,
+      userId,
+    );
+    return rows.length > 0;
+  }
+}

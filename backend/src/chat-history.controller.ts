@@ -1,0 +1,73 @@
+import {
+  Controller,
+  Get,
+  Param,
+  Query,
+  UseGuards,
+  Request,
+  NotFoundException,
+} from '@nestjs/common';
+import { JwtAuthGuard } from './auth/jwt-auth.guard';
+import { ConversationsRepository } from './repositories/conversations.repository';
+import { MessagesRepository } from './repositories/messages.repository';
+import type { Conversation, ChatMessage } from '@lg/shared';
+
+interface AuthenticatedRequest {
+  user: {
+    username: string;
+  };
+}
+
+@UseGuards(JwtAuthGuard)
+@Controller('api')
+export class ChatHistoryController {
+  constructor(
+    private readonly conversations: ConversationsRepository,
+    private readonly messages: MessagesRepository,
+  ) {}
+
+  // GET /api/conversations?page=1&pageSize=20
+  @Get('conversations')
+  async listConversations(
+    @Request() req: AuthenticatedRequest,
+    @Query('page') page = '1',
+    @Query('pageSize') pageSize = '20',
+  ): Promise<Conversation[]> {
+    const username = req.user.username;
+    // 与 UsersRepository 生成 userId 的方式保持一致
+    const userId = `user_${username}`;
+    const p = Math.max(1, Number(page) || 1);
+    const ps = Math.min(100, Math.max(1, Number(pageSize) || 20));
+    return await this.conversations.listByUser(userId, p, ps);
+  }
+
+  // GET /api/conversations/:id/messages?page=1&pageSize=50
+  @Get('conversations/:id/messages')
+  async listMessages(
+    @Param('id') id: string,
+    @Request() req: AuthenticatedRequest,
+    @Query('page') page = '1',
+    @Query('pageSize') pageSize = '50',
+  ): Promise<ChatMessage[]> {
+    const username = req.user.username;
+    const userId = `user_${username}`;
+    const owned = await this.messages.isConversationOwnedByUser(id, userId);
+    if (!owned) {
+      throw new NotFoundException('Conversation not found');
+    }
+    const p = Math.max(1, Number(page) || 1);
+    const ps = Math.min(200, Math.max(1, Number(pageSize) || 50));
+    return await this.messages.listByConversation(id, p, ps);
+  }
+
+  // 兼容 Python 实现：GET /api/conversations/:id 返回该会话消息
+  @Get('conversations/:id')
+  async getConversationMessages(
+    @Param('id') id: string,
+    @Request() req: AuthenticatedRequest,
+    @Query('page') page = '1',
+    @Query('pageSize') pageSize = '50',
+  ): Promise<ChatMessage[]> {
+    return await this.listMessages(id, req, page, pageSize);
+  }
+}

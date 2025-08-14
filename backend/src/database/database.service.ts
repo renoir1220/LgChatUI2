@@ -8,12 +8,18 @@ function loadConfigFromEnv(): any {
   const database = process.env.MSSQL_DATABASE;
   const user = process.env.MSSQL_USER;
   const password = process.env.MSSQL_PASSWORD;
-  const port = process.env.MSSQL_PORT ? Number(process.env.MSSQL_PORT) : undefined;
-  const encrypt = (process.env.MSSQL_ENCRYPT || '').toLowerCase() === 'true' ? true : false;
-  const trustServerCertificate = (process.env.MSSQL_TRUST_CERT || 'true').toLowerCase() === 'true';
+  const port = process.env.MSSQL_PORT
+    ? Number(process.env.MSSQL_PORT)
+    : undefined;
+  const encrypt =
+    (process.env.MSSQL_ENCRYPT || '').toLowerCase() === 'true' ? true : false;
+  const trustServerCertificate =
+    (process.env.MSSQL_TRUST_CERT || 'true').toLowerCase() === 'true';
 
   if (!server || !database || !user || !password) {
-    throw new Error('MSSQL env vars are not fully set: MSSQL_SERVER/HOST, MSSQL_DATABASE, MSSQL_USER, MSSQL_PASSWORD');
+    throw new Error(
+      'MSSQL env vars are not fully set: MSSQL_SERVER/HOST, MSSQL_DATABASE, MSSQL_USER, MSSQL_PASSWORD',
+    );
   }
 
   return {
@@ -30,7 +36,9 @@ function loadConfigFromEnv(): any {
     pool: {
       max: process.env.MSSQL_POOL_MAX ? Number(process.env.MSSQL_POOL_MAX) : 10,
       min: process.env.MSSQL_POOL_MIN ? Number(process.env.MSSQL_POOL_MIN) : 0,
-      idleTimeoutMillis: process.env.MSSQL_POOL_IDLE ? Number(process.env.MSSQL_POOL_IDLE) : 30000,
+      idleTimeoutMillis: process.env.MSSQL_POOL_IDLE
+        ? Number(process.env.MSSQL_POOL_IDLE)
+        : 30000,
     },
   } as any;
 }
@@ -59,14 +67,17 @@ export class DatabaseService {
       this.logger.log('MSSQL connected');
       return pool;
     } catch (err) {
-      this.logger.error('MSSQL connection failed', err as any);
+      this.logger.error('MSSQL connection failed', err);
       throw err;
     } finally {
       this.connecting = false;
     }
   }
 
-  async query<T = any>(strings: TemplateStringsArray | string, ...params: any[]): Promise<T[]> {
+  async query<T = any>(
+    strings: TemplateStringsArray | string,
+    ...params: any[]
+  ): Promise<T[]> {
     const pool = await this.getPool();
     const request = pool.request();
     // Simple parameter binding: we expect a string with @p0, @p1 ...
@@ -93,7 +104,9 @@ export class DatabaseService {
       await tx.commit();
       return res;
     } catch (e) {
-      try { await tx.rollback(); } catch {}
+      try {
+        await tx.rollback();
+      } catch {}
       throw e;
     }
   }

@@ -6,7 +6,7 @@
 
 LgChatUI2 是一个全栈聊天应用，包含：
 - **后端**：NestJS API 服务器（基于 TypeScript 和 Express）
-- **前端**：React + Vite + TypeScript + TailwindCSS
+- **前端**：React + Vite + TypeScript + TailwindCSS + shadcn
 - **架构**：前后端作为同级目录独立部署
 
 ## 开发命令
@@ -50,7 +50,7 @@ npm run lint                   # ESLint 检查
 ### 前端结构
 - **入口文件**：`frontend/src/main.tsx` - React 应用根节点
 - **构建工具**：Vite + React 插件 + SWC
-- **样式系统**：TailwindCSS 4.x + 自定义组件
+- **样式系统**：TailwindCSS 4.x + shadcn/ui
 - **组件目录**：`frontend/src/components/`（含 shadcn/ui 配置）
 - **路径别名**：`@` 映射到 `frontend/src/`（通过 Vite 配置）
 
@@ -94,3 +94,5 @@ npm run lint                   # ESLint 检查
 - 前端使用shadcn，如果缺少对应的组件，从shadcn获取后使用
 - 尽量不要自己写css，优先shadcn和tailwind样式，尽量不要自己写自定义元组件，如button，用shadcn的
 - lgchatui是一个参考项目，我要把它移植到新的frontend和backend下
+
+- 每次完成任务，都获取一下IDE中是否有报错，有的话解决掉

@@ -7,35 +7,48 @@ export class UsersRepository {
   constructor(private readonly db: DatabaseService) {}
 
   async findOrCreate(username: string): Promise<User> {
-    const rows = await this.db.query<any>(
-      `DECLARE @existing TABLE (id uniqueidentifier, username nvarchar(200), display_name nvarchar(200), avatar_url nvarchar(400), created_at datetime2);
-       INSERT INTO @existing
-       SELECT TOP 1 id, username, display_name, avatar_url, created_at FROM Users WHERE username = @p0;
-       IF EXISTS (SELECT 1 FROM @existing)
-       BEGIN
-         SELECT CONVERT(varchar(36), id) AS id, username,
-                display_name AS displayName, avatar_url AS avatarUrl,
-                CONVERT(varchar(33), created_at, 126) AS createdAt
-         FROM @existing;
-       END
-       ELSE
-       BEGIN
-         DECLARE @id uniqueidentifier = NEWID();
-         INSERT INTO Users (id, username, created_at)
-         VALUES (@id, @p0, GETUTCDATE());
-         SELECT CONVERT(varchar(36), @id) AS id, @p0 AS username, NULL AS displayName, NULL AS avatarUrl,
-                CONVERT(varchar(33), GETUTCDATE(), 126) AS createdAt;
-       END`,
-      username,
-    );
-    const r = rows[0];
-    return {
-      id: r.id,
-      username: r.username,
-      displayName: r.displayName ?? undefined,
-      avatarUrl: r.avatarUrl ?? undefined,
-      createdAt: r.createdAt,
-    };
+    // 只查找用户，如果不存在则返回null（不创建新用户）
+    const user = await this.findByUsername(username);
+
+    if (!user) {
+      // 抛出错误而不是创建新用户
+      throw new Error('用户不存在');
+    }
+
+    return user;
+  }
+
+  async findByUsername(username: string): Promise<User | null> {
+    try {
+      const rows = await this.db.query<any>(
+        `SELECT TOP 1 员工姓名 as username
+         FROM VIEW_EMPLOYEE 
+         WHERE 员工姓名 = @p0`,
+        username,
+      );
+
+      if (rows.length === 0) {
+        return null;
+      }
+
+      const r = rows[0];
+      return {
+        id: `user_${r.username}`, // 使用用户名生成ID
+        username: r.username,
+        displayName: r.username,
+        createdAt: new Date().toISOString(),
+      };
+    } catch (error) {
+      console.error('查询用户时出错:', error);
+      return null;
+    }
+  }
+
+  async create(userData: {
+    username: string;
+    displayName?: string;
+  }): Promise<User> {
+    // 对于这个场景，我们不允许创建新用户，只能使用现有员工
+    throw new Error('不允许创建新用户，请使用现有员工姓名');
   }
 }
-

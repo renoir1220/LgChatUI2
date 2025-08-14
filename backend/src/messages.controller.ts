@@ -16,8 +16,13 @@ export class MessagesController {
   }
 
   @Post()
-  async create(@Body() body: Partial<ChatRequest> & { role?: string; content?: string }) {
-    const role = (body?.role || '').toLowerCase() === 'assistant' ? ChatRole.Assistant : ChatRole.User;
+  async create(
+    @Body() body: Partial<ChatRequest> & { role?: string; content?: string },
+  ) {
+    const role =
+      (body?.role || '').toLowerCase() === 'assistant'
+        ? ChatRole.Assistant
+        : ChatRole.User;
     const content = (body?.message ?? body?.content ?? '').toString();
     return {
       id: randomUUID(),

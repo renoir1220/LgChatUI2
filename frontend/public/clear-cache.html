@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>清除登录缓存</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 50px; }
+        .btn { padding: 10px 20px; background: #dc2626; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .btn:hover { background: #b91c1c; }
+        .success { color: #16a34a; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>清除登录缓存</h1>
+    <p>如果您遇到登录状态异常的问题，请点击下面的按钮清除缓存：</p>
+    <button class="btn" onclick="clearCache()">清除登录缓存</button>
+    <div id="message"></div>
+
+    <script>
+        function clearCache() {
+            // 清除localStorage中的认证信息
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('username');
+            
+            document.getElementById('message').innerHTML = '<p class="success">✅ 登录缓存已清除！现在可以正常登录了。</p>';
+            
+            // 3秒后自动跳转到主页
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

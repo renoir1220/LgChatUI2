@@ -30,7 +30,9 @@ describe('HealthController (unit)', () => {
     }).compile();
 
     const controller = module.get<HealthController>(HealthController);
-    await expect(controller.dbHealth()).resolves.toEqual({ ok: false, error: 'boom' });
+    await expect(controller.dbHealth()).resolves.toEqual({
+      ok: false,
+      error: 'boom',
+    });
   });
 });
-
