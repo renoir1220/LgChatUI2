@@ -521,10 +521,44 @@ const ChatScreen: React.FC = () => {
                       <CitationList citations={msg.citations} />
                     ) : null}
                     <div className="message-actions" style={{ display: 'flex', gap: 4 }}>
-                      <Button type="text" size="small" icon={<ReloadOutlined />} />
-                      <Button type="text" size="small" icon={<CopyOutlined />} />
-                      <Button type="text" size="small" icon={<LikeOutlined />} />
-                      <Button type="text" size="small" icon={<DislikeOutlined />} />
+                      <Button 
+                        type="text" 
+                        size="small" 
+                        icon={<CopyOutlined />} 
+                        title="复制消息"
+                        onClick={() => {
+                          navigator.clipboard.writeText(msg.content).then(() => {
+                            message.success('消息已复制到剪贴板');
+                          }).catch(() => {
+                            message.error('复制失败');
+                          });
+                        }}
+                      />
+                      <Button 
+                        type="text" 
+                        size="small" 
+                        icon={<ReloadOutlined />} 
+                        title="重新发送"
+                        onClick={() => {
+                          if (loading) {
+                            message.warning('请等待当前请求完成后再重新发送');
+                            return;
+                          }
+                          
+                          // 找到对应的用户消息并重新发送
+                          const userMessageIndex = index - 1;
+                          if (userMessageIndex >= 0 && messages[userMessageIndex]?.role === 'user') {
+                            const userMessage = messages[userMessageIndex].content;
+                            // 删除当前AI回复后重新发送
+                            setMessages(prev => prev.slice(0, userMessageIndex + 1));
+                            setTimeout(() => {
+                              onSubmit(userMessage);
+                            }, 100);
+                          } else {
+                            message.error('未找到对应的用户消息');
+                          }
+                        }}
+                      />
                     </div>
                   </div>
                 )

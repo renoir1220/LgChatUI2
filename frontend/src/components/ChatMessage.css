@@ -124,6 +124,7 @@
 .message-actions {
   opacity: 0;
   transition: opacity 0.2s ease-in-out;
+  margin-top: 4px;
 }
 
 .message-container:hover .message-actions {
@@ -131,17 +132,33 @@
 }
 
 .message-actions .ant-btn {
-  border: none;
-  box-shadow: none;
-  background: transparent;
-  color: #6b7280;
-  transition: all 0.2s ease-in-out;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  color: #6b7280 !important;
+  transition: all 0.2s ease-in-out !important;
+  height: 32px !important;
+  width: 32px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 6px !important;
 }
 
 .message-actions .ant-btn:hover {
   background: #f3f4f6 !important;
   color: #374151 !important;
-  border-radius: 6px;
+  transform: scale(1.05);
+}
+
+.message-actions .ant-btn:active {
+  transform: scale(0.95);
+}
+
+/* 图标大小优化 */
+.message-actions .ant-btn .anticon {
+  font-size: 14px;
 }
 
 /* 加载状态优化 */
