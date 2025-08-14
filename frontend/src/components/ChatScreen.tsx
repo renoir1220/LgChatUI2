@@ -538,22 +538,116 @@ const ChatScreen: React.FC = () => {
                         type="text" 
                         size="small" 
                         icon={<ReloadOutlined />} 
-                        title="重新发送"
-                        onClick={() => {
+                        title="重新生成"
+                        onClick={async () => {
                           if (loading) {
-                            message.warning('请等待当前请求完成后再重新发送');
+                            message.warning('请等待当前请求完成后再重新生成');
                             return;
                           }
                           
-                          // 找到对应的用户消息并重新发送
+                          // 找到对应的用户消息
                           const userMessageIndex = index - 1;
                           if (userMessageIndex >= 0 && messages[userMessageIndex]?.role === 'user') {
                             const userMessage = messages[userMessageIndex].content;
-                            // 删除当前AI回复后重新发送
-                            setMessages(prev => prev.slice(0, userMessageIndex + 1));
-                            setTimeout(() => {
-                              onSubmit(userMessage);
-                            }, 100);
+                            
+                            // 清空当前AI回复内容，准备重新生成
+                            setMessages(prev => prev.map((item, i) => 
+                              i === index ? { ...item, content: '', citations: [] } : item
+                            ));
+                            
+                            setLoading(true);
+                            
+                            try {
+                              abortController.current?.abort();
+                              abortController.current = new AbortController();
+                              
+                              const isValidUUID = (s?: string) => !!s && /^[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$/.test(s);
+                              const baseBody: any = { message: userMessage, knowledgeBaseId: currentKnowledgeBase };
+                              const sentConvId = isValidUUID(conversationId) ? conversationId : undefined;
+                              const makeBody = (withConv: boolean) => JSON.stringify(withConv && sentConvId ? { ...baseBody, conversationId: sentConvId } : baseBody);
+
+                              let response = await apiFetch(`/api/chat`, {
+                                method: 'POST',
+                                body: makeBody(true),
+                                signal: abortController.current.signal,
+                              });
+
+                              if (!response.ok && response.status === 404 && sentConvId) {
+                                response = await apiFetch(`/api/chat`, {
+                                  method: 'POST',
+                                  body: makeBody(false),
+                                  signal: abortController.current.signal,
+                                });
+                              }
+
+                              if (!response.body) {
+                                throw new Error('响应体为空');
+                              }
+
+                              const reader = response.body.getReader();
+                              const decoder = new TextDecoder('utf-8');
+                              let buffer = '';
+
+                              while (true) {
+                                const { done, value } = await reader.read();
+                                if (done) break;
+
+                                buffer += decoder.decode(value, { stream: true });
+                                const lines = buffer.split('\\n\\n');
+                                buffer = lines.pop() || '';
+
+                                for (const line of lines) {
+                                  if (line.startsWith('data: ')) {
+                                    const rawData = line.substring(6);
+                                    if (rawData.includes('[DONE]')) continue;
+                                    
+                                    try {
+                                      const jsonData = JSON.parse(rawData);
+                                      
+                                      // 在相同位置更新AI回复内容
+                                      if (jsonData.event === 'agent_message' || jsonData.event === 'message') {
+                                        setMessages(prev => prev.map((item, i) => 
+                                          i === index ? { ...item, content: item.content + (jsonData.answer || '') } : item
+                                        ));
+                                      }
+
+                                      // 处理引用数据
+                                      const retrieverResources = jsonData?.metadata?.retriever_resources;
+                                      if (retrieverResources && Array.isArray(retrieverResources) && retrieverResources.length > 0) {
+                                        setMessages(prev => prev.map((item, i) => {
+                                          if (i === index) {
+                                            const withCitations = retrieverResources.map((r: any) => ({
+                                              source: r.document_name || r.dataset_name || '未知来源',
+                                              content: r.content,
+                                              document_name: r.document_name,
+                                              score: r.score,
+                                              dataset_id: r.dataset_id,
+                                              document_id: r.document_id,
+                                              segment_id: r.segment_id,
+                                              position: r.position,
+                                            }));
+                                            return { ...item, citations: withCitations };
+                                          }
+                                          return item;
+                                        }));
+                                      }
+                                    } catch (e) {
+                                      console.error('流式数据JSON解析失败:', e);
+                                    }
+                                  }
+                                }
+                              }
+                            } catch (error: any) {
+                              if (error.name !== 'AbortError') {
+                                console.error('重新生成失败:', error);
+                                setMessages(prev => prev.map((item, i) => 
+                                  i === index ? { ...item, content: `重新生成失败: ${error instanceof Error ? error.message : '网络错误'}`, citations: [] } : item
+                                ));
+                              }
+                            } finally {
+                              setLoading(false);
+                              abortController.current = null;
+                            }
                           } else {
                             message.error('未找到对应的用户消息');
                           }
