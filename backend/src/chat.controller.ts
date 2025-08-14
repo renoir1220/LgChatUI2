@@ -54,16 +54,6 @@ export class ChatController {
     
     console.log('提取的userId:', userId);
 
-    // 设置流式响应headers
-    console.log('设置SSE响应头...');
-    res.writeHead(200, {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      Connection: 'keep-alive',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Expose-Headers': 'X-Conversation-ID',
-    });
-
     try {
       // 1. 获取或创建会话
       let conversationId = body.conversationId;
@@ -87,8 +77,16 @@ export class ChatController {
         }
       }
 
-      // 设置会话ID响应头
-      res.setHeader('X-Conversation-ID', conversationId);
+      // 设置流式响应headers（包含会话ID）
+      console.log('设置SSE响应头...');
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Expose-Headers': 'X-Conversation-ID',
+        'X-Conversation-ID': conversationId,
+      });
 
       // 2. 保存用户消息
       console.log('保存用户消息到数据库...');
