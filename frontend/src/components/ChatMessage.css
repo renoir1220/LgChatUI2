@@ -120,45 +120,46 @@
   text-decoration: underline !important;
 }
 
-/* 消息操作按钮优化 - 参考ChatGPT悬浮显示 */
+/* 消息操作按钮优化 - 参考ChatGPT始终显示 */
 .message-actions {
-  opacity: 0;
-  transition: opacity 0.2s ease-in-out;
-  margin-top: 4px;
-}
-
-.message-container:hover .message-actions {
-  opacity: 1;
+  opacity: 1 !important; /* 始终显示 */
+  margin-top: 8px;
+  display: flex;
+  gap: 4px;
 }
 
 .message-actions .ant-btn {
-  border: none !important;
-  box-shadow: none !important;
-  background: transparent !important;
-  color: #6b7280 !important;
-  transition: all 0.2s ease-in-out !important;
-  height: 32px !important;
-  width: 32px !important;
+  border: 1px solid #e1e4e8 !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+  background: #ffffff !important;
+  color: #374151 !important;
+  transition: all 0.15s ease-in-out !important;
+  height: 28px !important;
+  width: 28px !important;
   padding: 0 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  border-radius: 6px !important;
+  border-radius: 4px !important;
+  min-width: 28px !important;
 }
 
 .message-actions .ant-btn:hover {
-  background: #f3f4f6 !important;
-  color: #374151 !important;
-  transform: scale(1.05);
+  background: #f8f9fa !important;
+  border-color: #d1d5db !important;
+  color: #111827 !important;
+  transform: none; /* 移除缩放效果 */
 }
 
 .message-actions .ant-btn:active {
-  transform: scale(0.95);
+  background: #f1f5f9 !important;
+  transform: none; /* 移除缩放效果 */
 }
 
-/* 图标大小优化 */
+/* 图标大小优化 - 更小更精致 */
 .message-actions .ant-btn .anticon {
-  font-size: 14px;
+  font-size: 12px !important;
+  line-height: 1;
 }
 
 /* 加载状态优化 */

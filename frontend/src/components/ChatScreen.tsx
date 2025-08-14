@@ -400,7 +400,11 @@ const ChatScreen: React.FC = () => {
           // 加载首个会话消息（404 视为空列表）
           try {
             const msgs = await apiGet<any[]>(`/api/conversations/${list[0].id}`);
-            const mapped = msgs.map((m) => ({ role: m.role === 'USER' ? 'user' : 'assistant', content: m.content }));
+            const mapped = msgs.map((m) => ({ 
+              role: m.role === 'USER' ? 'user' : 'assistant', 
+              content: m.content,
+              citations: [] // 确保历史消息也有citations字段
+            }));
             setMessages(mapped);
           } catch (e) {
             setMessages([]);
@@ -457,7 +461,11 @@ const ChatScreen: React.FC = () => {
                 }
                 
                 apiGet<any[]>(`/api/conversations/${val}`).then(msgs => {
-                  const mapped = msgs.map((m) => ({ role: m.role === 'USER' ? 'user' : 'assistant', content: m.content }));
+                  const mapped = msgs.map((m) => ({ 
+                    role: m.role === 'USER' ? 'user' : 'assistant', 
+                    content: m.content,
+                    citations: [] // 确保历史消息也有citations字段
+                  }));
                   setMessages(mapped);
                 }).catch(() => setMessages([]));
               } else {
