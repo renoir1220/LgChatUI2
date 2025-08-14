@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Button, Divider, Modal, Typography, Tag, Tooltip, Space } from 'antd';
+import { Button, Modal, Typography, Tag, Tooltip, Space } from 'antd';
 import { ContentWithImages } from './ContentWithImages';
 
 const { Text } = Typography;
@@ -74,7 +74,6 @@ export const CitationList: React.FC<{ citations?: CitationItem[] }>
 
   return (
     <div style={{ marginTop: 4 }}>
-      <Divider style={{ margin: '6px 0' }} />
       <Text strong style={{ display: 'block', marginBottom: 4 }}>引用</Text>
 
       <Space size={[8,8]} wrap style={{ marginTop: 4 }}>

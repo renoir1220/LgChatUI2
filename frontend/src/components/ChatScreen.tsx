@@ -12,9 +12,7 @@ import {
   LikeOutlined,
   PaperClipOutlined,
   PlusOutlined,
-  ProductOutlined,
   ReloadOutlined,
-  ScheduleOutlined,
   ShareAltOutlined,
   SmileOutlined,
 } from '@ant-design/icons';
@@ -27,11 +25,11 @@ import {
   Welcome,
   // type GetProp,
 } from '@ant-design/x';
-import { Avatar, Button, Flex, Space, Spin, Typography, message, Dropdown } from 'antd';
+import { Avatar, Button, Flex, Space, Spin, Typography, message, Dropdown, Skeleton } from 'antd';
+import { DownOutlined, CheckOutlined, DatabaseOutlined } from '@ant-design/icons';
 import MarkdownIt from 'markdown-it';
 import 'github-markdown-css/github-markdown.css';
 import './ChatMessage.css';
-import { KnowledgeBaseSelector } from './KnowledgeBaseSelector';
 import { CitationList } from './CitationList';
 import { useKnowledgeBases } from '../hooks/useKnowledgeBases';
 import { apiFetch, apiGet } from '../lib/api';
@@ -129,23 +127,7 @@ const DESIGN_GUIDE = {
   ],
 };
 
-const SENDER_PROMPTS = [
-  {
-    key: '1',
-    description: '介绍产品',
-    icon: <ScheduleOutlined />,
-  },
-  {
-    key: '2',
-    description: '获取帮助',
-    icon: <ProductOutlined />,
-  },
-  {
-    key: '3',
-    description: '技术支持',
-    icon: <FileSearchOutlined />,
-  },
-];
+// 已移除底部“常用问题”快捷入口
 
 /**
  * ChatScreen 组件 - 主聊天界面
@@ -905,17 +887,39 @@ const ChatScreen: React.FC = () => {
   );
 
   const chatSender = (
-    <div style={{ padding: '16px' }}>
-      <Prompts
-        items={SENDER_PROMPTS}
-        onItemClick={(info) => {
-          onSubmit(info.data.description as string);
-        }}
-        styles={{
-          item: { padding: '6px 12px' },
-        }}
-        style={{ marginBottom: 16 }}
-      />
+    <div style={{ paddingInline: 'calc(calc(100% - 800px) /2)', paddingTop: 8, paddingBottom: 16 }}>
+      {/* 知识库选择（模仿 ChatGPT 模型选择样式，靠近输入框） */}
+      <div style={{ marginBottom: 8 }}>
+        {kbLoading ? (
+          <Skeleton.Button active size="small" />
+        ) : (
+          <Dropdown
+            trigger={['click']}
+            menu={{
+              items: (knowledgeBases || []).map((kb) => ({
+                key: kb.id,
+                label: (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {currentKnowledgeBase === kb.id ? (
+                      <CheckOutlined style={{ color: '#1677ff' }} />
+                    ) : (
+                      <span style={{ width: 14 }} />
+                    )}
+                    <span>{kb.name}</span>
+                  </div>
+                ),
+              })),
+              onClick: ({ key }) => setCurrentKnowledgeBase(key as string),
+            }}
+          >
+            <Button size="small" style={{ borderRadius: 16 }}>
+              <DatabaseOutlined style={{ marginRight: 6 }} />
+              {knowledgeBases.find((k) => k.id === currentKnowledgeBase)?.name || '选择知识库'}
+              <DownOutlined style={{ marginLeft: 6, fontSize: 10 }} />
+            </Button>
+          </Dropdown>
+        )}
+      </div>
       <Sender
         value={inputValue}
         header={senderHeader}
@@ -962,13 +966,18 @@ const ChatScreen: React.FC = () => {
       {chatSider}
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ padding: '0 24px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: 12, paddingTop: 16, borderBottom: '1px solid #f0f0f0', paddingBottom: 16 }}>
-          <KnowledgeBaseSelector 
-            items={knowledgeBases}
-            value={currentKnowledgeBase}
-            onChange={setCurrentKnowledgeBase}
-            loading={kbLoading}
-          />
+        <div style={{ padding: '0 24px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: 12, paddingTop: 12, borderBottom: '1px solid #f0f0f0', paddingBottom: 12 }}>
+          {(() => {
+            let title = '新对话';
+            if (curConversation && curConversation !== 'new') {
+              // 优先使用会话详情中的标题
+              const detail = conversationDetails[curConversation];
+              title = detail?.title
+                || conversations.find((c) => c.key === curConversation)?.label
+                || '对话';
+            }
+            return <span style={{ fontWeight: 500 }}>{title}</span>;
+          })()}
           <span style={{ flex: 1 }} />
         </div>
         {chatList}
