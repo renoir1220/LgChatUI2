@@ -167,7 +167,7 @@ const ChatScreen: React.FC = () => {
   const abortController = useRef<AbortController | null>(null);
 
   // 知识库管理 - 使用独立的知识库状态管理
-  const { knowledgeBases, currentKnowledgeBase, setCurrentKnowledgeBase, loading: kbLoading, error: kbError } = useKnowledgeBases();
+  const { knowledgeBases, currentKnowledgeBase, setCurrentKnowledgeBase, loading: kbLoading } = useKnowledgeBases();
 
   // 状态管理 - 使用更清晰的命名和注释
   const [messageHistory, setMessageHistory] = useState<Record<string, any>>({}); // 存储所有会话的消息历史
@@ -316,7 +316,7 @@ const ChatScreen: React.FC = () => {
           console.log('=== 流式响应完成 ===');
           console.log('最终消息内容长度:', lastAssistantMsg.content?.length || 0);
           console.log('知识库引用数量:', lastAssistantMsg.citations?.length || 0);
-          if (lastAssistantMsg.citations?.length > 0) {
+          if (lastAssistantMsg.citations && lastAssistantMsg.citations.length > 0) {
             console.log('引用数据详情:', lastAssistantMsg.citations.map(c => ({
               source: c.source,
               score: c.score,

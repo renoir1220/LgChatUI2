@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Button, Divider, Modal, Typography, Tag, Tooltip, Space } from 'antd';
+import { ContentWithImages } from './ContentWithImages';
 
 const { Text } = Typography;
 
@@ -108,11 +109,9 @@ export const CitationList: React.FC<{ citations?: CitationItem[] }>
               <div style={{ 
                 padding: 16, 
                 backgroundColor: '#f8f9fa', 
-                borderRadius: 8,
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'break-word'
+                borderRadius: 8
               }}>
-                {item.content || ''}
+                <ContentWithImages content={item.content || ''} />
               </div>
               
               <div style={{ marginTop: 12 }}>
