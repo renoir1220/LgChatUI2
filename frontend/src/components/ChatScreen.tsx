@@ -412,11 +412,20 @@ const ChatScreen: React.FC = () => {
             const msgs = await apiGet<any[]>(`/api/conversations/${list[0].id}`);
             const cachedCitations = getCitationsFromCache(list[0].id);
             
-            const mapped = msgs.map((m, index) => ({ 
-              role: m.role === 'USER' ? 'user' : 'assistant', 
-              content: m.content,
-              citations: m.role === 'USER' ? [] : (cachedCitations[index.toString()] || []) // 从缓存恢复引用信息
-            }));
+            const mapped = msgs.map((m, index) => {
+              const role = m.role === 'USER' ? 'user' : 'assistant';
+              const citations = role === 'user' ? [] : (cachedCitations[index.toString()] || []);
+              
+              if (role === 'assistant' && citations.length > 0) {
+                console.log(`恢复历史消息引用: 索引${index}, 引用数量${citations.length}`, citations);
+              }
+              
+              return { 
+                role, 
+                content: m.content,
+                citations
+              };
+            });
             setMessages(mapped);
           } catch (e) {
             setMessages([]);
@@ -475,11 +484,20 @@ const ChatScreen: React.FC = () => {
                 apiGet<any[]>(`/api/conversations/${val}`).then(msgs => {
                   const cachedCitations = getCitationsFromCache(val as string);
                   
-                  const mapped = msgs.map((m, index) => ({ 
-                    role: m.role === 'USER' ? 'user' : 'assistant', 
-                    content: m.content,
-                    citations: m.role === 'USER' ? [] : (cachedCitations[index.toString()] || []) // 从缓存恢复引用信息
-                  }));
+                  const mapped = msgs.map((m, index) => {
+                    const role = m.role === 'USER' ? 'user' : 'assistant';
+                    const citations = role === 'user' ? [] : (cachedCitations[index.toString()] || []);
+                    
+                    if (role === 'assistant' && citations.length > 0) {
+                      console.log(`恢复历史消息引用: 索引${index}, 引用数量${citations.length}`, citations);
+                    }
+                    
+                    return { 
+                      role, 
+                      content: m.content,
+                      citations
+                    };
+                  });
                   setMessages(mapped);
                 }).catch(() => setMessages([]));
               } else {
@@ -530,18 +548,23 @@ const ChatScreen: React.FC = () => {
     <div style={{ flex: 1, height: '100%', overflow: 'auto' }}>
       {messages?.length ? (
         <Bubble.List
-          items={messages.map((msg, index) => ({
-            ...msg,
-            classNames: {
-              content: loading && index === messages.length - 1 && msg.role === 'assistant' ? 'loading-message' : '',
-            },
-            typing: loading && index === messages.length - 1 && msg.role === 'assistant' ? { step: 5, interval: 20 } : false,
-            footer: msg.role === 'assistant'
-              ? (
-                  <div className="message-container" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {msg.citations && msg.citations.length > 0 ? (
-                      <CitationList citations={msg.citations} />
-                    ) : null}
+          items={messages.map((msg, index) => {
+            if (msg.role === 'assistant' && msg.citations && msg.citations.length > 0) {
+              console.log(`渲染消息引用: 索引${index}, 引用数量${msg.citations.length}`, msg.citations);
+            }
+            
+            return {
+              ...msg,
+              classNames: {
+                content: loading && index === messages.length - 1 && msg.role === 'assistant' ? 'loading-message' : '',
+              },
+              typing: loading && index === messages.length - 1 && msg.role === 'assistant' ? { step: 5, interval: 20 } : false,
+              footer: msg.role === 'assistant'
+                ? (
+                    <div className="message-container" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {msg.citations && msg.citations.length > 0 ? (
+                        <CitationList citations={msg.citations} />
+                      ) : null}
                     <div className="message-actions" style={{ display: 'flex', gap: 4 }}>
                       <Button 
                         type="text" 
@@ -685,6 +708,7 @@ const ChatScreen: React.FC = () => {
                   </div>
                 )
               : undefined,
+            };
           }))}
           style={{ 
             height: '100%', 
