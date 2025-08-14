@@ -13,15 +13,8 @@ import { ConversationsRepository } from './repositories/conversations.repository
 import { MessagesRepository } from './repositories/messages.repository';
 import { DifyService } from './services/dify.service';
 import { ZodValidationPipe } from './pipes/zod-validation.pipe';
-import {
-  ChatRequestSchema,
-  ChatRole,
-} from '@lg/shared';
-import type {
-  ChatRequest,
-  ChatMessage,
-  Conversation,
-} from '@lg/shared';
+import { ChatRequestSchema, ChatRole } from '@lg/shared';
+import type { ChatRequest, ChatMessage, Conversation } from '@lg/shared';
 
 interface AuthenticatedRequest {
   user: {
@@ -48,10 +41,10 @@ export class ChatController {
     console.log('=== 开始处理聊天请求 ===');
     console.log('请求体:', JSON.stringify(body, null, 2));
     console.log('用户信息:', req.user);
-    
+
     const username = req.user.username;
     const userId = `user_${username}`;
-    
+
     console.log('提取的userId:', userId);
 
     try {
@@ -64,13 +57,19 @@ export class ChatController {
         // 创建新会话
         console.log('创建新会话...');
         const title = this.generateConversationTitle(body.message);
-        conversation = await this.conversations.createConversation(userId, title);
+        conversation = await this.conversations.createConversation(
+          userId,
+          title,
+        );
         conversationId = conversation.id;
         console.log('新会话创建成功:', conversationId);
       } else {
         // 验证会话是否属于该用户
         console.log('验证会话所有权...');
-        const owned = await this.messages.isConversationOwnedByUser(conversationId, userId);
+        const owned = await this.messages.isConversationOwnedByUser(
+          conversationId,
+          userId,
+        );
         console.log('会话所有权验证结果:', owned);
         if (!owned) {
           throw new BadRequestException('Conversation not found');
@@ -108,15 +107,16 @@ export class ChatController {
       );
       console.log('AI响应生成完成, 结果:', result);
       console.log('=== 聊天请求处理完成 ===');
-
     } catch (error) {
       console.error('=== 聊天请求处理出错 ===');
       console.error('错误详情:', error);
       // 发送错误事件
-      res.write(`data: ${JSON.stringify({
-        event: 'error',
-        error: error instanceof Error ? error.message : '处理请求时发生错误',
-      })}\n\n`);
+      res.write(
+        `data: ${JSON.stringify({
+          event: 'error',
+          error: error instanceof Error ? error.message : '处理请求时发生错误',
+        })}\n\n`,
+      );
     } finally {
       console.log('关闭SSE连接');
       res.end();
@@ -128,13 +128,20 @@ export class ChatController {
     conversationId: string,
     userMessage: string,
     knowledgeBaseId?: string,
-  ): Promise<{messageId: string, content: string}> {
+  ): Promise<{ messageId: string; content: string }> {
     console.log('--- generateStreamingResponse 开始 ---');
-    console.log('参数: conversationId:', conversationId, 'userMessage:', userMessage, 'knowledgeBaseId:', knowledgeBaseId);
-    
+    console.log(
+      '参数: conversationId:',
+      conversationId,
+      'userMessage:',
+      userMessage,
+      'knowledgeBaseId:',
+      knowledgeBaseId,
+    );
+
     try {
       console.log('调用Dify API...');
-      
+
       // 调用Dify API获取流式响应
       // 不传递conversationId给Dify，让Dify自己管理会话
       const stream = await this.difyService.chatWithStreaming(
@@ -156,7 +163,7 @@ export class ChatController {
         stream.on('data', (chunk: Buffer) => {
           buffer += chunk.toString();
           const lines = buffer.split('\n');
-          
+
           // 保留最后一个不完整的行
           buffer = lines.pop() || '';
 
@@ -167,15 +174,20 @@ export class ChatController {
             if (!streamData) continue;
 
             // 处理消息内容
-            if (streamData.event === 'message' || streamData.event === 'agent_message') {
+            if (
+              streamData.event === 'message' ||
+              streamData.event === 'agent_message'
+            ) {
               if (streamData.answer) {
                 assistantMessage += streamData.answer;
-                
+
                 // 发送流式内容到前端
-                res.write(`data: ${JSON.stringify({
-                  event: 'message',
-                  answer: streamData.answer
-                })}\n\n`);
+                res.write(
+                  `data: ${JSON.stringify({
+                    event: 'message',
+                    answer: streamData.answer,
+                  })}\n\n`,
+                );
               }
             }
 
@@ -221,18 +233,19 @@ export class ChatController {
         messageId: savedMessage.id,
         content: assistantMessage,
       };
-
     } catch (error) {
       console.error('Error in generateStreamingResponse:', error);
-      
+
       // 发生错误时的备用响应
       const fallbackMessage = `抱歉，处理您的请求时遇到了问题：${error instanceof Error ? error.message : '未知错误'}。请稍后再试。`;
-      
+
       // 使用前端期待的格式发送错误消息
-      res.write(`data: ${JSON.stringify({
-        event: 'message',
-        answer: fallbackMessage
-      })}\n\n`);
+      res.write(
+        `data: ${JSON.stringify({
+          event: 'message',
+          answer: fallbackMessage,
+        })}\n\n`,
+      );
 
       // 保存错误消息到数据库
       const savedMessage = await this.messages.append(
@@ -250,10 +263,10 @@ export class ChatController {
 
   private generateConversationTitle(firstMessage: string): string {
     // 简单的标题生成逻辑，取前20个字符
-    const title = firstMessage.length > 20 
-      ? firstMessage.substring(0, 20) + '...' 
-      : firstMessage;
+    const title =
+      firstMessage.length > 20
+        ? firstMessage.substring(0, 20) + '...'
+        : firstMessage;
     return title;
   }
-
 }

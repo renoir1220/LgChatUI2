@@ -13,7 +13,11 @@ import {
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { ConversationsRepository } from './repositories/conversations.repository';
 import { MessagesRepository } from './repositories/messages.repository';
-import type { Conversation, ChatMessage, CreateConversationRequest } from '@lg/shared';
+import type {
+  Conversation,
+  ChatMessage,
+  CreateConversationRequest,
+} from '@lg/shared';
 
 interface AuthenticatedRequest {
   user: {
@@ -82,7 +86,7 @@ export class ChatHistoryController {
   ): Promise<{ success: boolean }> {
     const username = req.user.username;
     const userId = `user_${username}`;
-    
+
     // 检查会话是否属于该用户
     const owned = await this.messages.isConversationOwnedByUser(id, userId);
     if (!owned) {
@@ -102,7 +106,7 @@ export class ChatHistoryController {
   ): Promise<Conversation> {
     const username = req.user.username;
     const userId = `user_${username}`;
-    
+
     const title = body.title || '新对话';
     return await this.conversations.createConversation(userId, title);
   }

@@ -12,8 +12,11 @@ import { UsersRepository } from '../repositories/users.repository';
     PassportModule,
     JwtModule.registerAsync({
       useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET', 'fallback-secret-key-for-development'),
-        signOptions: { 
+        secret: configService.get<string>(
+          'JWT_SECRET',
+          'fallback-secret-key-for-development',
+        ),
+        signOptions: {
           expiresIn: configService.get<string>('JWT_EXPIRES_IN', '24h'),
         },
       }),

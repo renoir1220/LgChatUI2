@@ -64,7 +64,10 @@ export class ConversationsRepository {
   }
 
   // 创建新会话（关联用户）
-  async createConversation(userId: string, title: string): Promise<Conversation> {
+  async createConversation(
+    userId: string,
+    title: string,
+  ): Promise<Conversation> {
     const rows = await this.db.query<any>(
       `DECLARE @id uniqueidentifier = NEWID();
        INSERT INTO AI_CONVERSATIONS (CONVERSATION_ID, USER_ID, TITLE, CREATED_AT)

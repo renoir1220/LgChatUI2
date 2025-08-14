@@ -20,8 +20,8 @@ import { DifyService } from './services/dify.service';
       isGlobal: true,
       envFilePath: '.env',
     }),
-    DatabaseModule, 
-    AuthModule
+    DatabaseModule,
+    AuthModule,
   ],
   controllers: [
     AppController,

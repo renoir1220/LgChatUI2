@@ -7,19 +7,19 @@ import type { KnowledgeBase } from '@lg/shared';
 @Controller('api')
 export class KnowledgeBaseController {
   constructor(private configService: ConfigService) {}
-  
+
   // GET /api/knowledge-bases - 获取知识库列表
   @Get('knowledge-bases')
   async getKnowledgeBases(): Promise<KnowledgeBase[]> {
     // 从环境变量读取知识库配置
     const knowledgeBases: KnowledgeBase[] = [];
-    
+
     // 读取配置的知识库
     for (let i = 1; i <= 3; i++) {
       const name = this.configService.get(`KB_${i}_NAME`);
       const apiKey = this.configService.get(`KB_${i}_API_KEY`);
       const url = this.configService.get(`KB_${i}_URL`);
-      
+
       if (name && apiKey && url) {
         knowledgeBases.push({
           id: `kb-${i}`,
@@ -31,7 +31,7 @@ export class KnowledgeBaseController {
         });
       }
     }
-    
+
     // 如果没有配置知识库，返回默认的
     if (knowledgeBases.length === 0) {
       return [
@@ -43,7 +43,7 @@ export class KnowledgeBaseController {
         },
       ];
     }
-    
+
     return knowledgeBases;
   }
 }
