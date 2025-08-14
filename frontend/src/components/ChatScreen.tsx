@@ -32,6 +32,7 @@ import {
 import { Avatar, Button, Flex, Space, Spin, Typography, message } from 'antd';
 import MarkdownIt from 'markdown-it';
 import 'github-markdown-css/github-markdown.css';
+import './ChatMessage.css';
 import { KnowledgeBaseSelector } from './KnowledgeBaseSelector';
 import { CitationList } from './CitationList';
 import { useKnowledgeBases } from '../hooks/useKnowledgeBases';
@@ -48,10 +49,10 @@ const md = new MarkdownIt({
   typographer: true
 });
 
-// Markdown 渲染函数
-const renderMarkdown = (content: string) => (
+// Markdown 渲染函数 - 优化样式类名
+const renderMarkdown = (content: string, isUser = false) => (
   <div 
-    className="markdown-body"
+    className={`markdown-body chat-markdown-body ${isUser ? 'user-message' : ''}`}
     style={{ backgroundColor: 'transparent' }}
     dangerouslySetInnerHTML={{ __html: md.render(content || '') }}
   />
@@ -515,11 +516,11 @@ const ChatScreen: React.FC = () => {
             typing: loading && index === messages.length - 1 && msg.role === 'assistant' ? { step: 5, interval: 20 } : false,
             footer: msg.role === 'assistant'
               ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div className="message-container" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {msg.citations && msg.citations.length > 0 ? (
                       <CitationList citations={msg.citations} />
                     ) : null}
-                    <div style={{ display: 'flex', gap: 8 }}>
+                    <div className="message-actions" style={{ display: 'flex', gap: 4 }}>
                       <Button type="text" size="small" icon={<ReloadOutlined />} />
                       <Button type="text" size="small" icon={<CopyOutlined />} />
                       <Button type="text" size="small" icon={<LikeOutlined />} />
@@ -529,18 +530,65 @@ const ChatScreen: React.FC = () => {
                 )
               : undefined,
           }))}
-          style={{ height: '100%', paddingInline: 'calc(calc(100% - 700px) /2)' }}
+          style={{ 
+            height: '100%', 
+            paddingInline: 'calc(calc(100% - 800px) /2)', // 稍微增加宽度
+            paddingTop: '16px',
+            paddingBottom: '16px'
+          }}
+          styles={{
+            list: {
+              gap: '16px' // 消息间距优化
+            },
+            item: {
+              marginBottom: '8px' // 单个消息底部间距
+            }
+          }}
           roles={{
             assistant: {
               placement: 'start',
-              avatar: { icon: '🤖', style: { background: '#f0f0f0' } },
+              avatar: { 
+                icon: '🤖', 
+                style: { 
+                  background: '#f6f8fa',
+                  border: '1px solid #e1e4e8',
+                  width: '32px',
+                  height: '32px'
+                } 
+              },
               loadingRender: () => <Spin size="small" />,
-              messageRender: (content) => renderMarkdown(content),
+              messageRender: (content) => renderMarkdown(content, false),
+              styles: {
+                bubble: {
+                  background: '#ffffff',
+                  border: '1px solid #e1e4e8',
+                  borderRadius: '12px',
+                  padding: '12px 16px',
+                  boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                  maxWidth: '100%'
+                }
+              }
             },
             user: { 
               placement: 'end', 
-              avatar: { icon: <SmileOutlined />, style: { background: '#1890ff' } },
-              messageRender: (content) => renderMarkdown(content)
+              avatar: { 
+                icon: <SmileOutlined />, 
+                style: { 
+                  background: '#2563eb',
+                  width: '32px',
+                  height: '32px'
+                } 
+              },
+              messageRender: (content) => renderMarkdown(content, true),
+              styles: {
+                bubble: {
+                  background: '#2563eb',
+                  color: '#ffffff',
+                  borderRadius: '12px',
+                  padding: '12px 16px',
+                  maxWidth: '100%'
+                }
+              }
             },
           }}
         />
