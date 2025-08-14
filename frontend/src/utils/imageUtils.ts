@@ -40,7 +40,7 @@ export function extractImagesFromText(text: string): ImageInfo[] {
   const images: ImageInfo[] = [];
   
   // 综合正则表达式，匹配多种图片格式
-  const combinedRegex = /(!\[([^\]]*)\]\(([^)]+)\))|(\[image\]\(([^)]+)\))|(<img[^>]+src="([^"]+)"[^>]*(?:alt="([^"]*)")?[^>]*\/?>)|(https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif|webp|svg)(?:\?[^\s]*)?)/gi;
+  const combinedRegex = /(!\[([^\]]*)\]\(([^)]+)\))|(\[image\]\(([^)]+)\))|(\[图片\])|(<img[^>]+src="([^"]+)"[^>]*(?:alt="([^"]*)")?[^>]*\/?>)|(https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif|webp|svg)(?:\?[^\s]*)?)/gi;
   
   let match;
   while ((match = combinedRegex.exec(text)) !== null) {
