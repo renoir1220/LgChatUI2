@@ -28,6 +28,7 @@ export function ChatPage({ className }: ChatPageProps) {
     conversations,
     currentConversation,
     messages,
+    streamingContent,
     knowledgeBases,
     selectedKnowledgeBase,
     sidebarOpen,
@@ -206,6 +207,7 @@ export function ChatPage({ className }: ChatPageProps) {
               messages={messages}
               isLoading={isLoading}
               isStreaming={isStreaming}
+              streamingContent={streamingContent}
               onCopy={handleCopyMessage}
               onRegenerate={handleRegenerateMessage}
               onLike={handleLikeMessage}

@@ -1,8 +1,10 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react';
+import { api } from '@/services/chatService';
 import type { 
   ChatMessage, 
   Conversation, 
-  KnowledgeBase 
+  KnowledgeBase,
+  ChatRequest
 } from '@lg/shared';
 
 // 聊天状态接口
@@ -13,6 +15,7 @@ interface ChatState {
   
   // 消息相关
   messages: ChatMessage[];
+  streamingContent: string; // 当前流式输入的内容
   
   // 知识库相关
   knowledgeBases: KnowledgeBase[];
@@ -39,6 +42,9 @@ type ChatAction =
   | { type: 'ADD_MESSAGE'; payload: ChatMessage }
   | { type: 'UPDATE_MESSAGE'; payload: { id: string; updates: Partial<ChatMessage> } }
   | { type: 'DELETE_MESSAGE'; payload: string }
+  | { type: 'SET_STREAMING_CONTENT'; payload: string }
+  | { type: 'APPEND_STREAMING_CONTENT'; payload: string }
+  | { type: 'CLEAR_STREAMING_CONTENT' }
   
   | { type: 'SET_KNOWLEDGE_BASES'; payload: KnowledgeBase[] }
   | { type: 'SELECT_KNOWLEDGE_BASE'; payload: string | undefined }
@@ -55,6 +61,7 @@ const initialState: ChatState = {
   conversations: [],
   currentConversation: null,
   messages: [],
+  streamingContent: '',
   knowledgeBases: [],
   selectedKnowledgeBase: undefined,
   sidebarOpen: true,
@@ -129,6 +136,15 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
         messages: state.messages.filter(msg => msg.id !== action.payload)
       };
     
+    case 'SET_STREAMING_CONTENT':
+      return { ...state, streamingContent: action.payload };
+    
+    case 'APPEND_STREAMING_CONTENT':
+      return { ...state, streamingContent: state.streamingContent + action.payload };
+    
+    case 'CLEAR_STREAMING_CONTENT':
+      return { ...state, streamingContent: '' };
+    
     case 'SET_KNOWLEDGE_BASES':
       return { ...state, knowledgeBases: action.payload };
     
@@ -198,192 +214,173 @@ const ChatContext = createContext<ChatContextType | null>(null);
 // 上下文Provider组件
 export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(chatReducer, initialState);
+  const abortControllerRef = useRef<AbortController | null>(null);
   
   // 便捷操作方法
   const actions = {
     // 会话操作
-    loadConversations: useCallback(() => {
-      // 模拟加载会话列表（后续替换为真实API调用）
-      const mockConversations: Conversation[] = [
-        {
-          id: '1',
-          title: '关于React开发的讨论',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          user_id: 'user-1',
-          message_count: 5,
-        },
-        {
-          id: '2', 
-          title: 'TypeScript最佳实践',
-          created_at: new Date(Date.now() - 86400000).toISOString(),
-          updated_at: new Date(Date.now() - 86400000).toISOString(),
-          user_id: 'user-1',
-          message_count: 3,
-        },
-      ];
-      dispatch({ type: 'SET_CONVERSATIONS', payload: mockConversations });
-    }, []),
-    
-    selectConversation: useCallback((conversation: Conversation) => {
-      dispatch({ type: 'SET_CURRENT_CONVERSATION', payload: conversation });
-      // 直接调用loadMessages而不是通过actions
-      dispatch({ type: 'SET_LOADING', payload: true });
-      
-      // 模拟加载消息（后续替换为真实API调用）
-      setTimeout(() => {
-        const mockMessages: ChatMessage[] = [
-          {
-            id: '1',
-            conversation_id: conversation.id,
-            role: 'user',
-            content: '你好，请介绍一下React的核心概念。',
-            created_at: new Date(Date.now() - 3600000).toISOString(),
-          },
-          {
-            id: '2',
-            conversation_id: conversation.id,
-            role: 'assistant',
-            content: 'React是一个用于构建用户界面的JavaScript库，主要有以下核心概念：\n\n1. **组件（Components）**：React应用由组件构成\n2. **JSX**：JavaScript的语法扩展\n3. **Props**：组件间的数据传递\n4. **State**：组件内部状态管理\n5. **生命周期**：组件的创建、更新、销毁过程',
-            created_at: new Date(Date.now() - 3500000).toISOString(),
-            citations: [
-              {
-                source: 'React官方文档',
-                content: 'React是一个用于构建用户界面的JavaScript库...',
-                document_name: 'React文档',
-                score: 0.92,
-                dataset_id: 'kb-1',
-                document_id: 'react-doc-1',
-                segment_id: 'intro-1',
-                position: 1,
-              },
-            ],
-          },
-        ];
-        dispatch({ type: 'SET_MESSAGES', payload: mockMessages });
+    loadConversations: useCallback(async () => {
+      try {
+        dispatch({ type: 'SET_LOADING', payload: true });
+        const conversations = await api.conversation.getConversations();
+        dispatch({ type: 'SET_CONVERSATIONS', payload: conversations });
+      } catch (error) {
+        console.error('加载会话列表失败:', error);
+        dispatch({ type: 'SET_ERROR', payload: '加载会话列表失败' });
+      } finally {
         dispatch({ type: 'SET_LOADING', payload: false });
-      }, 500);
+      }
     }, []),
     
-    createConversation: useCallback((title?: string) => {
-      const newConversation: Conversation = {
-        id: Date.now().toString(),
-        title: title || '新对话',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        user_id: 'user-1',
-        message_count: 0,
-      };
-      dispatch({ type: 'ADD_CONVERSATION', payload: newConversation });
-      dispatch({ type: 'SET_MESSAGES', payload: [] }); // 清空消息
+    selectConversation: useCallback(async (conversation: Conversation) => {
+      try {
+        dispatch({ type: 'SET_CURRENT_CONVERSATION', payload: conversation });
+        dispatch({ type: 'SET_LOADING', payload: true });
+        
+        const messages = await api.message.getMessages(conversation.id);
+        dispatch({ type: 'SET_MESSAGES', payload: messages });
+      } catch (error) {
+        console.error('加载会话消息失败:', error);
+        dispatch({ type: 'SET_ERROR', payload: '加载会话消息失败' });
+      } finally {
+        dispatch({ type: 'SET_LOADING', payload: false });
+      }
     }, []),
     
-    updateConversation: useCallback((id: string, updates: Partial<Conversation>) => {
-      dispatch({ type: 'UPDATE_CONVERSATION', payload: { id, updates } });
+    createConversation: useCallback(async (title?: string) => {
+      try {
+        const request = { title: title || '新对话' };
+        const conversation = await api.conversation.createConversation(request);
+        dispatch({ type: 'ADD_CONVERSATION', payload: conversation });
+        dispatch({ type: 'SET_MESSAGES', payload: [] }); // 清空消息
+        return conversation;
+      } catch (error) {
+        console.error('创建会话失败:', error);
+        dispatch({ type: 'SET_ERROR', payload: '创建会话失败' });
+        return null;
+      }
     }, []),
     
-    deleteConversation: useCallback((id: string) => {
-      dispatch({ type: 'DELETE_CONVERSATION', payload: id });
+    updateConversation: useCallback(async (id: string, updates: Partial<Conversation>) => {
+      try {
+        if (updates.title) {
+          const conversation = await api.conversation.renameConversation(id, updates.title);
+          dispatch({ type: 'UPDATE_CONVERSATION', payload: { id, updates: conversation } });
+        } else {
+          dispatch({ type: 'UPDATE_CONVERSATION', payload: { id, updates } });
+        }
+      } catch (error) {
+        console.error('更新会话失败:', error);
+        dispatch({ type: 'SET_ERROR', payload: '更新会话失败' });
+      }
+    }, []),
+    
+    deleteConversation: useCallback(async (id: string) => {
+      try {
+        await api.conversation.deleteConversation(id);
+        dispatch({ type: 'DELETE_CONVERSATION', payload: id });
+      } catch (error) {
+        console.error('删除会话失败:', error);
+        dispatch({ type: 'SET_ERROR', payload: '删除会话失败' });
+      }
     }, []),
     
     // 消息操作
-    loadMessages: useCallback((conversationId: string) => {
-      dispatch({ type: 'SET_LOADING', payload: true });
-      
-      // 模拟加载消息（后续替换为真实API调用）
-      setTimeout(() => {
-        const mockMessages: ChatMessage[] = [
-          {
-            id: '1',
-            conversation_id: conversationId,
-            role: 'user',
-            content: '你好，请介绍一下React的核心概念。',
-            created_at: new Date(Date.now() - 3600000).toISOString(),
-          },
-          {
-            id: '2',
-            conversation_id: conversationId,
-            role: 'assistant',
-            content: 'React是一个用于构建用户界面的JavaScript库，主要有以下核心概念：\n\n1. **组件（Components）**：React应用由组件构成\n2. **JSX**：JavaScript的语法扩展\n3. **Props**：组件间的数据传递\n4. **State**：组件内部状态管理\n5. **生命周期**：组件的创建、更新、销毁过程',
-            created_at: new Date(Date.now() - 3500000).toISOString(),
-            citations: [
-              {
-                source: 'React官方文档',
-                content: 'React是一个用于构建用户界面的JavaScript库...',
-                document_name: 'React文档',
-                score: 0.92,
-                dataset_id: 'kb-1',
-                document_id: 'react-doc-1',
-                segment_id: 'intro-1',
-                position: 1,
-              },
-            ],
-          },
-        ];
-        dispatch({ type: 'SET_MESSAGES', payload: mockMessages });
-        dispatch({ type: 'SET_LOADING', payload: false });
-      }, 500);
-    }, []),
-    
     sendMessage: useCallback(async (content: string) => {
       if (!content.trim() || state.isStreaming) return;
       
-      // 创建用户消息
-      const userMessage: ChatMessage = {
-        id: Date.now().toString(),
-        conversation_id: state.currentConversation?.id || 'new',
-        role: 'user',
-        content,
-        created_at: new Date().toISOString(),
-      };
-      
-      dispatch({ type: 'ADD_MESSAGE', payload: userMessage });
-      dispatch({ type: 'SET_STREAMING', payload: true });
-      
-      // 如果没有当前会话，创建新会话
-      if (!state.currentConversation) {
-        const newConversation: Conversation = {
-          id: Date.now().toString(),
-          title: content.slice(0, 30) + (content.length > 30 ? '...' : ''),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          user_id: 'user-1',
-          message_count: 1,
-        };
-        dispatch({ type: 'ADD_CONVERSATION', payload: newConversation });
-      }
-      
       try {
-        // 模拟AI回复（后续替换为真实API调用）
-        setTimeout(() => {
-          const assistantMessage: ChatMessage = {
-            id: (Date.now() + 1).toString(),
-            conversation_id: state.currentConversation?.id || 'new',
-            role: 'assistant',
-            content: '这是一个模拟的AI回复。实际实现中，这里会调用真实的聊天API。',
-            created_at: new Date().toISOString(),
-            citations: state.selectedKnowledgeBase ? [
-              {
-                source: '示例文档.pdf',
-                content: '这是一个示例引用内容，展示知识库的引用功能。',
-                document_name: '示例文档',
-                score: 0.85,
-                dataset_id: state.selectedKnowledgeBase,
-                document_id: 'doc-1',
-                segment_id: 'seg-1',
-                position: 1,
-              },
-            ] : undefined,
-          };
-          dispatch({ type: 'ADD_MESSAGE', payload: assistantMessage });
-          dispatch({ type: 'SET_STREAMING', payload: false });
-        }, 2000);
+        let conversationId = state.currentConversation?.id;
+        
+        // 如果没有当前会话，先创建新会话
+        if (!conversationId) {
+          const title = content.slice(0, 30) + (content.length > 30 ? '...' : '');
+          const request = { title };
+          const newConversation = await api.conversation.createConversation(request);
+          dispatch({ type: 'ADD_CONVERSATION', payload: newConversation });
+          dispatch({ type: 'SET_MESSAGES', payload: [] });
+          conversationId = newConversation.id;
+        }
+        
+        // 创建用户消息
+        const userMessage: ChatMessage = {
+          id: Date.now().toString(),
+          conversation_id: conversationId,
+          role: 'user',
+          content,
+          created_at: new Date().toISOString(),
+        };
+        
+        dispatch({ type: 'ADD_MESSAGE', payload: userMessage });
+        dispatch({ type: 'SET_STREAMING', payload: true });
+        dispatch({ type: 'CLEAR_STREAMING_CONTENT' });
+        
+        // 准备聊天请求
+        const chatRequest: ChatRequest = {
+          conversation_id: conversationId,
+          message: content,
+          knowledge_base_id: state.selectedKnowledgeBase,
+        };
+        
+        // 创建临时助手消息用于流式显示
+        const tempAssistantMessageId = (Date.now() + 1).toString();
+        const tempAssistantMessage: ChatMessage = {
+          id: tempAssistantMessageId,
+          conversation_id: conversationId,
+          role: 'assistant',
+          content: '',
+          created_at: new Date().toISOString(),
+        };
+        dispatch({ type: 'ADD_MESSAGE', payload: tempAssistantMessage });
+        
+        // 发送流式聊天请求
+        const controller = await api.chat.sendMessage(
+          chatRequest,
+          // onChunk: 处理流式内容
+          (chunk: string) => {
+            dispatch({ type: 'APPEND_STREAMING_CONTENT', payload: chunk });
+            // 实时更新临时消息
+            dispatch({ 
+              type: 'UPDATE_MESSAGE', 
+              payload: { 
+                id: tempAssistantMessageId, 
+                updates: { content: state.streamingContent + chunk } 
+              }
+            });
+          },
+          // onComplete: 处理完成的消息
+          (completeMessage: ChatMessage) => {
+            // 用完整消息替换临时消息
+            dispatch({ 
+              type: 'UPDATE_MESSAGE', 
+              payload: { 
+                id: tempAssistantMessageId, 
+                updates: completeMessage 
+              }
+            });
+            dispatch({ type: 'CLEAR_STREAMING_CONTENT' });
+            dispatch({ type: 'SET_STREAMING', payload: false });
+          },
+          // onError: 处理错误
+          (error: Error) => {
+            console.error('聊天请求失败:', error);
+            dispatch({ type: 'SET_ERROR', payload: error.message });
+            dispatch({ type: 'SET_STREAMING', payload: false });
+            dispatch({ type: 'CLEAR_STREAMING_CONTENT' });
+            // 删除临时消息
+            dispatch({ type: 'DELETE_MESSAGE', payload: tempAssistantMessageId });
+          }
+        );
+        
+        // 保存控制器引用，用于取消请求
+        abortControllerRef.current = controller;
+        
       } catch (error) {
         console.error('发送消息失败:', error);
         dispatch({ type: 'SET_ERROR', payload: '发送消息失败' });
         dispatch({ type: 'SET_STREAMING', payload: false });
       }
-    }, [state.currentConversation, state.isStreaming, state.selectedKnowledgeBase]),
+    }, [state.currentConversation, state.isStreaming, state.selectedKnowledgeBase, state.streamingContent]),
     
     addMessage: useCallback((message: ChatMessage) => {
       dispatch({ type: 'ADD_MESSAGE', payload: message });
@@ -394,29 +391,14 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     }, []),
     
     // 知识库操作
-    loadKnowledgeBases: useCallback(() => {
-      // 模拟加载知识库（后续替换为真实API调用）
-      const mockKnowledgeBases: KnowledgeBase[] = [
-        {
-          id: 'kb-1',
-          name: '技术文档',
-          description: '包含各种技术文档和API参考',
-          enabled: true,
-        },
-        {
-          id: 'kb-2',
-          name: '项目手册',
-          description: '项目相关的规范和指南',
-          enabled: true,
-        },
-        {
-          id: 'kb-3',
-          name: '历史归档',
-          description: '已归档的旧文档',
-          enabled: false,
-        },
-      ];
-      dispatch({ type: 'SET_KNOWLEDGE_BASES', payload: mockKnowledgeBases });
+    loadKnowledgeBases: useCallback(async () => {
+      try {
+        const knowledgeBases = await api.knowledgeBase.getKnowledgeBases();
+        dispatch({ type: 'SET_KNOWLEDGE_BASES', payload: knowledgeBases });
+      } catch (error) {
+        console.error('加载知识库失败:', error);
+        dispatch({ type: 'SET_ERROR', payload: '加载知识库失败' });
+      }
     }, []),
     
     selectKnowledgeBase: useCallback((id?: string) => {
@@ -447,53 +429,36 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     clearError: useCallback(() => {
       dispatch({ type: 'CLEAR_ERROR' });
     }, []),
+    
+    // 停止生成
+    stopGeneration: useCallback(() => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+      dispatch({ type: 'SET_STREAMING', payload: false });
+      dispatch({ type: 'CLEAR_STREAMING_CONTENT' });
+    }, []),
   };
   
   // 初始化加载
   useEffect(() => {
-    // 加载会话列表
-    const mockConversations: Conversation[] = [
-      {
-        id: '1',
-        title: '关于React开发的讨论',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        user_id: 'user-1',
-        message_count: 5,
-      },
-      {
-        id: '2', 
-        title: 'TypeScript最佳实践',
-        created_at: new Date(Date.now() - 86400000).toISOString(),
-        updated_at: new Date(Date.now() - 86400000).toISOString(),
-        user_id: 'user-1',
-        message_count: 3,
-      },
-    ];
-    dispatch({ type: 'SET_CONVERSATIONS', payload: mockConversations });
-
-    // 加载知识库
-    const mockKnowledgeBases: KnowledgeBase[] = [
-      {
-        id: 'kb-1',
-        name: '技术文档',
-        description: '包含各种技术文档和API参考',
-        enabled: true,
-      },
-      {
-        id: 'kb-2',
-        name: '项目手册',
-        description: '项目相关的规范和指南',
-        enabled: true,
-      },
-      {
-        id: 'kb-3',
-        name: '历史归档',
-        description: '已归档的旧文档',
-        enabled: false,
-      },
-    ];
-    dispatch({ type: 'SET_KNOWLEDGE_BASES', payload: mockKnowledgeBases });
+    // 异步加载数据
+    const initializeData = async () => {
+      try {
+        const [conversations, knowledgeBases] = await Promise.all([
+          api.conversation.getConversations(),
+          api.knowledgeBase.getKnowledgeBases(),
+        ]);
+        dispatch({ type: 'SET_CONVERSATIONS', payload: conversations });
+        dispatch({ type: 'SET_KNOWLEDGE_BASES', payload: knowledgeBases });
+      } catch (error) {
+        console.error('初始化数据失败:', error);
+        dispatch({ type: 'SET_ERROR', payload: '加载数据失败' });
+      }
+    };
+    
+    initializeData();
   }, []);
   
   const contextValue: ChatContextType = {

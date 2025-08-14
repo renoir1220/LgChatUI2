@@ -7,22 +7,24 @@ import type { ChatMessage } from '@lg/shared';
 interface MessageListProps {
   messages: ChatMessage[];
   isLoading?: boolean;
-  streamingMessageId?: string;
-  onCopyMessage?: (messageId: string, content: string) => void;
-  onRegenerateMessage?: (messageId: string) => void;
-  onLikeMessage?: (messageId: string) => void;
-  onDislikeMessage?: (messageId: string) => void;
+  isStreaming?: boolean;
+  streamingContent?: string;
+  onCopy?: (content: string) => void;
+  onRegenerate?: (messageId: string) => void;
+  onLike?: (messageId: string) => void;
+  onDislike?: (messageId: string) => void;
   className?: string;
 }
 
 export function MessageList({
   messages,
   isLoading = false,
-  streamingMessageId,
-  onCopyMessage,
-  onRegenerateMessage,
-  onLikeMessage,
-  onDislikeMessage,
+  isStreaming = false,
+  streamingContent = '',
+  onCopy,
+  onRegenerate,
+  onLike,
+  onDislike,
   className,
 }: MessageListProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -36,16 +38,10 @@ export function MessageList({
   // 当消息更新时滚动到底部
   useEffect(() => {
     scrollToBottom();
-  }, [messages, streamingMessageId]);
+  }, [messages, isStreaming, streamingContent]);
 
-  const handleCopy = async (messageId: string, content: string) => {
-    try {
-      await navigator.clipboard.writeText(content);
-      onCopyMessage?.(messageId, content);
-      // 这里可以添加成功提示
-    } catch (error) {
-      console.error('复制失败:', error);
-    }
+  const handleCopy = (content: string) => {
+    onCopy?.(content);
   };
 
   if (messages.length === 0 && !isLoading) {
@@ -68,20 +64,20 @@ export function MessageList({
       className={cn('flex-1 px-4 py-2', className)}
     >
       <div className="max-w-4xl mx-auto">
-        {messages.map((message) => (
+        {messages.map((message, index) => (
           <MessageBubble
             key={message.id}
             message={message}
-            isStreaming={streamingMessageId === message.id}
-            onCopy={() => handleCopy(message.id, message.content)}
-            onRegenerate={() => onRegenerateMessage?.(message.id)}
-            onLike={() => onLikeMessage?.(message.id)}
-            onDislike={() => onDislikeMessage?.(message.id)}
+            isStreaming={isStreaming && index === messages.length - 1}
+            onCopy={() => handleCopy(message.content)}
+            onRegenerate={() => onRegenerate?.(message.id)}
+            onLike={() => onLike?.(message.id)}
+            onDislike={() => onDislike?.(message.id)}
           />
         ))}
 
         {/* 加载指示器 */}
-        {isLoading && !streamingMessageId && (
+        {isLoading && !isStreaming && (
           <div className="flex gap-3 mb-6">
             <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm flex-shrink-0">
               AI

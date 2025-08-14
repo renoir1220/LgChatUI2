@@ -96,3 +96,4 @@ npm run lint                   # ESLint 检查
 - lgchatui是一个参考项目，我要把它移植到新的frontend和backend下
 
 - 每次完成任务，都获取一下IDE中是否有报错，有的话解决掉
+- 每次完成改动都commit一下，改动说明用中文

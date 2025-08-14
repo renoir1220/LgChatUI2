@@ -83,9 +83,7 @@ export function useMessageActions() {
   
   // 停止生成
   const stopGeneration = useCallback(() => {
-    actions.setStreaming(false);
-    // 这里应该取消正在进行的API请求
-    console.log('已停止生成');
+    actions.stopGeneration();
   }, [actions]);
   
   return {
