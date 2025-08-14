@@ -13,12 +13,10 @@ import {
   PaperClipOutlined,
   PlusOutlined,
   ProductOutlined,
-  QuestionCircleOutlined,
   ReloadOutlined,
   ScheduleOutlined,
   ShareAltOutlined,
   SmileOutlined,
-  CodeOutlined,
 } from '@ant-design/icons';
 import {
   Attachments,
@@ -29,7 +27,7 @@ import {
   Welcome,
   // type GetProp,
 } from '@ant-design/x';
-import { Avatar, Button, Flex, Space, Spin, Typography, message } from 'antd';
+import { Avatar, Button, Flex, Space, Spin, Typography, message, Dropdown } from 'antd';
 import MarkdownIt from 'markdown-it';
 import 'github-markdown-css/github-markdown.css';
 import './ChatMessage.css';
@@ -551,10 +549,44 @@ const ChatScreen: React.FC = () => {
         />
       </div>
 
-      <div style={{ padding: '16px', borderTop: '1px solid #f0f0f0', display: 'flex', alignItems: 'center', gap: 8 }}>
-        <Avatar size={24} icon={<SmileOutlined />} />
-        <Button type="text" icon={<QuestionCircleOutlined />} />
-        <Button type="text" icon={<CodeOutlined />} onClick={() => window.location.href = '/debug-api'} />
+      <div style={{ padding: '12px 12px', borderTop: '1px solid #f0f0f0' }}>
+        <Dropdown
+          placement="topLeft"
+          menu={{
+            items: [
+              { key: 'profile', label: '个人资料' },
+              { type: 'divider' as const },
+              { key: 'logout', danger: true, label: '退出登录' },
+            ],
+            onClick: ({ key }) => {
+              if (key === 'logout') {
+                clearAuth();
+                window.location.href = '/login';
+              }
+            },
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '8px 8px',
+              borderRadius: 8,
+              cursor: 'pointer',
+              userSelect: 'none',
+              transition: 'background-color 0.2s ease',
+            }}
+            onMouseEnter={(e) => ((e.currentTarget.style.backgroundColor = '#f5f5f5'))}
+            onMouseLeave={(e) => ((e.currentTarget.style.backgroundColor = 'transparent'))}
+          >
+            <Avatar size={28} icon={<SmileOutlined />} />
+            <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
+              <span style={{ fontWeight: 500 }}>{getUsername() || '用户'}</span>
+              <span style={{ fontSize: 12, color: '#999' }}>账户</span>
+            </div>
+          </div>
+        </Dropdown>
       </div>
     </div>
   );
@@ -938,9 +970,6 @@ const ChatScreen: React.FC = () => {
             loading={kbLoading}
           />
           <span style={{ flex: 1 }} />
-          <Text type="secondary">用户：</Text>
-          <span>{getUsername() || '-'}</span>
-          <Button size="small" onClick={() => { clearAuth(); window.location.href = '/login'; }}>退出</Button>
         </div>
         {chatList}
         {chatSender}

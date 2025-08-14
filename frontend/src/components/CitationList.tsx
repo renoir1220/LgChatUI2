@@ -73,11 +73,11 @@ export const CitationList: React.FC<{ citations?: CitationItem[] }>
   console.log('CitationList: 开始渲染，分组数量=', groupedCitations.length);
 
   return (
-    <div style={{ marginTop: 8 }}>
-      <Divider style={{ margin: '12px 0' }} />
-      <Text strong>引用</Text>
+    <div style={{ marginTop: 4 }}>
+      <Divider style={{ margin: '6px 0' }} />
+      <Text strong style={{ display: 'block', marginBottom: 4 }}>引用</Text>
 
-      <Space size={[8,8]} wrap style={{ marginTop: 8 }}>
+      <Space size={[8,8]} wrap style={{ marginTop: 4 }}>
         {groupedCitations.map((group, idx) => {
           const title = group.document_name;
           const color = colors[idx % colors.length] as any;
