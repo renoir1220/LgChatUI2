@@ -64,4 +64,32 @@ export class ConversationsRepository {
     );
     return rows as Conversation[];
   }
+
+  // 创建新会话（关联用户）
+  async createConversation(userId: string, title: string): Promise<Conversation> {
+    const rows = await this.db.query<any>(
+      `DECLARE @id uniqueidentifier = NEWID();
+       INSERT INTO T_AI_CONVERSATIONS (id, title, created_at, updated_at)
+       VALUES (@id, @p1, GETUTCDATE(), GETUTCDATE());
+       SELECT CONVERT(varchar(36), @id) AS id, 
+              @p1 AS title,
+              @p0 AS userId,
+              CONVERT(varchar(33), GETUTCDATE(), 126) AS createdAt,
+              CONVERT(varchar(33), GETUTCDATE(), 126) AS updatedAt;`,
+      userId,
+      title,
+    );
+    return rows[0] as Conversation;
+  }
+
+  // 删除会话及其所有消息
+  async deleteConversation(conversationId: string): Promise<void> {
+    await this.db.query(
+      `BEGIN TRANSACTION;
+       DELETE FROM T_AI_MESSAGES WHERE conversation_id = @p0;
+       DELETE FROM T_AI_CONVERSATIONS WHERE id = @p0;
+       COMMIT;`,
+      conversationId,
+    );
+  }
 }

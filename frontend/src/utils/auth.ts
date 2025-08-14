@@ -53,7 +53,7 @@ export async function validateToken(): Promise<boolean> {
   }
 
   try {
-    const API_BASE = (import.meta as any).env?.VITE_API_BASE || '';
+    const API_BASE = (import.meta.env?.VITE_API_BASE as string) || '';
     const response = await fetch(`${API_BASE}/api/auth/me`, {
       method: 'GET',
       headers: {

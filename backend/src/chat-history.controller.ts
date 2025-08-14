@@ -6,11 +6,14 @@ import {
   UseGuards,
   Request,
   NotFoundException,
+  Delete,
+  Post,
+  Body,
 } from '@nestjs/common';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { ConversationsRepository } from './repositories/conversations.repository';
 import { MessagesRepository } from './repositories/messages.repository';
-import type { Conversation, ChatMessage } from '@lg/shared';
+import type { Conversation, ChatMessage, CreateConversationRequest } from '@lg/shared';
 
 interface AuthenticatedRequest {
   user: {
@@ -69,5 +72,38 @@ export class ChatHistoryController {
     @Query('pageSize') pageSize = '50',
   ): Promise<ChatMessage[]> {
     return await this.listMessages(id, req, page, pageSize);
+  }
+
+  // DELETE /api/conversations/:id - 删除会话
+  @Delete('conversations/:id')
+  async deleteConversation(
+    @Param('id') id: string,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<{ success: boolean }> {
+    const username = req.user.username;
+    const userId = `user_${username}`;
+    
+    // 检查会话是否属于该用户
+    const owned = await this.messages.isConversationOwnedByUser(id, userId);
+    if (!owned) {
+      throw new NotFoundException('Conversation not found');
+    }
+
+    // 删除会话（这里需要在ConversationsRepository中实现delete方法）
+    await this.conversations.deleteConversation(id);
+    return { success: true };
+  }
+
+  // POST /api/conversations - 创建新会话
+  @Post('conversations')
+  async createConversation(
+    @Body() body: CreateConversationRequest,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<Conversation> {
+    const username = req.user.username;
+    const userId = `user_${username}`;
+    
+    const title = body.title || '新对话';
+    return await this.conversations.createConversation(userId, title);
   }
 }

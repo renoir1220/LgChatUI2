@@ -48,8 +48,9 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
       } else {
         setError('登录失败：未返回访问令牌')
       }
-    } catch (e: any) {
-      setError(`登录失败：${e?.message || '网络错误'}`)
+    } catch (e: unknown) {
+      const error = e as Error;
+      setError(`登录失败：${error?.message || '网络错误'}`)
     } finally {
       setLoading(false)
     }

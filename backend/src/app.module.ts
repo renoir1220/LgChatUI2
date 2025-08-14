@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { MessagesController } from './messages.controller';
+import { ChatController } from './chat.controller';
+import { KnowledgeBaseController } from './knowledge-base.controller';
 import { DatabaseModule } from './database/database.module';
 import { ConversationsRepository } from './repositories/conversations.repository';
 import { MessagesRepository } from './repositories/messages.repository';
@@ -15,6 +17,8 @@ import { AuthModule } from './auth/auth.module';
   controllers: [
     AppController,
     MessagesController,
+    ChatController,
+    KnowledgeBaseController,
     HealthController,
     ChatHistoryController,
   ],
