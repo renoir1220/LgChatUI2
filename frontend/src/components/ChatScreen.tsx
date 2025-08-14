@@ -172,6 +172,7 @@ const ChatScreen: React.FC = () => {
   // 状态管理 - 使用更清晰的命名和注释
   const [messageHistory, setMessageHistory] = useState<Record<string, any>>({}); // 存储所有会话的消息历史
   const [conversations, setConversations] = useState<any[]>(DEFAULT_CONVERSATIONS_ITEMS); // 会话列表数据
+  const [conversationDetails, setConversationDetails] = useState<Record<string, any>>({}); // 存储会话详细信息
   const [curConversation, setCurConversation] = useState<string>(DEFAULT_CONVERSATIONS_ITEMS[0].key); // 当前选中的会话
   const [conversationId, setConversationId] = useState<string | undefined>(undefined); // 当前会话ID（UUID格式）
   const [attachmentsOpen, setAttachmentsOpen] = useState(false); // 附件上传面板开关状态
@@ -233,6 +234,14 @@ const ChatScreen: React.FC = () => {
         try {
           const list = await apiGet<any[]>(`/api/conversations`);
           setConversations(list.map((c: any) => ({ key: c.id, label: c.title, group: '最近' })));
+          
+          // 更新会话详细信息
+          const details: Record<string, any> = {};
+          list.forEach(c => {
+            details[c.id] = c;
+          });
+          setConversationDetails(details);
+          
           setCurConversation(respConvId);
         } catch {}
       }
@@ -371,8 +380,22 @@ const ChatScreen: React.FC = () => {
         const list = await apiGet<any[]>(`/api/conversations`);
         if (Array.isArray(list) && list.length > 0) {
           setConversations(list.map((c) => ({ key: c.id, label: c.title, group: '最近' })));
+          
+          // 存储会话详细信息
+          const details: Record<string, any> = {};
+          list.forEach(c => {
+            details[c.id] = c;
+          });
+          setConversationDetails(details);
+          
           setCurConversation(list[0].id);
           setConversationId(list[0].id);
+          
+          // 如果首个会话有知识库ID，自动设置
+          if (list[0].knowledgeBaseId) {
+            setCurrentKnowledgeBase(list[0].knowledgeBaseId);
+          }
+          
           // 加载首个会话消息（404 视为空列表）
           try {
             const msgs = await apiGet<any[]>(`/api/conversations/${list[0].id}`);
@@ -423,8 +446,15 @@ const ChatScreen: React.FC = () => {
             setTimeout(() => {
               setCurConversation(val);
               setConversationId(typeof val === 'string' ? val : undefined);
+              
               // 加载该会话历史
               if (val && val !== 'new') {
+                // 从会话详细信息中获取知识库ID并自动设置
+                const conversationDetail = conversationDetails[val as string];
+                if (conversationDetail && conversationDetail.knowledgeBaseId) {
+                  setCurrentKnowledgeBase(conversationDetail.knowledgeBaseId);
+                }
+                
                 apiGet<any[]>(`/api/conversations/${val}`).then(msgs => {
                   const mapped = msgs.map((m) => ({ role: m.role === 'USER' ? 'user' : 'assistant', content: m.content }));
                   setMessages(mapped);

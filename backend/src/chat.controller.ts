@@ -60,6 +60,7 @@ export class ChatController {
         conversation = await this.conversations.createConversation(
           userId,
           title,
+          body.knowledgeBaseId,
         );
         conversationId = conversation.id;
         console.log('新会话创建成功:', conversationId);

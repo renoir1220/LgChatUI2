@@ -9,6 +9,7 @@ import {
   Delete,
   Post,
   Body,
+  Put,
 } from '@nestjs/common';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { ConversationsRepository } from './repositories/conversations.repository';
@@ -17,6 +18,7 @@ import type {
   Conversation,
   ChatMessage,
   CreateConversationRequest,
+  UpdateConversationRequest,
 } from '@lg/shared';
 
 interface AuthenticatedRequest {
@@ -108,6 +110,27 @@ export class ChatHistoryController {
     const userId = `user_${username}`;
 
     const title = body.title || '新对话';
-    return await this.conversations.createConversation(userId, title);
+    return await this.conversations.createConversation(userId, title, body.knowledgeBaseId);
+  }
+
+  // PUT /api/conversations/:id - 更新会话信息
+  @Put('conversations/:id')
+  async updateConversation(
+    @Param('id') id: string,
+    @Body() body: UpdateConversationRequest,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<{ success: boolean }> {
+    const username = req.user.username;
+    const userId = `user_${username}`;
+
+    // 检查会话是否属于该用户
+    const owned = await this.messages.isConversationOwnedByUser(id, userId);
+    if (!owned) {
+      throw new NotFoundException('Conversation not found');
+    }
+
+    // 更新会话信息
+    await this.conversations.updateConversation(id, body);
+    return { success: true };
   }
 }
