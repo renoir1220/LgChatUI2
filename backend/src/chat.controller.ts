@@ -136,11 +136,12 @@ export class ChatController {
       console.log('调用Dify API...');
       
       // 调用Dify API获取流式响应
+      // 不传递conversationId给Dify，让Dify自己管理会话
       const stream = await this.difyService.chatWithStreaming(
         userMessage,
         conversationId, // 使用conversationId作为user参数
         knowledgeBaseId,
-        conversationId,
+        undefined, // 不传递conversationId给Dify
       );
 
       if (!stream) {
@@ -148,16 +149,16 @@ export class ChatController {
       }
 
       let assistantMessage = '';
-      const reader = stream.getReader();
-      const decoder = new TextDecoder();
+      let buffer = '';
 
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split('\n');
+      // 使用Node.js流处理
+      await new Promise<void>((resolve, reject) => {
+        stream.on('data', (chunk: Buffer) => {
+          buffer += chunk.toString();
+          const lines = buffer.split('\n');
+          
+          // 保留最后一个不完整的行
+          buffer = lines.pop() || '';
 
           for (const line of lines) {
             if (line.trim() === '') continue;
@@ -181,18 +182,28 @@ export class ChatController {
             // 处理消息结束事件
             if (streamData.event === 'message_end') {
               console.log('收到消息结束事件');
-              break;
+              resolve();
+              return;
             }
 
             // 处理错误事件
             if (streamData.event === 'error') {
-              throw new Error('Dify API returned error');
+              reject(new Error('Dify API returned error'));
+              return;
             }
           }
-        }
-      } finally {
-        reader.releaseLock();
-      }
+        });
+
+        stream.on('end', () => {
+          console.log('Dify流结束');
+          resolve();
+        });
+
+        stream.on('error', (error: Error) => {
+          console.error('Dify流错误:', error);
+          reject(error);
+        });
+      });
 
       console.log('Dify流式响应完成，总内容长度:', assistantMessage.length);
 
