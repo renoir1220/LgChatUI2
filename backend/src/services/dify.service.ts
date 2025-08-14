@@ -19,7 +19,14 @@ interface DifyChatResponse {
 }
 
 interface DifyStreamResponse {
-  event: 'message' | 'agent_message' | 'message_end' | 'agent_thought' | 'message_file' | 'message_replace' | 'error';
+  event:
+    | 'message'
+    | 'agent_message'
+    | 'message_end'
+    | 'agent_thought'
+    | 'message_file'
+    | 'message_replace'
+    | 'error';
   message_id?: string;
   conversation_id?: string;
   answer?: string;
@@ -41,7 +48,7 @@ export class DifyService {
   ): Promise<ReadableStream<Uint8Array> | null> {
     const apiKey = this.getKnowledgeBaseApiKey(knowledgeBaseId);
     const apiUrl = this.getKnowledgeBaseApiUrl(knowledgeBaseId);
-    
+
     if (!apiKey || !apiUrl) {
       throw new Error('Knowledge base configuration not found');
     }
@@ -55,15 +62,19 @@ export class DifyService {
     };
 
     try {
-      const response = await axios.post(`${apiUrl}/chat-messages`, requestData, {
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
+      const response = await axios.post(
+        `${apiUrl}/chat-messages`,
+        requestData,
+        {
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          responseType: 'stream',
         },
-        responseType: 'stream',
-      });
+      );
 
-      return response.data;
+      return response.data as ReadableStream<Uint8Array>;
     } catch (error) {
       console.error('Dify API error:', error);
       throw new Error('Failed to call Dify API');
@@ -81,7 +92,7 @@ export class DifyService {
   ): Promise<DifyChatResponse> {
     const apiKey = this.getKnowledgeBaseApiKey(knowledgeBaseId);
     const apiUrl = this.getKnowledgeBaseApiUrl(knowledgeBaseId);
-    
+
     if (!apiKey || !apiUrl) {
       throw new Error('Knowledge base configuration not found');
     }
@@ -96,14 +107,14 @@ export class DifyService {
 
     try {
       const response: AxiosResponse<DifyChatResponse> = await axios.post(
-        `${apiUrl}/chat-messages`, 
+        `${apiUrl}/chat-messages`,
         requestData,
         {
           headers: {
-            'Authorization': `Bearer ${apiKey}`,
+            Authorization: `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
           },
-        }
+        },
       );
 
       return response.data;
