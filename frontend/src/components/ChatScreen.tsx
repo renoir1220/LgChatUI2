@@ -38,6 +38,7 @@ import { CitationList } from './CitationList';
 import { useKnowledgeBases } from '../hooks/useKnowledgeBases';
 import { apiFetch, apiGet } from '../lib/api';
 import { clearAuth, getUsername } from '../utils/auth';
+import { saveCitationsToCache, getCitationsFromCache, batchSaveCitations, cleanupExpiredCache } from '../utils/messageCache';
 
 const { Text } = Typography;
 
@@ -288,18 +289,24 @@ const ChatScreen: React.FC = () => {
                 // 处理知识库引用数据 - 检查所有可能的来源
                 const retrieverResources = jsonData?.metadata?.retriever_resources;
                 if (retrieverResources && Array.isArray(retrieverResources) && retrieverResources.length > 0) {
+                  const withCitations = retrieverResources.map((r: any) => ({
+                    source: r.document_name || r.dataset_name || '未知来源',
+                    content: r.content,
+                    document_name: r.document_name,
+                    score: r.score,
+                    dataset_id: r.dataset_id,
+                    document_id: r.document_id,
+                    segment_id: r.segment_id,
+                    position: r.position,
+                  }));
+
                   setMessages(prev => prev.map((msg, index) => {
                     if (index === botMessageIndex && msg.role === 'assistant') {
-                      const withCitations = retrieverResources.map((r: any) => ({
-                        source: r.document_name || r.dataset_name || '未知来源',
-                        content: r.content,
-                        document_name: r.document_name,
-                        score: r.score,
-                        dataset_id: r.dataset_id,
-                        document_id: r.document_id,
-                        segment_id: r.segment_id,
-                        position: r.position,
-                      }));
+                      // 保存引用信息到Cookie缓存
+                      if (respConvId) {
+                        saveCitationsToCache(respConvId, botMessageIndex, withCitations);
+                      }
+                      
                       return {
                         ...msg,
                         citations: withCitations,
@@ -376,6 +383,9 @@ const ChatScreen: React.FC = () => {
 
   // 加载会话列表
   useEffect(() => {
+    // 清理过期缓存
+    cleanupExpiredCache();
+    
     (async () => {
       try {
         const list = await apiGet<any[]>(`/api/conversations`);
@@ -400,10 +410,12 @@ const ChatScreen: React.FC = () => {
           // 加载首个会话消息（404 视为空列表）
           try {
             const msgs = await apiGet<any[]>(`/api/conversations/${list[0].id}`);
-            const mapped = msgs.map((m) => ({ 
+            const cachedCitations = getCitationsFromCache(list[0].id);
+            
+            const mapped = msgs.map((m, index) => ({ 
               role: m.role === 'USER' ? 'user' : 'assistant', 
               content: m.content,
-              citations: [] // 确保历史消息也有citations字段
+              citations: m.role === 'USER' ? [] : (cachedCitations[index.toString()] || []) // 从缓存恢复引用信息
             }));
             setMessages(mapped);
           } catch (e) {
@@ -461,10 +473,12 @@ const ChatScreen: React.FC = () => {
                 }
                 
                 apiGet<any[]>(`/api/conversations/${val}`).then(msgs => {
-                  const mapped = msgs.map((m) => ({ 
+                  const cachedCitations = getCitationsFromCache(val as string);
+                  
+                  const mapped = msgs.map((m, index) => ({ 
                     role: m.role === 'USER' ? 'user' : 'assistant', 
                     content: m.content,
-                    citations: [] // 确保历史消息也有citations字段
+                    citations: m.role === 'USER' ? [] : (cachedCitations[index.toString()] || []) // 从缓存恢复引用信息
                   }));
                   setMessages(mapped);
                 }).catch(() => setMessages([]));
@@ -622,18 +636,24 @@ const ChatScreen: React.FC = () => {
                                       // 处理引用数据
                                       const retrieverResources = jsonData?.metadata?.retriever_resources;
                                       if (retrieverResources && Array.isArray(retrieverResources) && retrieverResources.length > 0) {
+                                        const withCitations = retrieverResources.map((r: any) => ({
+                                          source: r.document_name || r.dataset_name || '未知来源',
+                                          content: r.content,
+                                          document_name: r.document_name,
+                                          score: r.score,
+                                          dataset_id: r.dataset_id,
+                                          document_id: r.document_id,
+                                          segment_id: r.segment_id,
+                                          position: r.position,
+                                        }));
+
+                                        // 保存重新生成的引用信息到缓存
+                                        if (conversationId) {
+                                          saveCitationsToCache(conversationId, index, withCitations);
+                                        }
+
                                         setMessages(prev => prev.map((item, i) => {
                                           if (i === index) {
-                                            const withCitations = retrieverResources.map((r: any) => ({
-                                              source: r.document_name || r.dataset_name || '未知来源',
-                                              content: r.content,
-                                              document_name: r.document_name,
-                                              score: r.score,
-                                              dataset_id: r.dataset_id,
-                                              document_id: r.document_id,
-                                              segment_id: r.segment_id,
-                                              position: r.position,
-                                            }));
                                             return { ...item, citations: withCitations };
                                           }
                                           return item;
