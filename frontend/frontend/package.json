@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "@ant-design/x": "^1.6.0",
+    "@types/markdown-it": "^14.1.2",
+    "antd": "^5.27.0",
+    "github-markdown-css": "^5.8.1",
+    "markdown-it": "^14.1.0"
+  }
+}

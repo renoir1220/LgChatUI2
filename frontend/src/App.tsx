@@ -1,44 +1,41 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import LoginScreen from '@/components/LoginScreen'
-import { ChatPage } from '@/components/ChatPage'
-import RequireAuth from '@/components/RequireAuth'
-import { ChatProvider } from '@/contexts/ChatContext'
-import { NotificationProvider } from '@/contexts/NotificationContext'
-import { SettingsProvider } from '@/contexts/SettingsContext'
+import LoginScreen from './components/LoginScreen'
+import ChatScreen from './components/ChatScreen'
+import RequireAuth from './components/RequireAuth'
+import { NotificationProvider } from './contexts/NotificationContext'
+import { SettingsProvider } from './contexts/SettingsContext'
 
 function App() {
   return (
     <SettingsProvider>
       <NotificationProvider>
-        <ChatProvider>
-          <Router>
-            <Routes>
-              <Route 
-                path="/login" 
-                element={
-                  <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50">
-                    <LoginScreen 
-                      onLogin={() => {
-                        // 登录成功后强制刷新页面，确保状态同步
-                        window.location.href = '/'
-                      }} 
-                    />
-                  </div>
-                } 
-              />
-              <Route 
-                path="/" 
-                element={
-                  <RequireAuth>
-                    <ChatPage />
-                  </RequireAuth>
-                } 
-              />
-              {/* 默认重定向到主页 */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Router>
-        </ChatProvider>
+        <Router>
+          <Routes>
+            <Route 
+              path="/login" 
+              element={
+                <div style={{ minHeight: '100vh', background: 'linear-gradient(to bottom right, #f8fafc, #ffffff, #eef2ff)' }}>
+                  <LoginScreen 
+                    onLogin={() => {
+                      // 登录成功后强制刷新页面，确保状态同步
+                      window.location.href = '/'
+                    }} 
+                  />
+                </div>
+              } 
+            />
+            <Route 
+              path="/" 
+              element={
+                <RequireAuth>
+                  <ChatScreen />
+                </RequireAuth>
+              } 
+            />
+            {/* 默认重定向到主页 */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Router>
       </NotificationProvider>
     </SettingsProvider>
   )

@@ -1,44 +1,54 @@
-import React, { useMemo } from 'react';
-import { Citation } from './Citation';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-import { FileText, ExternalLink } from 'lucide-react';
-import type { Citation as CitationType } from '@lg/shared';
+import React, { useState, useMemo } from 'react';
+import { Button, Divider, Modal, Typography, Tag, Tooltip, Space } from 'antd';
 
-interface CitationListProps {
-  citations: CitationType[];
-  className?: string;
+const { Text } = Typography;
+
+export interface CitationItem {
+  source: string;
+  content: string;
+  document_name?: string;
+  score?: number;
+  dataset_id?: string;
+  document_id?: string;
+  segment_id?: string;
+  position?: number;
 }
 
 interface DocumentGroup {
   document_name: string;
   source: string;
-  items: CitationType[];
+  items: CitationItem[];
   count: number;
 }
 
-export function CitationList({ citations, className }: CitationListProps) {
-  // 按文档分组引用
-  const groupedCitations = useMemo(() => {
-    if (!citations || citations.length === 0) return [];
+export const CitationList: React.FC<{ citations?: CitationItem[] }>
+  = ({ citations = [] }) => {
+  const [open, setOpen] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<DocumentGroup | null>(null);
 
+  if (!citations || citations.length === 0) return null;
+
+  const colors = ['blue','geekblue','purple','cyan','gold','lime'];
+
+  // Group citations by document_name and source
+  const groupedCitations = useMemo(() => {
     const groups: Map<string, DocumentGroup> = new Map();
     
-    citations.forEach((citation) => {
-      const key = `${citation.document_name || citation.source || '未知来源'}-${citation.source}`;
+    citations.forEach(item => {
+      const key = `${item.document_name || item.source || '引用'}-${item.source}`;
       if (groups.has(key)) {
-        groups.get(key)!.items.push(citation);
+        groups.get(key)!.items.push(item);
       } else {
         groups.set(key, {
-          document_name: citation.document_name || citation.source || '未知来源',
-          source: citation.source,
-          items: [citation],
-          count: 0,
+          document_name: item.document_name || item.source || '引用',
+          source: item.source,
+          items: [item],
+          count: 0
         });
       }
     });
 
-    // 按位置排序并更新计数
+    // Sort items by position (descending) and update count
     groups.forEach(group => {
       group.items.sort((a, b) => (b.position || 0) - (a.position || 0));
       group.count = group.items.length;
@@ -47,82 +57,84 @@ export function CitationList({ citations, className }: CitationListProps) {
     return Array.from(groups.values());
   }, [citations]);
 
-  const colors = [
-    'bg-blue-50 text-blue-700 border-blue-200',
-    'bg-green-50 text-green-700 border-green-200', 
-    'bg-purple-50 text-purple-700 border-purple-200',
-    'bg-orange-50 text-orange-700 border-orange-200',
-    'bg-pink-50 text-pink-700 border-pink-200',
-    'bg-indigo-50 text-indigo-700 border-indigo-200',
-  ];
-
-  if (!citations || citations.length === 0) {
-    return null;
-  }
+  const handleDocumentClick = (group: DocumentGroup) => {
+    setSelectedDocument(group);
+    setOpen(true);
+  };
 
   return (
-    <div className={cn('mt-4 pt-3 border-t border-gray-200', className)}>
-      <div className="flex items-center gap-2 mb-3">
-        <ExternalLink className="w-4 h-4 text-gray-500" />
-        <span className="text-sm font-medium text-gray-700">引用来源</span>
-        <span className="text-xs text-gray-500">({citations.length})</span>
-      </div>
+    <div style={{ marginTop: 8 }}>
+      <Divider style={{ margin: '12px 0' }} />
+      <Text strong>引用</Text>
 
-      <div className="space-y-3">
-        {/* 按文档分组显示 */}
-        {groupedCitations.map((group, groupIndex) => {
-          const colorClass = colors[groupIndex % colors.length];
+      <Space size={[8,8]} wrap style={{ marginTop: 8 }}>
+        {groupedCitations.map((group, idx) => {
+          const title = group.document_name;
+          const color = colors[idx % colors.length] as any;
+          const short = title.length > 24 ? title.slice(0, 24) + '…' : title;
+          const displayText = group.count > 1 ? `${short} (${group.count})` : short;
           
           return (
-            <div key={groupIndex} className="space-y-2">
-              {/* 文档标题 */}
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className={colorClass}>
-                  <FileText className="w-3 h-3 mr-1" />
-                  {group.document_name}
-                  {group.count > 1 && (
-                    <span className="ml-1 text-xs">({group.count})</span>
-                  )}
-                </Badge>
-              </div>
+            <Tooltip key={idx} title={title} placement="top">
+              <Tag
+                color={color}
+                onClick={() => handleDocumentClick(group)}
+                style={{ cursor: 'pointer', userSelect: 'none' }}
+              >
+                {displayText}
+              </Tag>
+            </Tooltip>
+          );
+        })}
+      </Space>
 
-              {/* 该文档的所有引用 */}
-              <div className="flex flex-wrap gap-1 ml-4">
-                {group.items.map((citation, itemIndex) => (
-                  <Citation
-                    key={itemIndex}
-                    citation={citation}
-                    position={citation.position || itemIndex + 1}
-                    className={cn(
-                      'text-xs',
-                      colorClass.replace('bg-', 'hover:bg-').replace('text-', 'hover:text-')
-                    )}
-                  />
-                ))}
+      <Modal
+        open={open}
+        onCancel={() => setOpen(false)}
+        title={selectedDocument?.document_name || '引用原文'}
+        footer={null}
+        width={720}
+        styles={{ body: { maxHeight: '70vh', overflow: 'auto' } }}
+      >
+        {selectedDocument?.items.map((item, index) => {
+          return (
+            <div key={index} style={{ marginBottom: 24 }}>
+              <div style={{ marginBottom: 12 }}>
+                <Text strong style={{ fontSize: 14 }}>
+                  #{index + 1} (位置: {item.position || '-'})
+                </Text>
+              </div>
+              
+              <div style={{ 
+                padding: 16, 
+                backgroundColor: '#f8f9fa', 
+                borderRadius: 8,
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word'
+              }}>
+                {item.content || ''}
+              </div>
+              
+              <div style={{ marginTop: 12 }}>
+                <Button
+                  size="small"
+                  type="text"
+                  onClick={() => navigator.clipboard.writeText(item.content || '')}
+                >
+                  复制原文
+                </Button>
+              </div>
+              
+              <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid #f0f0f0' }}>
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  置信: {typeof item.score === 'number' ? item.score.toFixed(3) : '-'} 
+                  {item.segment_id && ` | 片段: ${item.segment_id}`}
+                </Text>
               </div>
             </div>
           );
         })}
-
-        {/* 如果引用数量较少，也可以平铺显示 */}
-        {citations.length <= 3 && (
-          <div className="flex flex-wrap gap-2">
-            {citations.map((citation, index) => (
-              <Citation
-                key={index}
-                citation={citation}
-                position={citation.position || index + 1}
-                className="text-xs"
-              />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* 总结信息 */}
-      <div className="mt-3 text-xs text-gray-500">
-        基于 {groupedCitations.length} 个文档的 {citations.length} 条引用
-      </div>
+      </Modal>
     </div>
   );
-}
+};

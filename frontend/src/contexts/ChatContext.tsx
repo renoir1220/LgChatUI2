@@ -287,6 +287,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     
     // 消息操作
     sendMessage: useCallback(async (content: string) => {
+      console.log('ChatContext: sendMessage 开始', { content, isStreaming: state.isStreaming });
       if (!content.trim() || state.isStreaming) return;
       
       try {
@@ -316,11 +317,13 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: 'CLEAR_STREAMING_CONTENT' });
         
         // 准备聊天请求
+        console.log('ChatContext: 选择的知识库ID:', state.selectedKnowledgeBase);
         const chatRequest: ChatRequest = {
-          conversation_id: conversationId,
+          conversationId: conversationId,
           message: content,
-          knowledge_base_id: state.selectedKnowledgeBase,
+          knowledgeBaseId: state.selectedKnowledgeBase,
         };
+        console.log('ChatContext: 构建的聊天请求:', chatRequest);
         
         // 创建临时助手消息用于流式显示
         const tempAssistantMessageId = (Date.now() + 1).toString();
@@ -334,10 +337,12 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: 'ADD_MESSAGE', payload: tempAssistantMessage });
         
         // 发送流式聊天请求
+        console.log('ChatContext: 调用sendMessage API');
         const controller = await api.chat.sendMessage(
           chatRequest,
           // onChunk: 处理流式内容
           (chunk: string) => {
+            console.log('ChatContext: 收到chunk:', chunk);
             dispatch({ type: 'APPEND_STREAMING_CONTENT', payload: chunk });
             // 实时更新临时消息
             dispatch({ 
@@ -350,6 +355,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           },
           // onComplete: 处理完成的消息
           (completeMessage: ChatMessage) => {
+            console.log('ChatContext: 收到完整消息:', completeMessage);
             // 用完整消息替换临时消息
             dispatch({ 
               type: 'UPDATE_MESSAGE', 
