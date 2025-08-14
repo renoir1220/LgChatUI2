@@ -98,15 +98,7 @@ export class ChatController {
       );
       console.log('用户消息保存成功:', userMessage.id);
 
-      // 3. 发送用户消息确认
-      console.log('发送用户消息确认到前端...');
-      this.writeSSE(res, 'message', {
-        type: 'user_message',
-        message: userMessage,
-        conversationId,
-      });
-
-      // 4. 模拟AI助手响应（流式）
+      // 3. 生成AI助手响应（流式）
       console.log('开始生成AI响应...');
       const result = await this.generateStreamingResponse(
         res,
@@ -115,28 +107,16 @@ export class ChatController {
         body.knowledgeBaseId,
       );
       console.log('AI响应生成完成, 结果:', result);
-
-      // 5. 发送完成事件
-      console.log('发送流式响应结束事件...');
-      this.writeSSE(res, 'message', {
-        type: 'message',
-        message: {
-          id: result.messageId,
-          conversationId,
-          role: 'assistant',
-          content: result.content,
-          createdAt: new Date().toISOString(),
-        },
-      });
       console.log('=== 聊天请求处理完成 ===');
 
     } catch (error) {
       console.error('=== 聊天请求处理出错 ===');
       console.error('错误详情:', error);
       // 发送错误事件
-      this.writeSSE(res, 'error', {
+      res.write(`data: ${JSON.stringify({
+        event: 'error',
         error: error instanceof Error ? error.message : '处理请求时发生错误',
-      });
+      })}\n\n`);
     } finally {
       console.log('关闭SSE连接');
       res.end();
@@ -153,40 +133,71 @@ export class ChatController {
     console.log('参数: conversationId:', conversationId, 'userMessage:', userMessage, 'knowledgeBaseId:', knowledgeBaseId);
     
     try {
-      // 临时使用模拟响应，避免Dify API配置问题
-      console.log('使用模拟AI响应 (跳过Dify API调用)...');
+      console.log('调用Dify API...');
       
-      // 模拟流式响应
-      const simulatedResponse = `基于您的问题："${userMessage}"，这是一个模拟的AI回复。
+      // 调用Dify API获取流式响应
+      const stream = await this.difyService.chatWithStreaming(
+        userMessage,
+        conversationId, // 使用conversationId作为user参数
+        knowledgeBaseId,
+        conversationId,
+      );
 
-在实际应用中，这里会：
-1. 调用Dify API或其他AI服务
-2. 处理流式响应数据
-3. 解析知识库引用信息
-4. 实时传输生成的内容
-
-${knowledgeBaseId ? `当前使用知识库：${knowledgeBaseId}` : '未选择知识库'}`;
-
-      // 分块发送模拟响应
-      const chunks = simulatedResponse.split('');
-      let assistantMessage = '';
-      
-      for (let i = 0; i < chunks.length; i++) {
-        assistantMessage += chunks[i];
-        
-        // 每10个字符发送一次增量内容
-        if (i % 10 === 0 || i === chunks.length - 1) {
-          this.writeSSE(res, 'message', {
-            type: 'chunk',
-            content: chunks.slice(Math.max(0, i - 9), i + 1).join(''),
-          });
-          
-          // 模拟网络延迟
-          await this.sleep(50);
-        }
+      if (!stream) {
+        throw new Error('Failed to get stream from Dify API');
       }
 
-      console.log('模拟流式响应完成，总内容长度:', assistantMessage.length);
+      let assistantMessage = '';
+      const reader = stream.getReader();
+      const decoder = new TextDecoder();
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.trim() === '') continue;
+
+            const streamData = this.difyService.parseDifyStreamLine(line);
+            if (!streamData) continue;
+
+            // 处理消息内容
+            if (streamData.event === 'message' || streamData.event === 'agent_message') {
+              if (streamData.answer) {
+                assistantMessage += streamData.answer;
+                
+                // 发送流式内容到前端
+                res.write(`data: ${JSON.stringify({
+                  event: 'message',
+                  answer: streamData.answer
+                })}\n\n`);
+              }
+            }
+
+            // 处理消息结束事件
+            if (streamData.event === 'message_end') {
+              console.log('收到消息结束事件');
+              break;
+            }
+
+            // 处理错误事件
+            if (streamData.event === 'error') {
+              throw new Error('Dify API returned error');
+            }
+          }
+        }
+      } finally {
+        reader.releaseLock();
+      }
+
+      console.log('Dify流式响应完成，总内容长度:', assistantMessage.length);
+
+      // 发送结束标记
+      res.write(`data: [DONE]\n\n`);
 
       // 保存完整的助手消息到数据库
       const savedMessage = await this.messages.append(
@@ -206,10 +217,11 @@ ${knowledgeBaseId ? `当前使用知识库：${knowledgeBaseId}` : '未选择知
       // 发生错误时的备用响应
       const fallbackMessage = `抱歉，处理您的请求时遇到了问题：${error instanceof Error ? error.message : '未知错误'}。请稍后再试。`;
       
-      this.writeSSE(res, 'message', {
-        answer: fallbackMessage,
-        content: fallbackMessage,
-      });
+      // 使用前端期待的格式发送错误消息
+      res.write(`data: ${JSON.stringify({
+        event: 'message',
+        answer: fallbackMessage
+      })}\n\n`);
 
       // 保存错误消息到数据库
       const savedMessage = await this.messages.append(
@@ -233,12 +245,4 @@ ${knowledgeBaseId ? `当前使用知识库：${knowledgeBaseId}` : '未选择知
     return title;
   }
 
-  private writeSSE(res: express.Response, event: string, data: any): void {
-    res.write(`event: ${event}\n`);
-    res.write(`data: ${JSON.stringify(data)}\n\n`);
-  }
-
-  private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
 }
