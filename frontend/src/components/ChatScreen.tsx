@@ -264,7 +264,6 @@ const ChatScreen: React.FC = () => {
               }
               try {
                 const jsonData = JSON.parse(rawData);
-                console.log('收到流式数据:', jsonData); // 调试日志
                 
                 // 文本增量
                 if (jsonData.event === 'agent_message' || jsonData.event === 'message') {
@@ -279,8 +278,6 @@ const ChatScreen: React.FC = () => {
                 // 处理知识库引用数据 - 检查所有可能的来源
                 const retrieverResources = jsonData?.metadata?.retriever_resources;
                 if (retrieverResources && Array.isArray(retrieverResources) && retrieverResources.length > 0) {
-                  console.log('发现知识库引用数据:', retrieverResources); // 调试日志
-                  
                   setMessages(prev => prev.map((msg, index) => {
                     if (index === botMessageIndex && msg.role === 'assistant') {
                       const withCitations = retrieverResources.map((r: any) => ({
@@ -293,7 +290,6 @@ const ChatScreen: React.FC = () => {
                         segment_id: r.segment_id,
                         position: r.position,
                       }));
-                      console.log('解析后的引用数据:', withCitations); // 调试日志
                       return {
                         ...msg,
                         citations: withCitations,
@@ -303,7 +299,7 @@ const ChatScreen: React.FC = () => {
                   }));
                 }
               } catch (e) {
-                console.error('JSON 解析失败:', e);
+                console.error('流式数据JSON解析失败:', e, '原始数据:', rawData);
               }
             }
           }
@@ -312,11 +308,25 @@ const ChatScreen: React.FC = () => {
 
       await processStream();
       
-      // 打印完整的最终消息内容
-      console.log('=== 完整的最终响应报文 ===');
-      console.log('最后一条消息:', messages[messages.length - 1]);
-      console.log('引用内容:', messages[messages.length - 1]?.citations || []);
-      console.log('================================');
+      // 获取最终的助手消息状态并输出调试信息
+      setMessages(prev => {
+        const finalMessages = [...prev];
+        const lastAssistantMsg = finalMessages[botMessageIndex];
+        if (lastAssistantMsg?.role === 'assistant') {
+          console.log('=== 流式响应完成 ===');
+          console.log('最终消息内容长度:', lastAssistantMsg.content?.length || 0);
+          console.log('知识库引用数量:', lastAssistantMsg.citations?.length || 0);
+          if (lastAssistantMsg.citations?.length > 0) {
+            console.log('引用数据详情:', lastAssistantMsg.citations.map(c => ({
+              source: c.source,
+              score: c.score,
+              contentLength: c.content?.length || 0
+            })));
+          }
+          console.log('========================');
+        }
+        return finalMessages;
+      });
 
     } catch (error: any) {
       if (error.name !== 'AbortError') {
