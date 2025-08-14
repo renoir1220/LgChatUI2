@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
 import { ConversationList } from './ConversationList';
@@ -7,229 +7,108 @@ import { KnowledgeBaseSelector } from './KnowledgeBaseSelector';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
 import { PanelLeftOpen, PanelLeftClose, Settings, User } from 'lucide-react';
-import type { 
-  ChatMessage, 
-  Conversation, 
-  KnowledgeBase
-} from '@lg/shared';
+import { useChatContext } from '@/contexts/ChatContext';
+import { useMessageActions, useConversationActions } from '@/hooks/useChatActions';
+import { useSettings } from '@/contexts/SettingsContext';
+import { useNotification } from '@/contexts/NotificationContext';
 
 interface ChatPageProps {
   className?: string;
 }
 
 export function ChatPage({ className }: ChatPageProps) {
-  // 状态管理
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBase[]>([]);
-  const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState<string>();
-  const [isLoading, setIsLoading] = useState(false);
-  const [isStreaming, setIsStreaming] = useState(false);
+  // 使用上下文和Hook
+  const { state, actions } = useChatContext();
+  const { settings } = useSettings();
+  const { success, error } = useNotification();
+  const messageActions = useMessageActions();
+  const conversationActions = useConversationActions();
 
-  // 模拟数据（后续将替换为真实API调用）
-  useEffect(() => {
-    // 模拟加载会话列表
-    setConversations([
-      {
-        id: '1',
-        title: '关于React开发的讨论',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        user_id: 'user-1',
-        message_count: 5,
-      },
-      {
-        id: '2',
-        title: 'TypeScript最佳实践',
-        created_at: new Date(Date.now() - 86400000).toISOString(),
-        updated_at: new Date(Date.now() - 86400000).toISOString(),
-        user_id: 'user-1',
-        message_count: 3,
-      },
-    ]);
-
-    // 模拟加载知识库
-    setKnowledgeBases([
-      {
-        id: 'kb-1',
-        name: '技术文档',
-        description: '包含各种技术文档和API参考',
-        enabled: true,
-      },
-      {
-        id: 'kb-2',
-        name: '项目手册',
-        description: '项目相关的规范和指南',
-        enabled: true,
-      },
-      {
-        id: 'kb-3',
-        name: '历史归档',
-        description: '已归档的旧文档',
-        enabled: false,
-      },
-    ]);
-  }, []);
+  const {
+    conversations,
+    currentConversation,
+    messages,
+    knowledgeBases,
+    selectedKnowledgeBase,
+    sidebarOpen,
+    isLoading,
+    isStreaming,
+  } = state;
 
   // 处理发送消息
   const handleSendMessage = async (content: string) => {
-    if (!content.trim() || isStreaming) return;
-
-    const newMessage: ChatMessage = {
-      id: Date.now().toString(),
-      conversation_id: currentConversation?.id || 'new',
-      role: 'user',
-      content,
-      created_at: new Date().toISOString(),
-    };
-
-    setMessages(prev => [...prev, newMessage]);
-    setIsStreaming(true);
-
     try {
-      // 如果没有当前会话，创建新会话
-      if (!currentConversation) {
-        const newConversation: Conversation = {
-          id: Date.now().toString(),
-          title: content.slice(0, 30) + (content.length > 30 ? '...' : ''),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          user_id: 'user-1',
-          message_count: 1,
-        };
-        setCurrentConversation(newConversation);
-        setConversations(prev => [newConversation, ...prev]);
+      await actions.sendMessage(content);
+      if (settings.enableNotifications) {
+        success('消息发送成功');
       }
-
-      // 模拟AI回复（后续替换为真实API调用）
-      setTimeout(() => {
-        const assistantMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          conversation_id: currentConversation?.id || 'new',
-          role: 'assistant',
-          content: '这是一个模拟的AI回复。实际实现中，这里会调用真实的聊天API。',
-          created_at: new Date().toISOString(),
-          citations: selectedKnowledgeBase ? [
-            {
-              source: '示例文档.pdf',
-              content: '这是一个示例引用内容，展示知识库的引用功能。',
-              document_name: '示例文档',
-              score: 0.85,
-              dataset_id: selectedKnowledgeBase,
-              document_id: 'doc-1',
-              segment_id: 'seg-1',
-              position: 1,
-            },
-          ] : undefined,
-        };
-        setMessages(prev => [...prev, assistantMessage]);
-        setIsStreaming(false);
-      }, 2000);
-
-    } catch (error) {
-      console.error('发送消息失败:', error);
-      setIsStreaming(false);
+    } catch {
+      error('消息发送失败', '请检查网络连接后重试');
     }
   };
 
   // 处理选择会话
   const handleSelectConversation = async (conversation: Conversation) => {
-    setCurrentConversation(conversation);
-    setIsLoading(true);
-
     try {
-      // 模拟加载会话消息
-      setTimeout(() => {
-        const mockMessages: ChatMessage[] = [
-          {
-            id: '1',
-            conversation_id: conversation.id,
-            role: 'user',
-            content: '你好，请介绍一下React的核心概念。',
-            created_at: new Date(Date.now() - 3600000).toISOString(),
-          },
-          {
-            id: '2',
-            conversation_id: conversation.id,
-            role: 'assistant',
-            content: 'React是一个用于构建用户界面的JavaScript库，主要有以下核心概念：\n\n1. **组件（Components）**：React应用由组件构成\n2. **JSX**：JavaScript的语法扩展\n3. **Props**：组件间的数据传递\n4. **State**：组件内部状态管理\n5. **生命周期**：组件的创建、更新、销毁过程',
-            created_at: new Date(Date.now() - 3500000).toISOString(),
-            citations: [
-              {
-                source: 'React官方文档',
-                content: 'React是一个用于构建用户界面的JavaScript库...',
-                document_name: 'React文档',
-                score: 0.92,
-                dataset_id: 'kb-1',
-                document_id: 'react-doc-1',
-                segment_id: 'intro-1',
-                position: 1,
-              },
-            ],
-          },
-        ];
-        setMessages(mockMessages);
-        setIsLoading(false);
-      }, 500);
-    } catch (error) {
-      console.error('加载会话失败:', error);
-      setIsLoading(false);
+      actions.selectConversation(conversation);
+    } catch {
+      error('加载会话失败', '请重试');
     }
   };
 
   // 处理新建会话
   const handleNewConversation = () => {
-    setCurrentConversation(null);
-    setMessages([]);
+    conversationActions.newConversation();
   };
 
   // 处理删除会话
   const handleDeleteConversation = async (conversationId: string) => {
-    setConversations(prev => prev.filter(c => c.id !== conversationId));
-    if (currentConversation?.id === conversationId) {
-      handleNewConversation();
+    try {
+      conversationActions.deleteConversation(conversationId);
+      success('会话删除成功');
+    } catch {
+      error('删除会话失败');
     }
   };
 
   // 处理重命名会话
   const handleRenameConversation = async (conversationId: string, newTitle: string) => {
-    setConversations(prev => 
-      prev.map(c => c.id === conversationId ? { ...c, title: newTitle } : c)
-    );
-    if (currentConversation?.id === conversationId) {
-      setCurrentConversation(prev => prev ? { ...prev, title: newTitle } : null);
+    try {
+      conversationActions.renameConversation(conversationId, newTitle);
+      success('会话重命名成功');
+    } catch {
+      error('重命名失败');
     }
   };
 
   // 处理消息操作
   const handleCopyMessage = async (content: string) => {
     try {
-      await navigator.clipboard.writeText(content);
-      // 这里可以添加成功提示
-    } catch (error) {
-      console.error('复制失败:', error);
+      await messageActions.copyMessage(content);
+      success('已复制到剪贴板');
+    } catch {
+      error('复制失败');
     }
   };
 
   const handleRegenerateMessage = async (messageId: string) => {
-    // 重新生成消息的逻辑
-    console.log('重新生成消息:', messageId);
+    try {
+      await messageActions.regenerateMessage(messageId);
+    } catch {
+      error('重新生成失败');
+    }
   };
 
   const handleLikeMessage = async (messageId: string) => {
-    // 点赞消息的逻辑
-    console.log('点赞消息:', messageId);
+    await messageActions.likeMessage(messageId);
   };
 
   const handleDislikeMessage = async (messageId: string) => {
-    // 点踩消息的逻辑
-    console.log('点踩消息:', messageId);
+    await messageActions.dislikeMessage(messageId);
   };
 
   const handleStopGeneration = () => {
-    setIsStreaming(false);
+    messageActions.stopGeneration();
   };
 
   return (
@@ -289,7 +168,7 @@ export function ChatPage({ className }: ChatPageProps) {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
+              onClick={actions.toggleSidebar}
             >
               {sidebarOpen ? (
                 <PanelLeftClose className="w-4 h-4" />
@@ -313,7 +192,7 @@ export function ChatPage({ className }: ChatPageProps) {
           <KnowledgeBaseSelector
             knowledgeBases={knowledgeBases}
             selectedKnowledgeBase={selectedKnowledgeBase}
-            onSelectKnowledgeBase={setSelectedKnowledgeBase}
+            onSelectKnowledgeBase={actions.selectKnowledgeBase}
             className="flex-shrink-0"
           />
         </div>
