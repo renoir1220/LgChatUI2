@@ -17,7 +17,7 @@ export class MessagesRepository {
       `WITH M AS (
         SELECT MESSAGE_ID, CONVERSATION_ID, ROLE, CONTENT, CREATED_AT,
                ROW_NUMBER() OVER (ORDER BY CREATED_AT ASC) AS rn
-        FROM AI_MESSAGES WHERE CONVERSATION_ID = @p0
+        FROM T_AI_MESSAGES WHERE CONVERSATION_ID = @p0
       )
       SELECT CONVERT(varchar(36), MESSAGE_ID) AS id,
              CONVERT(varchar(36), CONVERSATION_ID) AS conversationId,
@@ -47,7 +47,7 @@ export class MessagesRepository {
     const dbRole = role === ChatRole.User ? 'USER' : 'BOT';
     const rows = await this.db.query<any>(
       `DECLARE @id uniqueidentifier = NEWID();
-       INSERT INTO AI_MESSAGES (MESSAGE_ID, CONVERSATION_ID, ROLE, CONTENT, CREATED_AT)
+       INSERT INTO T_AI_MESSAGES (MESSAGE_ID, CONVERSATION_ID, ROLE, CONTENT, CREATED_AT)
        VALUES (@id, @p0, @p1, @p2, GETUTCDATE());
        SELECT CONVERT(varchar(36), @id) AS id,
               CONVERT(varchar(36), @p0) AS conversationId,
@@ -68,13 +68,13 @@ export class MessagesRepository {
     };
   }
 
-  // 检查某会话是否属于指定用户（依据 AI_CONVERSATIONS.USER_ID）
+  // 检查某会话是否属于指定用户（依据 T_AI_CONVERSATIONS.USER_ID）
   async isConversationOwnedByUser(
     conversationId: string,
     userId: string,
   ): Promise<boolean> {
     const rows = await this.db.query<any>(
-      `SELECT TOP 1 1 AS ok FROM AI_CONVERSATIONS WHERE CONVERSATION_ID = @p0 AND USER_ID = @p1`,
+      `SELECT TOP 1 1 AS ok FROM T_AI_CONVERSATIONS WHERE CONVERSATION_ID = @p0 AND USER_ID = @p1`,
       conversationId,
       userId,
     );

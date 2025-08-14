@@ -13,7 +13,7 @@ export class ConversationsRepository {
       `WITH C AS (
         SELECT CONVERSATION_ID, TITLE, CREATED_AT,
                ROW_NUMBER() OVER (ORDER BY CREATED_AT DESC) AS rn
-        FROM AI_CONVERSATIONS
+        FROM T_AI_CONVERSATIONS
       )
       SELECT CONVERT(varchar(36), CONVERSATION_ID) AS id,
              TITLE as title,
@@ -28,7 +28,7 @@ export class ConversationsRepository {
   async create(title: string): Promise<Conversation> {
     const rows = await this.db.query<Conversation>(
       `DECLARE @id uniqueidentifier = NEWID();
-       INSERT INTO AI_CONVERSATIONS (CONVERSATION_ID, TITLE, CREATED_AT)
+       INSERT INTO T_AI_CONVERSATIONS (CONVERSATION_ID, TITLE, CREATED_AT)
        VALUES (@id, @p0, GETUTCDATE());
        SELECT CONVERT(varchar(36), @id) AS id, @p0 AS title,
               CONVERT(varchar(33), GETUTCDATE(), 126) AS createdAt;`,
@@ -49,7 +49,7 @@ export class ConversationsRepository {
       `WITH C AS (
         SELECT CONVERSATION_ID, TITLE, KNOWLEDGE_BASE_ID, CREATED_AT,
                ROW_NUMBER() OVER (ORDER BY CREATED_AT DESC) AS rn
-        FROM AI_CONVERSATIONS
+        FROM T_AI_CONVERSATIONS
         WHERE USER_ID = @p0
       )
       SELECT CONVERT(varchar(36), CONVERSATION_ID) AS id,
@@ -72,7 +72,7 @@ export class ConversationsRepository {
   ): Promise<Conversation> {
     const rows = await this.db.query<any>(
       `DECLARE @id uniqueidentifier = NEWID();
-       INSERT INTO AI_CONVERSATIONS (CONVERSATION_ID, USER_ID, TITLE, KNOWLEDGE_BASE_ID, CREATED_AT)
+       INSERT INTO T_AI_CONVERSATIONS (CONVERSATION_ID, USER_ID, TITLE, KNOWLEDGE_BASE_ID, CREATED_AT)
        VALUES (@id, @p0, @p1, @p2, GETUTCDATE());
        SELECT CONVERT(varchar(36), @id) AS id, 
               @p1 AS title,
@@ -91,8 +91,8 @@ export class ConversationsRepository {
     conversationId: string,
     updates: { title?: string; knowledgeBaseId?: string }
   ): Promise<void> {
-    const setParts = [];
-    const params = [];
+    const setParts: string[] = [];
+    const params: any[] = [];
     let paramIndex = 0;
 
     if (updates.title !== undefined) {
@@ -112,7 +112,7 @@ export class ConversationsRepository {
     }
 
     params.push(conversationId);
-    const query = `UPDATE AI_CONVERSATIONS SET ${setParts.join(', ')} WHERE CONVERSATION_ID = @p${paramIndex}`;
+    const query = `UPDATE T_AI_CONVERSATIONS SET ${setParts.join(', ')} WHERE CONVERSATION_ID = @p${paramIndex}`;
     
     await this.db.query(query, ...params);
   }
@@ -121,8 +121,8 @@ export class ConversationsRepository {
   async deleteConversation(conversationId: string): Promise<void> {
     await this.db.query(
       `BEGIN TRANSACTION;
-       DELETE FROM AI_MESSAGES WHERE CONVERSATION_ID = @p0;
-       DELETE FROM AI_CONVERSATIONS WHERE CONVERSATION_ID = @p0;
+       DELETE FROM T_AI_MESSAGES WHERE CONVERSATION_ID = @p0;
+       DELETE FROM T_AI_CONVERSATIONS WHERE CONVERSATION_ID = @p0;
        COMMIT;`,
       conversationId,
     );

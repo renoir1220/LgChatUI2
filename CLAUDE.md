@@ -180,3 +180,4 @@ useEffect(() => {
   loadData();
 }, []);  // 空依赖数组是安全的
 ```
+- 本项目西能的数据库表名要以T_AI开头，如：T_AI_MESSAGE
