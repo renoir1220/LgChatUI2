@@ -15,16 +15,15 @@ export class MessagesRepository {
     const end = page * pageSize;
     const rows = await this.db.query<any>(
       `WITH M AS (
-        SELECT id, conversation_id, user_id, role, content, created_at,
-               ROW_NUMBER() OVER (ORDER BY created_at ASC) AS rn
-        FROM T_AI_MESSAGES WHERE conversation_id = @p0
+        SELECT MESSAGE_ID, CONVERSATION_ID, ROLE, CONTENT, CREATED_AT,
+               ROW_NUMBER() OVER (ORDER BY CREATED_AT ASC) AS rn
+        FROM AI_MESSAGES WHERE CONVERSATION_ID = @p0
       )
-      SELECT CONVERT(varchar(36), id) AS id,
-             CONVERT(varchar(36), conversation_id) AS conversationId,
-             user_id AS userId,
-             role AS role,
-             content AS content,
-             CONVERT(varchar(33), created_at, 126) AS createdAt
+      SELECT CONVERT(varchar(36), MESSAGE_ID) AS id,
+             CONVERT(varchar(36), CONVERSATION_ID) AS conversationId,
+             ROLE AS role,
+             CONTENT AS content,
+             CONVERT(varchar(33), CREATED_AT, 126) AS createdAt
       FROM M WHERE rn BETWEEN @p1 AND @p2`,
       conversationId,
       offset,
@@ -33,8 +32,7 @@ export class MessagesRepository {
     return rows.map((r) => ({
       id: r.id,
       conversationId: r.conversationId,
-      userId: r.userId,
-      role: r.role as string as ChatRole,
+      role: r.role === 'USER' ? ChatRole.User : ChatRole.Assistant,
       content: r.content,
       createdAt: r.createdAt,
     }));
@@ -46,39 +44,37 @@ export class MessagesRepository {
     content: string,
     userId?: string,
   ): Promise<ChatMessage> {
+    const dbRole = role === ChatRole.User ? 'USER' : 'BOT';
     const rows = await this.db.query<any>(
       `DECLARE @id uniqueidentifier = NEWID();
-       INSERT INTO T_AI_MESSAGES (id, conversation_id, user_id, role, content, created_at)
-       VALUES (@id, @p0, @p1, @p2, @p3, GETUTCDATE());
+       INSERT INTO AI_MESSAGES (MESSAGE_ID, CONVERSATION_ID, ROLE, CONTENT, CREATED_AT)
+       VALUES (@id, @p0, @p1, @p2, GETUTCDATE());
        SELECT CONVERT(varchar(36), @id) AS id,
               CONVERT(varchar(36), @p0) AS conversationId,
-              @p1 AS userId,
-              @p2 AS role,
-              @p3 AS content,
+              @p1 AS role,
+              @p2 AS content,
               CONVERT(varchar(33), GETUTCDATE(), 126) AS createdAt;`,
       conversationId,
-      userId || null,
-      role,
+      dbRole,
       content,
     );
     const r = rows[0];
     return {
       id: r.id,
       conversationId: r.conversationId,
-      userId: r.userId ?? undefined,
-      role: r.role as ChatRole,
+      role: role,
       content: r.content,
       createdAt: r.createdAt,
     };
   }
 
-  // 检查某会话是否属于指定用户（依据 Messages.user_id 存在关联消息）
+  // 检查某会话是否属于指定用户（依据 AI_CONVERSATIONS.USER_ID）
   async isConversationOwnedByUser(
     conversationId: string,
     userId: string,
   ): Promise<boolean> {
     const rows = await this.db.query<any>(
-      `SELECT TOP 1 1 AS ok FROM T_AI_MESSAGES WHERE conversation_id = @p0 AND user_id = @p1`,
+      `SELECT TOP 1 1 AS ok FROM AI_CONVERSATIONS WHERE CONVERSATION_ID = @p0 AND USER_ID = @p1`,
       conversationId,
       userId,
     );

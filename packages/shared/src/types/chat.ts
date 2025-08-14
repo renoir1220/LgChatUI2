@@ -116,6 +116,8 @@ export const KnowledgeBaseSchema = z.object({
   name: z.string(),
   description: z.string().optional(),
   enabled: z.boolean().default(true),
+  apiKey: z.string().optional(), // Dify API key
+  apiUrl: z.string().optional(), // Dify API URL
 });
 
 export type KnowledgeBase = z.infer<typeof KnowledgeBaseSchema>;

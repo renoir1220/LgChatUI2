@@ -11,13 +11,13 @@ export class ConversationsRepository {
     const end = page * pageSize;
     const rows = await this.db.query<Conversation>(
       `WITH C AS (
-        SELECT id, title, created_at, updated_at,
-               ROW_NUMBER() OVER (ORDER BY created_at DESC) AS rn
-        FROM T_AI_CONVERSATIONS
+        SELECT CONVERSATION_ID, TITLE, CREATED_AT,
+               ROW_NUMBER() OVER (ORDER BY CREATED_AT DESC) AS rn
+        FROM AI_CONVERSATIONS
       )
-      SELECT id, title,
-             CONVERT(varchar(33), created_at, 126) AS createdAt,
-             CONVERT(varchar(33), updated_at, 126) AS updatedAt
+      SELECT CONVERT(varchar(36), CONVERSATION_ID) AS id,
+             TITLE as title,
+             CONVERT(varchar(33), CREATED_AT, 126) AS createdAt
       FROM C WHERE rn BETWEEN @p0 AND @p1`,
       offset,
       end,
@@ -28,17 +28,16 @@ export class ConversationsRepository {
   async create(title: string): Promise<Conversation> {
     const rows = await this.db.query<Conversation>(
       `DECLARE @id uniqueidentifier = NEWID();
-       INSERT INTO T_AI_CONVERSATIONS (id, title, created_at, updated_at)
-       VALUES (@id, @p0, GETUTCDATE(), GETUTCDATE());
+       INSERT INTO AI_CONVERSATIONS (CONVERSATION_ID, TITLE, CREATED_AT)
+       VALUES (@id, @p0, GETUTCDATE());
        SELECT CONVERT(varchar(36), @id) AS id, @p0 AS title,
-              CONVERT(varchar(33), GETUTCDATE(), 126) AS createdAt,
-              CONVERT(varchar(33), GETUTCDATE(), 126) AS updatedAt;`,
+              CONVERT(varchar(33), GETUTCDATE(), 126) AS createdAt;`,
       title,
     );
     return rows[0];
   }
 
-  // 列出与指定用户相关的会话（根据 Messages 表中的 user_id 关联）
+  // 列出与指定用户相关的会话（根据 USER_ID 字段关联）
   async listByUser(
     userId: string,
     page = 1,
@@ -48,15 +47,14 @@ export class ConversationsRepository {
     const end = page * pageSize;
     const rows = await this.db.query<any>(
       `WITH C AS (
-        SELECT c.id, c.title, c.created_at, c.updated_at,
-               ROW_NUMBER() OVER (ORDER BY c.created_at DESC) AS rn
-        FROM T_AI_CONVERSATIONS c
-        WHERE EXISTS (SELECT 1 FROM T_AI_MESSAGES m WHERE m.conversation_id = c.id AND m.user_id = @p0)
+        SELECT CONVERSATION_ID, TITLE, CREATED_AT,
+               ROW_NUMBER() OVER (ORDER BY CREATED_AT DESC) AS rn
+        FROM AI_CONVERSATIONS
+        WHERE USER_ID = @p0
       )
-      SELECT CONVERT(varchar(36), id) AS id,
-             title,
-             CONVERT(varchar(33), created_at, 126) AS createdAt,
-             CONVERT(varchar(33), updated_at, 126) AS updatedAt
+      SELECT CONVERT(varchar(36), CONVERSATION_ID) AS id,
+             TITLE as title,
+             CONVERT(varchar(33), CREATED_AT, 126) AS createdAt
       FROM C WHERE rn BETWEEN @p1 AND @p2`,
       userId,
       offset,
@@ -69,13 +67,12 @@ export class ConversationsRepository {
   async createConversation(userId: string, title: string): Promise<Conversation> {
     const rows = await this.db.query<any>(
       `DECLARE @id uniqueidentifier = NEWID();
-       INSERT INTO T_AI_CONVERSATIONS (id, title, created_at, updated_at)
-       VALUES (@id, @p1, GETUTCDATE(), GETUTCDATE());
+       INSERT INTO AI_CONVERSATIONS (CONVERSATION_ID, USER_ID, TITLE, CREATED_AT)
+       VALUES (@id, @p0, @p1, GETUTCDATE());
        SELECT CONVERT(varchar(36), @id) AS id, 
               @p1 AS title,
               @p0 AS userId,
-              CONVERT(varchar(33), GETUTCDATE(), 126) AS createdAt,
-              CONVERT(varchar(33), GETUTCDATE(), 126) AS updatedAt;`,
+              CONVERT(varchar(33), GETUTCDATE(), 126) AS createdAt;`,
       userId,
       title,
     );
@@ -86,8 +83,8 @@ export class ConversationsRepository {
   async deleteConversation(conversationId: string): Promise<void> {
     await this.db.query(
       `BEGIN TRANSACTION;
-       DELETE FROM T_AI_MESSAGES WHERE conversation_id = @p0;
-       DELETE FROM T_AI_CONVERSATIONS WHERE id = @p0;
+       DELETE FROM AI_MESSAGES WHERE CONVERSATION_ID = @p0;
+       DELETE FROM AI_CONVERSATIONS WHERE CONVERSATION_ID = @p0;
        COMMIT;`,
       conversationId,
     );

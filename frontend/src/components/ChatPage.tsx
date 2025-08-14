@@ -11,6 +11,7 @@ import { useChatContext } from '@/contexts/ChatContext';
 import { useMessageActions, useConversationActions } from '@/hooks/useChatActions';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useNotification } from '@/contexts/NotificationContext';
+import { getUsername } from '@/utils/auth';
 
 interface ChatPageProps {
   className?: string;
@@ -23,6 +24,9 @@ export function ChatPage({ className }: ChatPageProps) {
   const { success, error } = useNotification();
   const messageActions = useMessageActions();
   const conversationActions = useConversationActions();
+  
+  // 获取当前用户信息
+  const currentUsername = getUsername();
 
   const {
     conversations,
@@ -146,15 +150,41 @@ export function ChatPage({ className }: ChatPageProps) {
             </div>
 
             {/* 侧边栏底部 */}
-            <div className="p-4 border-t border-gray-200 space-y-2">
-              <Button variant="ghost" size="sm" className="w-full justify-start text-sm">
-                <Settings className="w-4 h-4 mr-2" />
-                设置
-              </Button>
-              <Button variant="ghost" size="sm" className="w-full justify-start text-sm">
-                <User className="w-4 h-4 mr-2" />
-                个人中心
-              </Button>
+            <div className="p-4 border-t border-gray-200 space-y-3">
+              {/* 当前用户信息 */}
+              <div className="flex items-center gap-3 px-2 py-2 bg-gray-100 rounded-lg">
+                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                  {currentUsername ? currentUsername.charAt(0).toUpperCase() : 'U'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-gray-900 truncate">
+                    {currentUsername || '用户'}
+                  </div>
+                  <div className="text-xs text-gray-500">已登录</div>
+                </div>
+              </div>
+              
+              <div className="space-y-1">
+                <Button variant="ghost" size="sm" className="w-full justify-start text-sm">
+                  <Settings className="w-4 h-4 mr-2" />
+                  设置
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="w-full justify-start text-sm text-red-600 hover:text-red-700 hover:bg-red-50"
+                  onClick={() => {
+                    // 退出登录
+                    import('@/utils/auth').then(({ clearAuth }) => {
+                      clearAuth();
+                      window.location.href = '/login';
+                    });
+                  }}
+                >
+                  <User className="w-4 h-4 mr-2" />
+                  退出登录
+                </Button>
+              </div>
             </div>
           </div>
         )}
@@ -201,7 +231,7 @@ export function ChatPage({ className }: ChatPageProps) {
         {/* 聊天内容区域 */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {messages.length === 0 ? (
-            <WelcomeScreen onQuickPrompt={handleSendMessage} />
+            <WelcomeScreen onSendMessage={handleSendMessage} />
           ) : (
             <MessageList
               messages={messages}

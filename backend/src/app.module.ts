@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { MessagesController } from './messages.controller';
@@ -11,9 +12,17 @@ import { UsersRepository } from './repositories/users.repository';
 import { HealthController } from './health.controller';
 import { ChatHistoryController } from './chat-history.controller';
 import { AuthModule } from './auth/auth.module';
+import { DifyService } from './services/dify.service';
 
 @Module({
-  imports: [DatabaseModule, AuthModule],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
+    DatabaseModule, 
+    AuthModule
+  ],
   controllers: [
     AppController,
     MessagesController,
@@ -27,6 +36,7 @@ import { AuthModule } from './auth/auth.module';
     ConversationsRepository,
     MessagesRepository,
     UsersRepository,
+    DifyService,
   ],
 })
 export class AppModule {}

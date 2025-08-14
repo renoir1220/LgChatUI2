@@ -1,4 +1,5 @@
 import { apiGet, apiPost, API_BASE } from '@/lib/api';
+import { getToken } from '@/utils/auth';
 import type { 
   Conversation, 
   ChatMessage, 
@@ -11,27 +12,27 @@ import type {
 export const conversationApi = {
   // 获取会话列表
   getConversations: async (): Promise<Conversation[]> => {
-    return apiGet<Conversation[]>('/api/chat-history/conversations');
+    return apiGet<Conversation[]>('/api/conversations');
   },
 
   // 创建新会话
   createConversation: async (request: ConversationCreateRequest): Promise<Conversation> => {
-    return apiPost<Conversation>('/api/chat-history/conversations', request);
+    return apiPost<Conversation>('/api/conversations', request);
   },
 
   // 获取会话详情
   getConversation: async (id: string): Promise<Conversation> => {
-    return apiGet<Conversation>(`/api/chat-history/conversations/${id}`);
+    return apiGet<Conversation>(`/api/conversations/${id}`);
   },
 
   // 删除会话
   deleteConversation: async (id: string): Promise<void> => {
-    await apiPost(`/api/chat-history/conversations/${id}`, {});
+    await apiPost(`/api/conversations/${id}`, {});
   },
 
   // 重命名会话
   renameConversation: async (id: string, title: string): Promise<Conversation> => {
-    return apiPost<Conversation>(`/api/chat-history/conversations/${id}/rename`, { title });
+    return apiPost<Conversation>(`/api/conversations/${id}/rename`, { title });
   },
 };
 
@@ -39,7 +40,7 @@ export const conversationApi = {
 export const messageApi = {
   // 获取会话消息
   getMessages: async (conversationId: string): Promise<ChatMessage[]> => {
-    return apiGet<ChatMessage[]>(`/api/chat-history/conversations/${conversationId}/messages`);
+    return apiGet<ChatMessage[]>(`/api/conversations/${conversationId}/messages`);
   },
 };
 
@@ -55,11 +56,19 @@ export const chatApi = {
     const abortController = new AbortController();
     
     try {
+      const token = getToken();
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+      
+      // 添加认证头
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`${API_BASE}/api/chat`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify(request),
         signal: abortController.signal,
       });
@@ -145,12 +154,12 @@ export const chatApi = {
 export const knowledgeBaseApi = {
   // 获取知识库列表
   getKnowledgeBases: async (): Promise<KnowledgeBase[]> => {
-    return apiGet<KnowledgeBase[]>('/api/knowledge-base');
+    return apiGet<KnowledgeBase[]>('/api/knowledge-bases');
   },
 
   // 获取知识库详情
   getKnowledgeBase: async (id: string): Promise<KnowledgeBase> => {
-    return apiGet<KnowledgeBase>(`/api/knowledge-base/${id}`);
+    return apiGet<KnowledgeBase>(`/api/knowledge-bases/${id}`);
   },
 };
 

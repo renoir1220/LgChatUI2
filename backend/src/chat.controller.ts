@@ -11,6 +11,7 @@ import * as express from 'express';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { ConversationsRepository } from './repositories/conversations.repository';
 import { MessagesRepository } from './repositories/messages.repository';
+import { DifyService } from './services/dify.service';
 import { ZodValidationPipe } from './pipes/zod-validation.pipe';
 import {
   ChatRequestSchema,
@@ -34,6 +35,7 @@ export class ChatController {
   constructor(
     private readonly conversations: ConversationsRepository,
     private readonly messages: MessagesRepository,
+    private readonly difyService: DifyService,
   ) {}
 
   // POST /api/chat - 流式聊天API
@@ -116,44 +118,111 @@ export class ChatController {
     userMessage: string,
     knowledgeBaseId?: string,
   ): Promise<string> {
-    // 这里先实现一个模拟的流式响应
-    // 实际项目中这里会调用Dify API或其他AI服务
-    
-    const simulatedResponse = `基于您的问题："${userMessage}"，这是一个模拟的AI回复。
+    try {
+      // 调用 Dify API 获取流式响应
+      const stream = await this.difyService.chatWithStreaming(
+        userMessage,
+        `user_${conversationId}`, // 使用会话ID作为用户标识
+        knowledgeBaseId,
+        conversationId,
+      );
 
-在实际应用中，这里会：
-1. 调用Dify API或其他AI服务
-2. 处理流式响应数据
-3. 解析知识库引用信息
-4. 实时传输生成的内容
+      if (!stream) {
+        throw new Error('Failed to get stream from Dify API');
+      }
 
-${knowledgeBaseId ? `当前使用知识库：${knowledgeBaseId}` : '未选择知识库'}`;
+      let assistantMessage = '';
+      let difyChatId = '';
+      let difyConversationId = '';
 
-    // 开始生成助手消息
-    let assistantMessage = '';
-    const chunks = simulatedResponse.split('');
-    
-    for (let i = 0; i < chunks.length; i++) {
-      assistantMessage += chunks[i];
+      // 处理流式数据
+      const reader = stream.getReader();
+      const decoder = new TextDecoder();
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (!line.trim()) continue;
+
+            const parsed = this.difyService.parseDifyStreamLine(line);
+            if (!parsed) continue;
+
+            // 处理不同类型的事件
+            switch (parsed.event) {
+              case 'message':
+                if (parsed.answer) {
+                  assistantMessage += parsed.answer;
+                  this.writeSSE(res, 'message', {
+                    answer: parsed.answer,
+                    content: assistantMessage,
+                  });
+                }
+                if (parsed.message_id) {
+                  difyChatId = parsed.message_id;
+                }
+                if (parsed.conversation_id) {
+                  difyConversationId = parsed.conversation_id;
+                }
+                break;
+              
+              case 'message_end':
+                // 流式响应结束
+                break;
+              
+              case 'error':
+                console.error('Dify API error:', parsed);
+                throw new Error('Dify API returned error');
+            }
+          }
+        }
+      } finally {
+        reader.releaseLock();
+      }
+
+      // 如果没有收到任何内容，使用备用响应
+      if (!assistantMessage) {
+        assistantMessage = '抱歉，我暂时无法为您提供回复。请稍后再试。';
+        this.writeSSE(res, 'message', {
+          answer: assistantMessage,
+          content: assistantMessage,
+        });
+      }
+
+      // 保存完整的助手消息到数据库
+      const savedMessage = await this.messages.append(
+        conversationId,
+        ChatRole.Assistant,
+        assistantMessage,
+      );
+
+      return savedMessage.id;
+
+    } catch (error) {
+      console.error('Error in generateStreamingResponse:', error);
       
-      // 模拟网络延迟
-      await this.sleep(50);
+      // 发生错误时的备用响应
+      const fallbackMessage = `抱歉，处理您的请求时遇到了问题：${error instanceof Error ? error.message : '未知错误'}。请稍后再试。`;
       
-      // 发送增量内容
       this.writeSSE(res, 'message', {
-        answer: chunks[i],
-        content: assistantMessage,
+        answer: fallbackMessage,
+        content: fallbackMessage,
       });
+
+      // 保存错误消息到数据库
+      const savedMessage = await this.messages.append(
+        conversationId,
+        ChatRole.Assistant,
+        fallbackMessage,
+      );
+
+      return savedMessage.id;
     }
-
-    // 保存完整的助手消息到数据库
-    const savedMessage = await this.messages.append(
-      conversationId,
-      ChatRole.Assistant,
-      assistantMessage,
-    );
-
-    return savedMessage.id;
   }
 
   private generateConversationTitle(firstMessage: string): string {
