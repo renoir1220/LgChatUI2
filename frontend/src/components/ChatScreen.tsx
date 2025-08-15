@@ -183,11 +183,7 @@ const ChatScreen: React.FC = () => {
       abortController.current?.abort();
       abortController.current = new AbortController();
 
-      console.log('发送请求到后端:', {
-        message: val,
-        knowledgeBaseId: currentKnowledgeBase,
-        currentKnowledgeBaseValue: currentKnowledgeBase
-      });
+      // 消息交互：开始发送请求
       
       const isValidUUID = (s?: string) => !!s && /^[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$/.test(s);
       const baseBody: any = { message: val, knowledgeBaseId: currentKnowledgeBase };
@@ -299,7 +295,7 @@ const ChatScreen: React.FC = () => {
                   }));
                 }
               } catch (e) {
-                console.error('流式数据JSON解析失败:', e, '原始数据:', rawData);
+                console.error('流式数据JSON解析失败:', e);
               }
             }
           }
@@ -309,24 +305,7 @@ const ChatScreen: React.FC = () => {
       await processStream();
       
       // 获取最终的助手消息状态并输出调试信息
-      setMessages(prev => {
-        const finalMessages = [...prev];
-        const lastAssistantMsg = finalMessages[botMessageIndex];
-        if (lastAssistantMsg?.role === 'assistant') {
-          console.log('=== 流式响应完成 ===');
-          console.log('最终消息内容长度:', lastAssistantMsg.content?.length || 0);
-          console.log('知识库引用数量:', lastAssistantMsg.citations?.length || 0);
-          if (lastAssistantMsg.citations && lastAssistantMsg.citations.length > 0) {
-            console.log('引用数据详情:', lastAssistantMsg.citations.map(c => ({
-              source: c.source,
-              score: c.score,
-              contentLength: c.content?.length || 0
-            })));
-          }
-          console.log('========================');
-        }
-        return finalMessages;
-      });
+      setMessages(prev => [...prev]);
 
     } catch (error: any) {
       if (error.name !== 'AbortError') {
@@ -405,9 +384,7 @@ const ChatScreen: React.FC = () => {
                 citations = (byAssistantKey.length ? byAssistantKey : byLegacyIndex) as any[];
               }
               
-              if (role === 'assistant' && citations.length > 0) {
-                console.log(`恢复历史消息引用: 索引${index}, 引用数量${citations.length}`, citations);
-              }
+              // 恢复历史引用（静默）
               
               return { 
                 role, 
@@ -421,7 +398,7 @@ const ChatScreen: React.FC = () => {
           }
         }
       } catch (e) {
-        console.warn('加载会话失败或未登录:', e);
+        // 静默处理：未登录或加载失败
       }
     })();
   }, []);
@@ -483,9 +460,7 @@ const ChatScreen: React.FC = () => {
                       citations = (byAssistantKey.length ? byAssistantKey : byLegacyIndex) as any[];
                     }
                     
-                    if (role === 'assistant' && citations.length > 0) {
-                      console.log(`恢复历史消息引用: 索引${index}, 引用数量${citations.length}`, citations);
-                    }
+                    // 历史引用恢复，静默
                     
                     return { 
                       role, 
@@ -578,9 +553,7 @@ const ChatScreen: React.FC = () => {
       {messages?.length ? (
         <Bubble.List
           items={messages.map((msg, index) => {
-            if (msg.role === 'assistant' && msg.citations && msg.citations.length > 0) {
-              console.log(`渲染消息引用: 索引${index}, 引用数量${msg.citations.length}`, msg.citations);
-            }
+            // 渲染逻辑，无额外调试输出
             
             const isStreamingAssistant = loading && index === messages.length - 1 && msg.role === 'assistant';
             const contentNode = (!isStreamingAssistant && msg.role === 'assistant' && msg.citations && msg.citations.length > 0)
@@ -603,7 +576,7 @@ const ChatScreen: React.FC = () => {
               footer: msg.role === 'assistant'
                 ? (
                     <div className="message-container" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {console.log('ChatScreen: 引用已内嵌到气泡内容中，footer不再渲染引用')}
+                      {/* 引用已内嵌到气泡内容中 */}
                     <div className="message-actions" style={{ display: 'flex', gap: 4 }}>
                       <Button 
                         type="text" 

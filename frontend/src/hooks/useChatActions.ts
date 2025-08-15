@@ -10,7 +10,7 @@ export function useMessageActions() {
     try {
       await navigator.clipboard.writeText(content);
       // 可以添加成功提示
-      console.log('消息已复制到剪贴板');
+      // 复制成功
     } catch (error) {
       console.error('复制失败:', error);
       actions.setError('复制失败');
@@ -56,7 +56,7 @@ export function useMessageActions() {
       });
       
       // 可以发送到后端记录用户反馈
-      console.log('消息已点赞:', messageId);
+      // 点赞
       
     } catch (error) {
       console.error('点赞失败:', error);
@@ -73,7 +73,7 @@ export function useMessageActions() {
       });
       
       // 可以发送到后端记录用户反馈
-      console.log('消息已点踩:', messageId);
+      // 点踩
       
     } catch (error) {
       console.error('点踩失败:', error);
@@ -114,7 +114,7 @@ export function useConversationActions() {
         updated_at: new Date().toISOString(),
       });
       
-      console.log('会话已重命名:', newTitle);
+      // 会话重命名
       
     } catch (error) {
       console.error('重命名失败:', error);
@@ -126,7 +126,7 @@ export function useConversationActions() {
   const deleteConversation = useCallback(async (conversationId: string) => {
     try {
       actions.deleteConversation(conversationId);
-      console.log('会话已删除:', conversationId);
+      // 会话删除
       
     } catch (error) {
       console.error('删除失败:', error);

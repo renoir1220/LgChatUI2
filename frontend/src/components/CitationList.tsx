@@ -35,10 +35,7 @@ export const CitationList: React.FC<{ citations?: CitationItem[] }>
   const [open, setOpen] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<DocumentGroup | null>(null);
 
-  console.log('CitationList渲染: citations=', citations, 'length=', citations?.length);
-
   if (!citations || citations.length === 0) {
-    console.log('CitationList: 没有引用数据，返回null');
     return null;
   }
 
@@ -85,17 +82,13 @@ export const CitationList: React.FC<{ citations?: CitationItem[] }>
       group.count = group.items.length;
     });
 
-    const result = Array.from(groups.values());
-    console.log('CitationList: 分组后的引用数据', result);
-    return result;
+    return Array.from(groups.values());
   }, [citations]);
 
   const handleDocumentClick = (group: DocumentGroup) => {
     setSelectedDocument(group);
     setOpen(true);
   };
-
-  console.log('CitationList: 开始渲染，分组数量=', groupedCitations.length);
 
   return (
     <div style={{ marginTop: 4 }}>

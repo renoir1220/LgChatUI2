@@ -78,7 +78,7 @@ function readConvCookie(conversationId: string): MessageCitations {
     });
     return result;
   } catch (error) {
-    console.warn('读取会话Cookie缓存失败:', error);
+    // 读取会话Cookie缓存失败
     return {};
   }
 }
@@ -121,7 +121,7 @@ function writeConvCookie(conversationId: string, data: MessageCitations) {
   for (let i = 0; i < keys.length; i++) {
     delete map[keys[i]]; // 从最旧开始删除
     if (tryWrite(map)) {
-      console.warn('会话引用数据过大，已裁剪旧消息引用。保留较近的若干条。');
+      // 会话引用数据过大，已裁剪旧消息引用
       return;
     }
   }
@@ -194,9 +194,9 @@ export function saveCitationsToCache(conversationId: string, messageIndex: numbe
     const conv = readConvLS(conversationId);
     conv[messageIndex.toString()] = citations;
     writeConvLS(conversationId, conv);
-    console.log(`保存引用信息到缓存(legacy键): 对话${conversationId}, 消息${messageIndex}, 引用数量${citations.length}`);
+    // 保存引用信息到缓存(legacy键)
   } catch (error) {
-    console.warn('保存引用信息到缓存失败:', error);
+    // 保存引用信息到缓存失败
   }
 }
 
@@ -216,9 +216,9 @@ export function saveAssistantCitationsToCache(
     const key = `a:${assistantOrdinal}`;
     conv[key] = citations;
     writeConvLS(conversationId, conv);
-    console.log(`保存引用信息到缓存(助手序号): 对话${conversationId}, 助手序号${assistantOrdinal}, 引用数量${citations.length}`);
+    // 保存引用信息到缓存(助手序号)
   } catch (error) {
-    console.warn('保存引用信息到缓存(助手序号)失败:', error);
+    // 保存引用信息到缓存(助手序号)失败
   }
 }
 
@@ -234,24 +234,24 @@ export function getCitationsFromCache(conversationId: string): MessageCitations 
     // 优先读 localStorage
     const ls = readConvLS(conversationId);
     if (Object.keys(ls).length > 0) {
-      console.log(`从localStorage获取引用信息: 对话${conversationId}, 找到${Object.keys(ls).length}条消息引用`);
+      // 从localStorage获取引用信息
       return ls;
     }
 
     const convCache = readConvCookie(conversationId);
     if (Object.keys(convCache).length > 0) {
-      console.log(`从会话Cookie获取引用信息: 对话${conversationId}, 找到${Object.keys(convCache).length}条消息引用`);
+      // 从会话Cookie获取引用信息
       return convCache;
     }
 
     const legacy = readLegacyConv(conversationId);
     if (Object.keys(legacy).length > 0) {
-      console.log(`从旧版缓存获取引用信息: 对话${conversationId}, 找到${Object.keys(legacy).length}条消息引用`);
+      // 从旧版缓存获取引用信息
       return legacy;
     }
     return {};
   } catch (error) {
-    console.warn('从缓存获取引用信息失败:', error);
+    // 从缓存获取引用信息失败
     return {};
   }
 }
@@ -287,7 +287,7 @@ export function cleanupExpiredCache() {
     });
     document.cookie = `${LEGACY_CACHE_KEY}=; expires=${new Date(0).toUTCString()}; path=/; SameSite=Lax`;
   } catch (error) {
-    console.warn('清理缓存失败:', error);
+    // 清理缓存失败
   }
 }
 
@@ -300,9 +300,9 @@ export function clearConversationCache(conversationId: string) {
     localStorage.removeItem(`${LS_PREFIX}${conversationId}`);
     const key = getCookieKey(conversationId);
     document.cookie = `${key}=; expires=${new Date(0).toUTCString()}; path=/; SameSite=Lax`;
-    console.log(`清除对话缓存: ${conversationId}`);
+    // 清除对话缓存
   } catch (error) {
-    console.warn('清除对话缓存失败:', error);
+    // 清除对话缓存失败
   }
 }
 
@@ -324,9 +324,9 @@ export function batchSaveCitations(conversationId: string, messages: any[]) {
     });
 
     if (savedCount > 0) {
-      console.log(`批量保存引用信息: 对话${conversationId}, 保存${savedCount}条消息引用`);
+      // 批量保存引用信息
     }
   } catch (error) {
-    console.warn('批量保存引用信息失败:', error);
+    // 批量保存引用信息失败
   }
 }
