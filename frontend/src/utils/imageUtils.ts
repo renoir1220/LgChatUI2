@@ -24,6 +24,10 @@ const IMAGE_BASE_URL: string =
  * 将相对路径转换为完整的图片URL
  */
 export function resolveImageUrl(url: string): string {
+  // 内部API路径直接返回，避免改写
+  if (url.startsWith('/api/')) {
+    return url;
+  }
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url; // 已经是完整URL
   }

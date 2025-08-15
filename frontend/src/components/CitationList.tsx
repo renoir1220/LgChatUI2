@@ -30,8 +30,8 @@ interface DocumentGroup {
   count: number;
 }
 
-export const CitationList: React.FC<{ citations?: CitationItem[] }>
-  = ({ citations = [] }) => {
+export const CitationList: React.FC<{ citations?: CitationItem[]; kbId?: string }>
+  = ({ citations = [], kbId }) => {
   const [open, setOpen] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<DocumentGroup | null>(null);
 
@@ -138,7 +138,7 @@ export const CitationList: React.FC<{ citations?: CitationItem[] }>
                 backgroundColor: '#f8f9fa', 
                 borderRadius: 8
               }}>
-                <ContentWithImages content={item.content || ''} />
+                <ContentWithImages content={normalizeImageLinks(item.content || '')} />
               </div>
               
               <div style={{ marginTop: 12 }}>
@@ -164,3 +164,16 @@ export const CitationList: React.FC<{ citations?: CitationItem[] }>
     </div>
   );
 };
+  // 把 Dify 的签名URL改写为后端代理，避免过期
+  const normalizeImageLinks = (content: string) => {
+    if (!content) return content;
+    try {
+      const kbQuery = kbId ? `?kb=${encodeURIComponent(kbId)}` : '';
+      return content
+        .replace(/\[image\]\(\/files\/([0-9a-fA-F-]{36})\/file-preview[^)]*\)/g, (_m, id) => `[image](/api/files/${id}/preview${kbQuery})`)
+        .replace(/!\[[^\]]*\]\(\/files\/([0-9a-fA-F-]{36})\/file-preview[^)]*\)/g, (_m, id) => `![image](/api/files/${id}/preview${kbQuery})`)
+        .replace(/<img[^>]+src=\"\/files\/([0-9a-fA-F-]{36})\/file-preview[^\"]*\"[^>]*>/g, (_m, id) => `<img src="/api/files/${id}/preview${kbQuery}" />`);
+    } catch {
+      return content;
+    }
+  };

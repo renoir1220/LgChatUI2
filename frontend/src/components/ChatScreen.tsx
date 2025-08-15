@@ -561,7 +561,7 @@ const ChatScreen: React.FC = () => {
                   <div>
                     {renderMarkdown(msg.content, false)}
                     <Divider style={{ margin: '8px 0' }} />
-                    <CitationList citations={msg.citations} />
+                    <CitationList citations={msg.citations} kbId={currentKnowledgeBase} />
                   </div>
                 )
               : msg.content;

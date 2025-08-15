@@ -276,4 +276,36 @@ export class DifyService {
       return null;
     }
   }
+
+  /**
+   * 获取文件预览流（代理），避免前端使用易过期的签名URL
+   */
+  async fetchFilePreviewStream(
+    fileId: string,
+    knowledgeBaseId?: string,
+  ): Promise<NodeJS.ReadableStream> {
+    const apiKey = this.getKnowledgeBaseApiKey(knowledgeBaseId);
+    const apiUrl = this.getKnowledgeBaseApiUrl(knowledgeBaseId);
+    if (!apiKey || !apiUrl) {
+      throw new Error('Knowledge base configuration missing');
+    }
+
+    const url = `${apiUrl}/files/${fileId}/file-preview`;
+    const resp = await axios.get(url, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+      responseType: 'stream',
+      validateStatus: () => true,
+    });
+    if (resp.status >= 200 && resp.status < 300) {
+      return resp.data as NodeJS.ReadableStream;
+    }
+    // 直接抛错由控制器处理
+    const err = new Error(`Dify file preview failed: ${resp.status}`) as Error & {
+      status?: number;
+      data?: any;
+    };
+    (err as any).status = resp.status;
+    (err as any).data = resp.data;
+    throw err;
+  }
 }
