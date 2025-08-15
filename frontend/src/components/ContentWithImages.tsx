@@ -101,7 +101,7 @@ export const ContentWithImages: React.FC<ContentWithImagesProps> = ({
         // Special format: [image](url)
         src = match[5];
         alt = '图片';
-      } else if (match[5]) {
+      } else if (match[6]) {
         // Placeholder format: [图片]
         segments.push({
           type: 'image',
@@ -115,13 +115,13 @@ export const ContentWithImages: React.FC<ContentWithImagesProps> = ({
         });
         lastIndex = match.index + match[0].length;
         continue;
-      } else if (match[6]) {
+      } else if (match[7]) {
         // HTML format: <img src="url" alt="alt" />
-        src = match[7];
-        alt = match[8] || '图片';
-      } else if (match[8]) {
-        // Direct URL
         src = match[8];
+        alt = match[9] || '图片';
+      } else if (match[10]) {
+        // Direct URL
+        src = match[10];
         alt = '图片';
       }
 

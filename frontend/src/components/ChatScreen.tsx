@@ -25,7 +25,7 @@ import {
   Welcome,
   // type GetProp,
 } from '@ant-design/x';
-import { Avatar, Button, Flex, Space, Spin, Typography, message, Dropdown, Skeleton } from 'antd';
+import { Avatar, Button, Flex, Space, Spin, Typography, message, Dropdown, Skeleton, Divider } from 'antd';
 import { DownOutlined, CheckOutlined, DatabaseOutlined } from '@ant-design/icons';
 import MarkdownIt from 'markdown-it';
 import 'github-markdown-css/github-markdown.css';
@@ -582,20 +582,28 @@ const ChatScreen: React.FC = () => {
               console.log(`渲染消息引用: 索引${index}, 引用数量${msg.citations.length}`, msg.citations);
             }
             
+            const isStreamingAssistant = loading && index === messages.length - 1 && msg.role === 'assistant';
+            const contentNode = (!isStreamingAssistant && msg.role === 'assistant' && msg.citations && msg.citations.length > 0)
+              ? (
+                  <div>
+                    {renderMarkdown(msg.content, false)}
+                    <Divider style={{ margin: '8px 0' }} />
+                    <CitationList citations={msg.citations} />
+                  </div>
+                )
+              : msg.content;
+
             return {
               ...msg,
+              content: contentNode as any,
               classNames: {
-                content: loading && index === messages.length - 1 && msg.role === 'assistant' ? 'loading-message' : '',
+                content: isStreamingAssistant ? 'loading-message' : '',
               },
-              typing: loading && index === messages.length - 1 && msg.role === 'assistant' ? { step: 5, interval: 20 } : false,
+              typing: isStreamingAssistant ? { step: 5, interval: 20 } : false,
               footer: msg.role === 'assistant'
                 ? (
                     <div className="message-container" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {msg.citations && msg.citations.length > 0 ? (
-                        <CitationList citations={msg.citations} />
-                      ) : (
-                        console.log('ChatScreen: 跳过引用显示，citations=', msg.citations, 'length=', msg.citations?.length), null
-                      )}
+                      {console.log('ChatScreen: 引用已内嵌到气泡内容中，footer不再渲染引用')}
                     <div className="message-actions" style={{ display: 'flex', gap: 4 }}>
                       <Button 
                         type="text" 
@@ -770,7 +778,12 @@ const ChatScreen: React.FC = () => {
                 } 
               },
               loadingRender: () => <Spin size="small" />,
-              messageRender: (content) => renderMarkdown(content, false),
+              messageRender: (content: any) => {
+                if (typeof content === 'string') {
+                  return renderMarkdown(content, false);
+                }
+                return content;
+              },
               styles: {
                 bubble: {
                   background: '#ffffff',

@@ -7,7 +7,7 @@ interface MessageCitations {
   [messageKey: string]: any[]; // messageKey -> citations数组（如 a:1 或 旧的 index）
 }
 
-const COOKIE_PREFIX = 'chat_cit_'; // 每个会话一个cookie：chat_cit_<conversationId>
+const COOKIE_PREFIX = 'chat_cit_'; // 旧：每个会话一个cookie：chat_cit_<conversationId>
 const CACHE_EXPIRE_DAYS = 7; // Cookie过期时间：7天
 const COOKIE_SOFT_LIMIT = 3800; // 近似上限，留出安全余量
 
@@ -146,6 +146,41 @@ function readLegacyConv(conversationId: string): MessageCitations {
   }
 }
 
+// 新：使用 localStorage 存储，避免随请求携带导致 400（Request Header Or Cookie Too Large）
+const LS_PREFIX = 'cit:'; // cit:<conversationId>
+
+function readConvLS(conversationId: string): MessageCitations {
+  try {
+    const key = `${LS_PREFIX}${conversationId}`;
+    const raw = localStorage.getItem(key);
+    if (!raw) return {};
+    const json = JSON.parse(raw) as PackedConvCacheV1;
+    if (!json || json.v !== 1 || !json.m) return {};
+    const result: MessageCitations = {};
+    Object.keys(json.m).forEach((k) => (result[k] = unpackCitations(json.m[k])));
+    return result;
+  } catch {
+    return {};
+  }
+}
+
+function writeConvLS(conversationId: string, data: MessageCitations) {
+  const packed: PackedConvCacheV1 = { v: 1, m: {} };
+  Object.keys(data).forEach((k) => {
+    if (Array.isArray(data[k]) && data[k].length > 0) packed.m[k] = packCitations(data[k]);
+  });
+  try {
+    localStorage.setItem(`${LS_PREFIX}${conversationId}`, JSON.stringify(packed));
+  } catch (e) {
+    // LS 爆满则做简单降级：按键名排序删旧键
+    try {
+      const keys = Object.keys(localStorage).filter((k) => k.startsWith(LS_PREFIX)).sort();
+      for (let i = 0; i < Math.min(3, keys.length); i++) localStorage.removeItem(keys[i]);
+      localStorage.setItem(`${LS_PREFIX}${conversationId}`, JSON.stringify(packed));
+    } catch {}
+  }
+}
+
 /**
  * 保存消息引用信息到Cookie
  * @param conversationId 对话ID
@@ -156,9 +191,9 @@ export function saveCitationsToCache(conversationId: string, messageIndex: numbe
   try {
     if (!conversationId || citations.length === 0) return;
 
-    const conv = readConvCookie(conversationId);
+    const conv = readConvLS(conversationId);
     conv[messageIndex.toString()] = citations;
-    writeConvCookie(conversationId, conv);
+    writeConvLS(conversationId, conv);
     console.log(`保存引用信息到缓存(legacy键): 对话${conversationId}, 消息${messageIndex}, 引用数量${citations.length}`);
   } catch (error) {
     console.warn('保存引用信息到缓存失败:', error);
@@ -177,10 +212,10 @@ export function saveAssistantCitationsToCache(
   try {
     if (!conversationId || citations.length === 0) return;
 
-    const conv = readConvCookie(conversationId);
+    const conv = readConvLS(conversationId);
     const key = `a:${assistantOrdinal}`;
     conv[key] = citations;
-    writeConvCookie(conversationId, conv);
+    writeConvLS(conversationId, conv);
     console.log(`保存引用信息到缓存(助手序号): 对话${conversationId}, 助手序号${assistantOrdinal}, 引用数量${citations.length}`);
   } catch (error) {
     console.warn('保存引用信息到缓存(助手序号)失败:', error);
@@ -195,6 +230,13 @@ export function saveAssistantCitationsToCache(
 export function getCitationsFromCache(conversationId: string): MessageCitations {
   try {
     if (!conversationId) return {};
+
+    // 优先读 localStorage
+    const ls = readConvLS(conversationId);
+    if (Object.keys(ls).length > 0) {
+      console.log(`从localStorage获取引用信息: 对话${conversationId}, 找到${Object.keys(ls).length}条消息引用`);
+      return ls;
+    }
 
     const convCache = readConvCookie(conversationId);
     if (Object.keys(convCache).length > 0) {
@@ -219,8 +261,31 @@ export function getCitationsFromCache(conversationId: string): MessageCitations 
  */
 export function cleanupExpiredCache() {
   try {
-    // 逐会话cookie基于过期时间由浏览器自动清理，这里无需全局清理
-    return;
+    // 迁移旧cookie到 localStorage，随后清理cookie，避免图片/文件请求因 Cookie 过大触发 400
+    const cookies = document.cookie.split(';');
+    const convIds: string[] = [];
+    cookies.forEach((row) => {
+      const t = row.trim();
+      if (t.startsWith(COOKIE_PREFIX)) {
+        const [k, v] = t.split('=');
+        const convId = k.replace(COOKIE_PREFIX, '');
+        try {
+          const decoded = decodeURIComponent(v || '');
+          const json = JSON.parse(decoded) as PackedConvCacheV1;
+          if (json && json.v === 1 && json.m) {
+            const mc: MessageCitations = {};
+            Object.keys(json.m).forEach((mk) => (mc[mk] = unpackCitations(json.m[mk])));
+            writeConvLS(convId, mc);
+            convIds.push(convId);
+          }
+        } catch {}
+      }
+    });
+    // 清理已迁移的cookie，以及旧的全局大cookie
+    convIds.forEach((id) => {
+      document.cookie = `${COOKIE_PREFIX}${id}=; expires=${new Date(0).toUTCString()}; path=/; SameSite=Lax`;
+    });
+    document.cookie = `${LEGACY_CACHE_KEY}=; expires=${new Date(0).toUTCString()}; path=/; SameSite=Lax`;
   } catch (error) {
     console.warn('清理缓存失败:', error);
   }
@@ -232,6 +297,7 @@ export function cleanupExpiredCache() {
  */
 export function clearConversationCache(conversationId: string) {
   try {
+    localStorage.removeItem(`${LS_PREFIX}${conversationId}`);
     const key = getCookieKey(conversationId);
     document.cookie = `${key}=; expires=${new Date(0).toUTCString()}; path=/; SameSite=Lax`;
     console.log(`清除对话缓存: ${conversationId}`);

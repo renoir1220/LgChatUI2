@@ -1,5 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { Button, Modal, Typography, Tag, Tooltip, Space } from 'antd';
+import { 
+  FilePdfOutlined,
+  FileWordOutlined,
+  FileExcelOutlined,
+  FileTextOutlined,
+  FilePptOutlined,
+  FileUnknownOutlined,
+} from '@ant-design/icons';
 import { ContentWithImages } from './ContentWithImages';
 
 const { Text } = Typography;
@@ -34,7 +42,24 @@ export const CitationList: React.FC<{ citations?: CitationItem[] }>
     return null;
   }
 
-  const colors = ['blue','geekblue','purple','cyan','gold','lime'];
+  // 文件类型解析与图标映射
+  const getFileIcon = (ext: string) => {
+    const e = ext.toLowerCase();
+    if (e === 'pdf') return <FilePdfOutlined />;
+    if (e === 'doc' || e === 'docx') return <FileWordOutlined />;
+    if (e === 'xls' || e === 'xlsx') return <FileExcelOutlined />;
+    if (e === 'ppt' || e === 'pptx') return <FilePptOutlined />;
+    if (e === 'txt' || e === 'md') return <FileTextOutlined />;
+    return <FileUnknownOutlined />;
+  };
+
+  const getBaseNameAndExt = (name?: string) => {
+    const n = (name || '').trim();
+    if (!n) return { base: '引用', ext: '' };
+    const lastDot = n.lastIndexOf('.');
+    if (lastDot <= 0) return { base: n, ext: '' };
+    return { base: n.slice(0, lastDot), ext: n.slice(lastDot + 1) };
+  };
 
   // Group citations by document_name and source
   const groupedCitations = useMemo(() => {
@@ -78,18 +103,19 @@ export const CitationList: React.FC<{ citations?: CitationItem[] }>
 
       <Space size={[8,8]} wrap style={{ marginTop: 4 }}>
         {groupedCitations.map((group, idx) => {
-          const title = group.document_name;
-          const color = colors[idx % colors.length] as any;
-          const short = title.length > 24 ? title.slice(0, 24) + '…' : title;
+          const fullTitle = group.document_name;
+          const { base, ext } = getBaseNameAndExt(fullTitle);
+          const Icon = getFileIcon(ext);
+          const short = base.length > 24 ? base.slice(0, 24) + '…' : base;
           const displayText = group.count > 1 ? `${short} (${group.count})` : short;
           
           return (
-            <Tooltip key={idx} title={title} placement="top">
+            <Tooltip key={idx} title={fullTitle} placement="top">
               <Tag
-                color={color}
                 onClick={() => handleDocumentClick(group)}
                 style={{ cursor: 'pointer', userSelect: 'none' }}
               >
+                <span style={{ marginRight: 6, display: 'inline-flex', alignItems: 'center' }}>{Icon}</span>
                 {displayText}
               </Tag>
             </Tooltip>

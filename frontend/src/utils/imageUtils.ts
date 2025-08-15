@@ -2,8 +2,23 @@
  * 图片处理工具函数
  */
 
-// 图片基础URL，可通过环境变量配置
-const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL || 'http://localhost/';
+// 解析 URL 的 origin 辅助
+function getOrigin(u?: string): string | undefined {
+  try {
+    if (!u) return undefined;
+    const url = new URL(u);
+    return url.origin;
+  } catch {
+    return undefined;
+  }
+}
+
+// 图片基础URL：优先显式配置，其次取 Dify API 的 origin，再次取后端 API，再退回当前站点
+const IMAGE_BASE_URL: string =
+  (import.meta.env.VITE_IMAGE_BASE_URL as string) ||
+  getOrigin(import.meta.env.VITE_DEFAULT_DIFY_API_URL as string) ||
+  (import.meta.env.VITE_API_BASE as string) ||
+  window.location.origin;
 
 /**
  * 将相对路径转换为完整的图片URL
@@ -55,13 +70,13 @@ export function extractImagesFromText(text: string): ImageInfo[] {
       // Special format: [image](url)
       src = match[5];
       alt = '图片';
-    } else if (match[6]) {
+    } else if (match[7]) {
       // HTML format: <img src="url" alt="alt" />
-      src = match[7];
-      alt = match[8] || '图片';
-    } else if (match[9]) {
+      src = match[8];
+      alt = match[9] || '图片';
+    } else if (match[10]) {
       // Direct URL
-      src = match[9];
+      src = match[10];
       alt = '图片';
     }
     
