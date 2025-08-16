@@ -579,8 +579,7 @@ const ChatScreen: React.FC = () => {
                       {/* 引用已内嵌到气泡内容中 */}
                     <div className="message-actions" style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                       <VoicePlayer 
-                        text={msg.content} 
-                        className="mr-1"
+                        text={msg.content}
                       />
                       <Button
                         variant="ghost"
