@@ -4,12 +4,10 @@ import {
   CommentOutlined,
   CopyOutlined,
   DeleteOutlined,
-  DislikeOutlined,
   EditOutlined,
   EllipsisOutlined,
   FileSearchOutlined,
   HeartOutlined,
-  LikeOutlined,
   PaperClipOutlined,
   PlusOutlined,
   ReloadOutlined,
@@ -26,18 +24,18 @@ import {
   Welcome,
   // type GetProp,
 } from '@ant-design/x';
-import { Avatar, Button, Flex, Space, Spin, Typography, message, Dropdown, Skeleton, Divider } from 'antd';
+import { Avatar, Button, Flex, Space, Spin, message, Dropdown, Skeleton, Divider } from 'antd';
 import { DownOutlined, CheckOutlined, DatabaseOutlined } from '@ant-design/icons';
 import MarkdownIt from 'markdown-it';
 import 'github-markdown-css/github-markdown.css';
 import './ChatMessage.css';
 import { CitationList } from './CitationList';
+import { VoicePlayer } from './ui/VoicePlayer';
 import { useKnowledgeBases } from '../hooks/useKnowledgeBases';
 import { apiFetch, apiGet } from '../lib/api';
 import { clearAuth, getUsername } from '../utils/auth';
-import { saveCitationsToCache, saveAssistantCitationsToCache, getCitationsFromCache, batchSaveCitations, cleanupExpiredCache } from '../utils/messageCache';
+import { saveCitationsToCache, saveAssistantCitationsToCache, getCitationsFromCache, cleanupExpiredCache } from '../utils/messageCache';
 
-const { Text } = Typography;
 
 // 初始化 markdown-it 渲染器
 const md = new MarkdownIt({
@@ -578,7 +576,11 @@ const ChatScreen: React.FC = () => {
                 ? (
                     <div className="message-container" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                       {/* 引用已内嵌到气泡内容中 */}
-                    <div className="message-actions" style={{ display: 'flex', gap: 4 }}>
+                    <div className="message-actions" style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                      <VoicePlayer 
+                        text={msg.content} 
+                        className="mr-1"
+                      />
                       <Button 
                         type="text" 
                         size="small" 

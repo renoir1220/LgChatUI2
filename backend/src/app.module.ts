@@ -13,6 +13,7 @@ import { HealthController } from './health.controller';
 import { ChatHistoryController } from './chat-history.controller';
 import { FilesController } from './files.controller';
 import { AuthModule } from './auth/auth.module';
+import { TtsModule } from './tts/tts.module';
 import { DifyService } from './services/dify.service';
 
 @Module({
@@ -23,6 +24,7 @@ import { DifyService } from './services/dify.service';
     }),
     DatabaseModule,
     AuthModule,
+    TtsModule,
   ],
   controllers: [
     AppController,
