@@ -15,7 +15,7 @@ import { z } from 'zod';
 // TTS请求数据验证模式
 const TtsRequestSchema = z.object({
   text: z.string().min(1, '文本不能为空').max(5000, '文本长度不能超过5000字符'),
-  voiceType: z.string().optional().default('zh_female_qingxin'),
+  voiceType: z.string().optional(),
   encoding: z.string().optional().default('wav'),
 });
 
@@ -36,6 +36,9 @@ export class TtsController {
       // 从环境变量获取配置
       const appid = process.env.VOLCENGINE_APPID;
       const accessToken = process.env.VOLCENGINE_ACCESS_TOKEN;
+      const defaultVoiceType = process.env.VOLCENGINE_VOICE_TYPE || 'zh_female_daimengchuanmei_moon_bigtts';
+
+      this.logger.log(`环境变量检查 - APPID: ${appid}, ACCESS_TOKEN: ...${accessToken?.slice(-4) || 'N/A'}, 默认音色: ${defaultVoiceType}`);
 
       if (!appid || !accessToken) {
         throw new HttpException(
@@ -49,7 +52,7 @@ export class TtsController {
       // 调用TTS服务合成语音
       const audioBuffer = await this.ttsService.synthesizeText(
         body.text,
-        body.voiceType,
+        body.voiceType || defaultVoiceType,
         body.encoding,
         appid,
         accessToken,
