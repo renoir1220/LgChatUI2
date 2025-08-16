@@ -23,7 +23,9 @@ import {
   Welcome,
   // type GetProp,
 } from '@ant-design/x';
-import { Avatar, Button, Flex, Space, Spin, message, Dropdown, Skeleton, Divider } from 'antd';
+import { Avatar, Flex, Space, Spin, message, Dropdown, Skeleton, Divider } from 'antd';
+import { Button as AntdButton } from 'antd';
+import { Button } from './ui/button';
 import { DownOutlined, CheckOutlined, DatabaseOutlined } from '@ant-design/icons';
 import MarkdownIt from 'markdown-it';
 import 'github-markdown-css/github-markdown.css';
@@ -417,14 +419,14 @@ const ChatScreen: React.FC = () => {
       </div>
 
       {/* 新建会话按钮 */}
-      <Button
+      <AntdButton
         onClick={handleNewConversation}
         type="link"
         style={{ margin: '8px 16px', textAlign: 'left' }}
         icon={<PlusOutlined />}
       >
         新建会话
-      </Button>
+      </AntdButton>
 
       {/* 会话列表 */}
       <div style={{ flex: 1, overflow: 'auto' }}>
@@ -580,10 +582,10 @@ const ChatScreen: React.FC = () => {
                         text={msg.content} 
                         className="mr-1"
                       />
-                      <Button 
-                        type="text" 
-                        size="small" 
-                        icon={<Copy size={16} />} 
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 hover:bg-gray-100"
                         title="复制消息"
                         onClick={() => {
                           navigator.clipboard.writeText(msg.content).then(() => {
@@ -592,11 +594,13 @@ const ChatScreen: React.FC = () => {
                             message.error('复制失败');
                           });
                         }}
-                      />
-                      <Button 
-                        type="text" 
-                        size="small" 
-                        icon={<RotateCcw size={16} />} 
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 hover:bg-gray-100"
                         title="重新生成"
                         onClick={async () => {
                           if (loading) {
@@ -719,7 +723,9 @@ const ChatScreen: React.FC = () => {
                             message.error('未找到对应的用户消息');
                           }
                         }}
-                      />
+                      >
+                        <RotateCcw className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 )
@@ -806,8 +812,8 @@ const ChatScreen: React.FC = () => {
             description="基于 AI 平台的智能对话系统，为您提供专业的问答服务"
             extra={
               <Space>
-                <Button icon={<ShareAltOutlined />} />
-                <Button icon={<EllipsisOutlined />} />
+                <AntdButton icon={<ShareAltOutlined />} />
+                <AntdButton icon={<EllipsisOutlined />} />
               </Space>
             }
           />
@@ -900,11 +906,11 @@ const ChatScreen: React.FC = () => {
               onClick: ({ key }) => setCurrentKnowledgeBase(key as string),
             }}
           >
-            <Button size="small" style={{ borderRadius: 16 }}>
+            <AntdButton size="small" style={{ borderRadius: 16 }}>
               <DatabaseOutlined style={{ marginRight: 6 }} />
               {knowledgeBases.find((k) => k.id === currentKnowledgeBase)?.name || '选择知识库'}
               <DownOutlined style={{ marginLeft: 6, fontSize: 10 }} />
-            </Button>
+            </AntdButton>
           </Dropdown>
         )}
       </div>
@@ -920,7 +926,7 @@ const ChatScreen: React.FC = () => {
           abortController.current?.abort();
         }}
         prefix={
-          <Button
+          <AntdButton
             type="text"
             icon={<PaperClipOutlined style={{ fontSize: 18 }} />}
             onClick={() => setAttachmentsOpen(!attachmentsOpen)}
