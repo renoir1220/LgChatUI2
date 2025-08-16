@@ -12,7 +12,7 @@ interface VoicePlayerProps {
 export const VoicePlayer: React.FC<VoicePlayerProps> = ({
   text,
   className = '',
-  voiceType = 'zh_female_qingxin',
+  voiceType = 'zh_female_daimengchuanmei_moon_bigtts',
   encoding = 'wav',
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);

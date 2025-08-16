@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   CloudUploadOutlined,
   CommentOutlined,
-  CopyOutlined,
   DeleteOutlined,
   EditOutlined,
   EllipsisOutlined,
@@ -10,10 +9,10 @@ import {
   HeartOutlined,
   PaperClipOutlined,
   PlusOutlined,
-  ReloadOutlined,
   ShareAltOutlined,
   SmileOutlined,
 } from '@ant-design/icons';
+import { Copy, RotateCcw } from 'lucide-react';
 import logoTree from '../assets/logoTree.png';
 import {
   Attachments,
@@ -584,7 +583,7 @@ const ChatScreen: React.FC = () => {
                       <Button 
                         type="text" 
                         size="small" 
-                        icon={<CopyOutlined />} 
+                        icon={<Copy size={16} />} 
                         title="复制消息"
                         onClick={() => {
                           navigator.clipboard.writeText(msg.content).then(() => {
@@ -597,7 +596,7 @@ const ChatScreen: React.FC = () => {
                       <Button 
                         type="text" 
                         size="small" 
-                        icon={<ReloadOutlined />} 
+                        icon={<RotateCcw size={16} />} 
                         title="重新生成"
                         onClick={async () => {
                           if (loading) {
