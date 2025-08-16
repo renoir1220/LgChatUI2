@@ -2,6 +2,7 @@
 .DS_Store
 Thumbs.db
 
+
 # Node/JS
 node_modules/
 dist/
@@ -28,3 +29,4 @@ yarn-error.log*
 
 # Project-specific
 LgChatUI/
+kb_source/

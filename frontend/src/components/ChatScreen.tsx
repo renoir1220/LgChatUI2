@@ -16,6 +16,7 @@ import {
   ShareAltOutlined,
   SmileOutlined,
 } from '@ant-design/icons';
+import logoTree from '../assets/logoTree.png';
 import {
   Attachments,
   Bubble,
@@ -409,13 +410,13 @@ const ChatScreen: React.FC = () => {
       {/* Logo */}
       <div style={{ padding: '16px', display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid #f0f0f0' }}>
         <img
-          src="https://gw.alipayobjects.com/zos/rmsportal/KDpgvguMpGfqaHPjicRK.svg"
+          src={logoTree}
           draggable={false}
           alt="logo"
           width={24}
           height={24}
         />
-        <span>ChatUI</span>
+        <span>朗珈GPT</span>
       </div>
 
       {/* 新建会话按钮 */}
