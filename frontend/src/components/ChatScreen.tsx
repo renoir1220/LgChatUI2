@@ -733,7 +733,7 @@ const ChatScreen: React.FC = () => {
           })}
           style={{ 
             height: '100%', 
-            paddingInline: 'calc(calc(100% - 800px) /2)', // 稍微增加宽度
+            paddingInline: 'max(16px, calc((100% - 800px) / 2))', // 响应式边距，最小16px
             paddingTop: '16px',
             paddingBottom: '16px'
           }}
@@ -802,7 +802,7 @@ const ChatScreen: React.FC = () => {
         <Space
           direction="vertical"
           size={16}
-          style={{ paddingInline: 'calc(calc(100% - 700px) /2)', height: '100%', justifyContent: 'center' }}
+          style={{ paddingInline: 'max(16px, calc((100% - 700px) / 2))', height: '100%', justifyContent: 'center' }}
         >
           <Welcome
             variant="borderless"
@@ -880,7 +880,7 @@ const ChatScreen: React.FC = () => {
   );
 
   const chatSender = (
-    <div style={{ paddingInline: 'calc(calc(100% - 800px) /2)', paddingTop: 8, paddingBottom: 16 }}>
+    <div style={{ paddingInline: 'max(16px, calc((100% - 800px) / 2))', paddingTop: 8, paddingBottom: 16 }}>
       {/* 知识库选择（模仿 ChatGPT 模型选择样式，靠近输入框） */}
       <div style={{ marginBottom: 8 }}>
         {kbLoading ? (
