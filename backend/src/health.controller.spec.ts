@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { HealthController } from './health.controller';
-import { DatabaseService } from './database/database.service';
+import { DatabaseService } from './shared/database/database.service';
 
 describe('HealthController (unit)', () => {
   it('returns ok: true when DB query succeeds', async () => {
