@@ -23,6 +23,12 @@ export function useStreamChat() {
     setMessages: React.Dispatch<React.SetStateAction<BubbleDataType[]>>,
     onConversationUpdate?: (newConversationId: string) => void
   ): Promise<void> => {
+    // 调试信息
+    console.log('=== sendMessage 调试信息 ===');
+    console.log('传入的 conversationId:', conversationId);
+    console.log('conversationId 类型:', typeof conversationId);
+    console.log('conversationId 是否为有效UUID:', isValidUUID(conversationId));
+    
     // 中止之前的请求
     abortController.current?.abort();
     abortController.current = new AbortController();
@@ -32,6 +38,9 @@ export function useStreamChat() {
     const makeBody = (withConv: boolean) => JSON.stringify(
       withConv && sentConvId ? { ...baseBody, conversationId: sentConvId } : baseBody
     );
+    
+    console.log('处理后的 sentConvId:', sentConvId);
+    console.log('将发送的请求体:', makeBody(true));
 
     const userMessage = { role: 'user', content: message };
     const botMessageIndex = messages.length + 1;
