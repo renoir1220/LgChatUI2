@@ -16,6 +16,7 @@ import 'github-markdown-css/github-markdown.css';
 import './ChatMessage.css';
 import { CitationList } from '../../knowledge-base/components/CitationList';
 import { VoicePlayer } from './VoicePlayer';
+import logoTree from '../../../assets/logoTree.png';
 import type { BubbleDataType } from '../hooks/useChatState';
 
 // 初始化 markdown-it 渲染器
@@ -137,8 +138,8 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
         >
           <Welcome
             variant="borderless"
-            icon="https://gw.alipayobjects.com/zos/rmsportal/KDpgvguMpGfqaHPjicRK.svg"
-            title="欢迎使用 ChatUI"
+            icon={logoTree}
+            title="欢迎使用朗珈GPT"
             description="基于 AI 平台的智能对话系统，为您提供专业的问答服务"
             extra={
               <Space>
