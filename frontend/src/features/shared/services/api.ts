@@ -37,3 +37,9 @@ export async function apiPost<T = unknown>(path: string, body?: unknown): Promis
   return resp.json() as Promise<T>;
 }
 
+export async function apiDelete<T = unknown>(path: string): Promise<T> {
+  const resp = await apiFetch(path, { method: 'DELETE' });
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  return resp.json() as Promise<T>;
+}
+

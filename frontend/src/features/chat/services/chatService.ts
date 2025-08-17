@@ -1,4 +1,4 @@
-import { apiGet, apiPost, API_BASE } from '../../shared/services/api';
+import { apiGet, apiPost, apiDelete, API_BASE } from '../../shared/services/api';
 import { getToken } from '../../auth/utils/auth';
 import type { 
   Conversation, 
@@ -27,7 +27,7 @@ export const conversationApi = {
 
   // 删除会话
   deleteConversation: async (id: string): Promise<void> => {
-    await apiPost(`/api/conversations/${id}`, {});
+    await apiDelete(`/api/conversations/${id}`);
   },
 
   // 重命名会话

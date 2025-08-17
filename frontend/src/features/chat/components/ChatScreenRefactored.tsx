@@ -7,6 +7,7 @@ import { useKnowledgeBases } from '../../knowledge-base/hooks/useKnowledgeBases'
 import { ChatSidebar } from './ChatSidebar';
 import { ChatMessageList } from './ChatMessageList';
 import { ChatInput } from './ChatInput';
+import { conversationApi } from '../services/chatService';
 
 /**
  * 重构后的聊天界面组件
@@ -137,6 +138,25 @@ const ChatScreenRefactored: React.FC = () => {
     createNewConversation();
   };
 
+  // 删除会话处理
+  const handleDeleteConversation = async (conversationKey: string) => {
+    try {
+      await conversationApi.deleteConversation(conversationKey);
+      message.success('会话删除成功');
+      
+      // 如果删除的是当前会话，切换到新会话
+      if (conversationKey === curConversation) {
+        createNewConversation();
+      }
+      
+      // 刷新会话列表
+      await refreshConversations();
+    } catch (error) {
+      console.error('删除会话失败:', error);
+      message.error('删除会话失败，请重试');
+    }
+  };
+
   // 取消请求
   const handleCancel = () => {
     abortRequest();
@@ -174,6 +194,7 @@ const ChatScreenRefactored: React.FC = () => {
         loading={loading}
         onNewConversation={handleNewConversation}
         onConversationChange={handleConversationChange}
+        onDeleteConversation={handleDeleteConversation}
       />
 
       {/* 主聊天区域 */}

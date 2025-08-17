@@ -1,11 +1,12 @@
 import React from 'react';
-import { Avatar, Dropdown } from 'antd';
+import { Avatar, Dropdown, Modal } from 'antd';
 import { Button as AntdButton } from 'antd';
 import { 
   PlusOutlined, 
   EditOutlined, 
   DeleteOutlined,
-  SmileOutlined 
+  SmileOutlined,
+  ExclamationCircleOutlined
 } from '@ant-design/icons';
 import { Conversations } from '@ant-design/x';
 import logoTree from '../../../assets/logoTree.png';
@@ -18,6 +19,7 @@ interface ChatSidebarProps {
   loading: boolean;
   onNewConversation: () => void;
   onConversationChange: (conversationKey: string) => void;
+  onDeleteConversation: (conversationKey: string) => void;
 }
 
 /**
@@ -30,6 +32,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
   loading,
   onNewConversation,
   onConversationChange,
+  onDeleteConversation,
 }) => {
   const handleLogout = () => {
     clearAuth();
@@ -42,6 +45,28 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
       return;
     }
     onNewConversation();
+  };
+
+  const handleDeleteConversation = (conversationKey: string) => {
+    // 不能删除虚拟会话
+    if (conversationKey === 'default-0' || conversationKey === 'new') {
+      return;
+    }
+
+    const conversation = conversations.find(c => c.key === conversationKey);
+    const conversationTitle = conversation?.label || '此会话';
+
+    Modal.confirm({
+      title: '删除会话',
+      icon: <ExclamationCircleOutlined />,
+      content: `确定要删除"${conversationTitle}"吗？此操作不可撤销。`,
+      okText: '删除',
+      okType: 'danger',
+      cancelText: '取消',
+      onOk() {
+        onDeleteConversation(conversationKey);
+      },
+    });
   };
 
   return (
@@ -92,25 +117,35 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
           }}
           groupable
           styles={{ item: { padding: '0 8px' } }}
-          menu={(conversation) => ({
-            items: [
+          menu={(conversation) => {
+            // 只对真实会话显示删除菜单
+            const isRealConversation = conversation.key && 
+                                      conversation.key !== 'new' && 
+                                      !conversation.key.startsWith('default-') &&
+                                      /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/i.test(conversation.key);
+            
+            const menuItems = [
               {
                 label: '重命名',
                 key: 'rename',
                 icon: <EditOutlined />,
-              },
-              {
+              }
+            ];
+
+            if (isRealConversation) {
+              menuItems.push({
                 label: '删除',
                 key: 'delete',
                 icon: <DeleteOutlined />,
                 danger: true,
                 onClick: () => {
-                  // TODO: 实现删除功能
-                  console.log('删除会话:', conversation.key);
+                  handleDeleteConversation(conversation.key);
                 },
-              },
-            ],
-          })}
+              } as any); // 临时类型断言，因为Antd的类型定义问题
+            }
+
+            return { items: menuItems };
+          }}
         />
       </div>
 
