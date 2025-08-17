@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import LoginScreen from './components/LoginScreen'
-import ChatScreen from './components/ChatScreen'
+import ChatScreenRefactored from './components/ChatScreenRefactored'
 import RequireAuth from './components/RequireAuth'
 import { NotificationProvider } from './contexts/NotificationContext'
 import { SettingsProvider } from './contexts/SettingsContext'
@@ -28,7 +28,7 @@ function App() {
               path="/" 
               element={
                 <RequireAuth>
-                  <ChatScreen />
+                  <ChatScreenRefactored />
                 </RequireAuth>
               } 
             />
