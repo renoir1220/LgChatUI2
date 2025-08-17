@@ -137,4 +137,34 @@ export class ChatHistoryController {
     await this.conversations.updateConversation(id, body);
     return { success: true };
   }
+
+  // POST /api/conversations/:id/rename - 重命名会话
+  @Post('conversations/:id/rename')
+  async renameConversation(
+    @Param('id') id: string,
+    @Body() body: { title: string },
+    @Request() req: AuthenticatedRequest,
+  ): Promise<Conversation> {
+    const username = req.user.username;
+    const userId = `user_${username}`;
+
+    // 检查会话是否属于该用户
+    const owned = await this.messages.isConversationOwnedByUser(id, userId);
+    if (!owned) {
+      throw new NotFoundException('Conversation not found');
+    }
+
+    // 更新会话标题
+    await this.conversations.updateConversation(id, { title: body.title });
+    
+    // 返回更新后的会话
+    const conversations = await this.conversations.listByUser(userId, 1, 100);
+    const updatedConversation = conversations.find(c => c.id === id);
+    
+    if (!updatedConversation) {
+      throw new NotFoundException('Conversation not found after update');
+    }
+    
+    return updatedConversation;
+  }
 }
