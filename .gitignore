@@ -23,9 +23,15 @@ yarn-error.log*
 .env.*
 !.env.example
 
+# Local configuration files (contains sensitive information)
+*.local.*
+.local/
+**/CLAUDE.local.md
+**/README.local.md
+
 # Editor
 .idea/
-.vscode/
+.vscode/settings.local.json
 
 # Project-specific
 LgChatUI/

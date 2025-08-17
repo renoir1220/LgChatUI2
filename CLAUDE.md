@@ -191,7 +191,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 
 ### 数据库配置
 - **类型**: MSSQL Server 2008
-- **测试环境**: 192.168.200.246 (端口默认)
+- **测试环境**: 详见 `CLAUDE.local.md`
 - **表命名规范**: 所有AI相关表以 `T_AI_` 开头
 
 ### 构建产物说明
@@ -200,12 +200,12 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 
 ### 环境配置
 ```bash
-# .env 示例
+# .env 示例 (真实配置详见 CLAUDE.local.md)
 NODE_ENV=development
-DB_HOST=192.168.200.246
-DB_USER=pathnet  
-DB_PASSWORD=4s3c2a1p
-DB_DATABASE=ai_test
+DB_HOST=your-database-host
+DB_USER=your-database-user
+DB_PASSWORD=your-database-password
+DB_DATABASE=your-database-name
 JWT_SECRET=your-jwt-secret
 DIFY_API_URL=https://your-dify-instance
 ```

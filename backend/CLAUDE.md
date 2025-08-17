@@ -191,14 +191,15 @@ POST /api/tts                    # 语音合成
 
 ### 环境配置
 ```bash
+# 示例配置 (真实配置详见 ../CLAUDE.local.md)
 NODE_ENV=production
 PORT=3000
-DB_HOST=192.168.200.246
-DB_USER=pathnet
-DB_PASSWORD=4s3c2a1p
-DB_DATABASE=ai_test
+DB_HOST=your-database-host
+DB_USER=your-database-user
+DB_PASSWORD=your-database-password
+DB_DATABASE=your-database-name
 JWT_SECRET=your-secret-key
-DIFY_API_URL=https://api.dify.ai
+DIFY_API_URL=https://your-dify-instance
 ```
 
 ### 健康检查

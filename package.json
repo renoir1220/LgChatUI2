@@ -30,6 +30,8 @@
     "test:watch": "npm run test:watch -ws --if-present",
     "health": "curl -f http://localhost:3000/health || echo 'Backend not ready' && curl -f http://localhost:5173 || echo 'Frontend not ready'",
     "ports": "lsof -i :3000,:5173 | grep LISTEN || echo 'No services running on default ports'",
+    "security:check": "node scripts/check-security.js",
+    "security:scan": "npm run security:check",
     "postinstall": "npm run build:shared"
   },
   "engines": {

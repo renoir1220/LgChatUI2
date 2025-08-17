@@ -2,11 +2,12 @@ const sql = require('mssql');
 const fs = require('fs');
 const path = require('path');
 
+// 数据库配置 - 真实配置请参考 ../CLAUDE.local.md
 const config = {
-  server: '192.168.200.246',
-  user: 'pathnet',
-  password: '4s3c2a1p',
-  database: 'ai_test',
+  server: process.env.DB_HOST || 'your-database-host',
+  user: process.env.DB_USER || 'your-database-user',
+  password: process.env.DB_PASSWORD || 'your-database-password',
+  database: process.env.DB_DATABASE || 'your-database-name',
   options: {
     encrypt: false,
     enableArithAbort: true,
