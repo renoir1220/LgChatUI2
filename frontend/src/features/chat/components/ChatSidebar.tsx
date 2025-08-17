@@ -11,6 +11,8 @@ import { Conversations } from '@ant-design/x';
 import logoTree from '../../../assets/logoTree.png';
 import { clearAuth, getUsername } from '../../auth/utils/auth';
 import { DeleteConversationDialog } from './DeleteConversationDialog';
+import { RenameConversationDialog } from './RenameConversationDialog';
+import { conversationApi } from '../services/chatService';
 import type { ConversationItem } from '../hooks/useChatState';
 
 interface ChatSidebarProps {
@@ -20,6 +22,7 @@ interface ChatSidebarProps {
   onNewConversation: () => void;
   onConversationChange: (conversationKey: string) => void;
   onDeleteConversation: (conversationKey: string) => void;
+  onRefreshConversations: () => void; // 新增：刷新会话列表的回调
 }
 
 /**
@@ -33,10 +36,18 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
   onNewConversation,
   onConversationChange,
   onDeleteConversation,
+  onRefreshConversations,
 }) => {
   // 删除对话框状态
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [conversationToDelete, setConversationToDelete] = useState<{
+    key: string;
+    title: string;
+  } | null>(null);
+  
+  // 重命名对话框状态
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [conversationToRename, setConversationToRename] = useState<{
     key: string;
     title: string;
   } | null>(null);
@@ -83,6 +94,55 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
       console.log('用户确认删除，调用onDeleteConversation');
       onDeleteConversation(conversationToDelete.key);
       setConversationToDelete(null);
+    }
+  };
+
+  // 处理重命名会话
+  const handleRenameConversation = (conversationKey: string) => {
+    console.log('=== handleRenameConversation 被调用 ===');
+    console.log('传入的conversationKey:', conversationKey);
+    
+    // 不能重命名虚拟会话
+    if (conversationKey === 'default-0' || conversationKey === 'new') {
+      console.log('这是虚拟会话，不能重命名');
+      return;
+    }
+
+    const conversation = conversations.find(c => c.key === conversationKey);
+    const conversationTitle = conversation?.label || '此会话';
+    
+    console.log('找到会话:', conversation);
+    console.log('会话标题:', conversationTitle);
+
+    // 设置要重命名的会话信息并打开对话框
+    setConversationToRename({
+      key: conversationKey,
+      title: conversationTitle,
+    });
+    setRenameDialogOpen(true);
+  };
+
+  // 确认重命名会话
+  const handleConfirmRename = async (newTitle: string) => {
+    if (!conversationToRename) return;
+
+    console.log('用户确认重命名，新标题:', newTitle);
+    
+    try {
+      // 调用重命名API
+      await conversationApi.renameConversation(conversationToRename.key, newTitle);
+      console.log('重命名API调用成功');
+      
+      // 刷新会话列表
+      onRefreshConversations();
+      
+      // 清理状态
+      setConversationToRename(null);
+      
+      console.log('重命名完成');
+    } catch (error) {
+      console.error('重命名会话失败:', error);
+      throw error; // 让对话框组件处理错误状态
     }
   };
 
@@ -173,8 +233,8 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
                   console.log('调用删除函数...');
                   handleDeleteConversation(conversation.key);
                 } else if (key === 'rename') {
-                  // TODO: 实现重命名功能
-                  console.log('重命名会话:', conversation.key);
+                  console.log('调用重命名函数...');
+                  handleRenameConversation(conversation.key);
                 }
               }
             };
@@ -243,6 +303,14 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
         onOpenChange={setDeleteDialogOpen}
         conversationTitle={conversationToDelete?.title || ''}
         onConfirm={handleConfirmDelete}
+      />
+
+      {/* 重命名对话框 */}
+      <RenameConversationDialog
+        open={renameDialogOpen}
+        onOpenChange={setRenameDialogOpen}
+        conversationTitle={conversationToRename?.title || ''}
+        onConfirm={handleConfirmRename}
       />
     </div>
   );

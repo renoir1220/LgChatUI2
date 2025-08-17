@@ -205,6 +205,7 @@ const ChatScreenRefactored: React.FC = () => {
         onNewConversation={handleNewConversation}
         onConversationChange={handleConversationChange}
         onDeleteConversation={handleDeleteConversation}
+        onRefreshConversations={refreshConversations}
       />
 
       {/* 主聊天区域 */}
