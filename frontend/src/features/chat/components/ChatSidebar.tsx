@@ -1,16 +1,16 @@
-import React from 'react';
-import { Avatar, Dropdown, Modal } from 'antd';
+import React, { useState } from 'react';
+import { Avatar, Dropdown } from 'antd';
 import { Button as AntdButton } from 'antd';
 import { 
   PlusOutlined, 
   EditOutlined, 
   DeleteOutlined,
-  SmileOutlined,
-  ExclamationCircleOutlined
+  SmileOutlined
 } from '@ant-design/icons';
 import { Conversations } from '@ant-design/x';
 import logoTree from '../../../assets/logoTree.png';
 import { clearAuth, getUsername } from '../../auth/utils/auth';
+import { DeleteConversationDialog } from './DeleteConversationDialog';
 import type { ConversationItem } from '../hooks/useChatState';
 
 interface ChatSidebarProps {
@@ -34,6 +34,12 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
   onConversationChange,
   onDeleteConversation,
 }) => {
+  // 删除对话框状态
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [conversationToDelete, setConversationToDelete] = useState<{
+    key: string;
+    title: string;
+  } | null>(null);
   const handleLogout = () => {
     clearAuth();
     window.location.href = '/login';
@@ -48,25 +54,36 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
   };
 
   const handleDeleteConversation = (conversationKey: string) => {
+    console.log('=== handleDeleteConversation 被调用 ===');
+    console.log('传入的conversationKey:', conversationKey);
+    
     // 不能删除虚拟会话
     if (conversationKey === 'default-0' || conversationKey === 'new') {
+      console.log('这是虚拟会话，不能删除');
       return;
     }
 
     const conversation = conversations.find(c => c.key === conversationKey);
     const conversationTitle = conversation?.label || '此会话';
+    
+    console.log('找到会话:', conversation);
+    console.log('会话标题:', conversationTitle);
 
-    Modal.confirm({
-      title: '删除会话',
-      icon: <ExclamationCircleOutlined />,
-      content: `确定要删除"${conversationTitle}"吗？此操作不可撤销。`,
-      okText: '删除',
-      okType: 'danger',
-      cancelText: '取消',
-      onOk() {
-        onDeleteConversation(conversationKey);
-      },
+    // 设置要删除的会话信息并打开对话框
+    setConversationToDelete({
+      key: conversationKey,
+      title: conversationTitle,
     });
+    setDeleteDialogOpen(true);
+  };
+
+  // 确认删除会话
+  const handleConfirmDelete = () => {
+    if (conversationToDelete) {
+      console.log('用户确认删除，调用onDeleteConversation');
+      onDeleteConversation(conversationToDelete.key);
+      setConversationToDelete(null);
+    }
   };
 
   return (
@@ -124,6 +141,10 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
                                       !conversation.key.startsWith('default-') &&
                                       /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/i.test(conversation.key);
             
+            console.log('=== 菜单调试信息 ===');
+            console.log('会话key:', conversation.key);
+            console.log('是否为真实会话:', isRealConversation);
+            
             const menuItems = [
               {
                 label: '重命名',
@@ -138,13 +159,25 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
                 key: 'delete',
                 icon: <DeleteOutlined />,
                 danger: true,
-                onClick: () => {
-                  handleDeleteConversation(conversation.key);
-                },
               } as any); // 临时类型断言，因为Antd的类型定义问题
             }
 
-            return { items: menuItems };
+            return { 
+              items: menuItems,
+              onClick: ({ key }: { key: string }) => {
+                console.log('=== 菜单点击调试 ===');
+                console.log('点击的菜单项key:', key);
+                console.log('会话key:', conversation.key);
+                
+                if (key === 'delete') {
+                  console.log('调用删除函数...');
+                  handleDeleteConversation(conversation.key);
+                } else if (key === 'rename') {
+                  // TODO: 实现重命名功能
+                  console.log('重命名会话:', conversation.key);
+                }
+              }
+            };
           }}
         />
       </div>
@@ -203,6 +236,14 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
           </div>
         </Dropdown>
       </div>
+
+      {/* 删除确认对话框 */}
+      <DeleteConversationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        conversationTitle={conversationToDelete?.title || ''}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 };

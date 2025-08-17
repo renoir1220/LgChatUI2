@@ -140,17 +140,27 @@ const ChatScreenRefactored: React.FC = () => {
 
   // 删除会话处理
   const handleDeleteConversation = async (conversationKey: string) => {
+    console.log('=== 删除会话调试信息 ===');
+    console.log('要删除的会话ID:', conversationKey);
+    console.log('当前会话ID:', curConversation);
+    
     try {
+      console.log('开始调用删除API...');
       await conversationApi.deleteConversation(conversationKey);
+      console.log('删除API调用成功');
+      
       message.success('会话删除成功');
       
       // 如果删除的是当前会话，切换到新会话
       if (conversationKey === curConversation) {
+        console.log('删除的是当前会话，切换到新会话');
         createNewConversation();
       }
       
       // 刷新会话列表
+      console.log('刷新会话列表...');
       await refreshConversations();
+      console.log('会话列表刷新完成');
     } catch (error) {
       console.error('删除会话失败:', error);
       message.error('删除会话失败，请重试');
