@@ -3,6 +3,9 @@ import { apiGet } from '../../shared/services/api';
 import { getCitationsFromCache, cleanupExpiredCache } from '../utils/messageCache';
 import type { ConversationItem, ConversationDetail, MessageRecord, BubbleDataType, Citation } from './useChatState';
 
+// UUID验证函数
+const isValidUUID = (s?: string) => !!s && /^[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$/.test(s);
+
 /**
  * 会话管理Hook
  * 处理会话列表的加载、切换和历史消息恢复
@@ -100,7 +103,9 @@ export function useConversations(
    */
   const switchConversation = async (conversationKey: string) => {
     setCurConversation(conversationKey);
-    setConversationId(typeof conversationKey === 'string' ? conversationKey : undefined);
+    // 只有当conversationKey是有效的UUID时（即真实会话），才设置conversationId
+    // 虚拟会话（如'default-0', 'new'）应该保持conversationId为undefined
+    setConversationId(isValidUUID(conversationKey) ? conversationKey : undefined);
     
     if (conversationKey && conversationKey !== 'new') {
       // 从会话详细信息中获取知识库ID并自动设置

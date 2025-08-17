@@ -73,6 +73,11 @@ const ChatScreenRefactored: React.FC = () => {
 
     setLoading(true);
 
+    console.log('=== 发送消息调试信息 ===');
+    console.log('当前会话ID (conversationId):', conversationId);
+    console.log('当前选中会话 (curConversation):', curConversation);
+    console.log('conversationId类型:', typeof conversationId);
+    console.log('conversationId是否有效:', conversationId && conversationId !== 'new' && conversationId !== 'default-0');
 
     try {
       await sendMessage(
