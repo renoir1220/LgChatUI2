@@ -18,16 +18,16 @@ export function useKnowledgeBases() {
       setLoading(true);
       setError(null);
       try {
-        const data = await apiGet(`/api/knowledge-bases`);
+        const data = await apiGet<KnowledgeBase[]>(`/api/knowledge-bases`);
         if (!mounted) return;
         const list = Array.isArray(data) ? data : [];
         setKnowledgeBases(list);
         if (list.length && !currentKnowledgeBase) setCurrentKnowledgeBase(list[0].id);
-      } catch (e: any) {
+      } catch (e) {
         // 后端暂未实现时，保持空列表，不阻塞聊天功能
         if (!mounted) return;
         setKnowledgeBases([]);
-        setError(e?.message || '加载失败');
+        setError(e instanceof Error ? e.message : '加载失败');
       } finally {
         if (mounted) setLoading(false);
       }
@@ -35,7 +35,7 @@ export function useKnowledgeBases() {
 
     fetchKB();
     return () => { mounted = false; };
-  }, []);
+  }, [currentKnowledgeBase]);
 
   return {
     knowledgeBases,

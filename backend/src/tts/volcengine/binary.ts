@@ -1,16 +1,16 @@
-import { Command } from 'commander'
-import * as fs from 'fs'
-import WebSocket from 'ws'
-import * as uuid from 'uuid'
-import { MsgType, ReceiveMessage, FullClientRequest } from '../protocols'
+import { Command } from 'commander';
+import * as fs from 'fs';
+import WebSocket from 'ws';
+import * as uuid from 'uuid';
+import { MsgType, ReceiveMessage, FullClientRequest } from '../protocols';
 
-const program = new Command()
+const program = new Command();
 
 function VoiceToCluster(voice: string): string {
   if (voice.startsWith('S_')) {
-    return 'volcano_icl'
+    return 'volcano_icl';
   }
-  return 'volcano_tts'
+  return 'volcano_tts';
 }
 
 program
@@ -27,21 +27,21 @@ program
     'wss://openspeech.bytedance.com/api/v1/tts/ws_binary',
   )
   .action(async (options) => {
-    console.log('options: ', options)
+    console.log('options: ', options);
 
     const headers = {
       Authorization: `Bearer;${options.access_token}`,
-    }
+    };
 
     const ws = new WebSocket(options.endpoint, {
       headers,
       skipUTF8Validation: true,
-    })
+    });
 
     await new Promise((resolve, reject) => {
-      ws.on('open', resolve)
-      ws.on('error', reject)
-    })
+      ws.on('open', resolve);
+      ws.on('error', reject);
+    });
 
     const request = {
       app: {
@@ -67,27 +67,27 @@ program
         }),
         with_timestamp: '1',
       },
-    }
+    };
 
     await FullClientRequest(
       ws,
       new TextEncoder().encode(JSON.stringify(request)),
-    )
+    );
 
-    const totalAudio: Uint8Array[] = []
+    const totalAudio: Uint8Array[] = [];
 
     while (true) {
-      const msg = await ReceiveMessage(ws)
-      console.log(`${msg.toString()}`)
+      const msg = await ReceiveMessage(ws);
+      console.log(`${msg.toString()}`);
 
       switch (msg.type) {
         case MsgType.FrontEndResultServer:
-          break
+          break;
         case MsgType.AudioOnlyServer:
-          totalAudio.push(msg.payload)
-          break
+          totalAudio.push(msg.payload);
+          break;
         default:
-          throw new Error(`${msg.toString()}`)
+          throw new Error(`${msg.toString()}`);
       }
 
       if (
@@ -95,19 +95,19 @@ program
         msg.sequence !== undefined &&
         msg.sequence < 0
       ) {
-        break
+        break;
       }
     }
 
     if (totalAudio.length === 0) {
-      throw new Error('no audio received')
+      throw new Error('no audio received');
     }
 
-    const outputFile = `${options.voice_type}.${options.encoding}`
-    await fs.promises.writeFile(outputFile, totalAudio)
-    console.log(`audio saved to ${outputFile}`)
+    const outputFile = `${options.voice_type}.${options.encoding}`;
+    await fs.promises.writeFile(outputFile, totalAudio);
+    console.log(`audio saved to ${outputFile}`);
 
-    ws.close()
-  })
+    ws.close();
+  });
 
-program.parse(process.argv)
+program.parse(process.argv);

@@ -110,7 +110,11 @@ export class ChatHistoryController {
     const userId = `user_${username}`;
 
     const title = body.title || '新对话';
-    return await this.conversations.createConversation(userId, title, body.knowledgeBaseId);
+    return await this.conversations.createConversation(
+      userId,
+      title,
+      body.knowledgeBaseId,
+    );
   }
 
   // PUT /api/conversations/:id - 更新会话信息

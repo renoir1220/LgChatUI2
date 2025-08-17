@@ -66,11 +66,49 @@ interface Citation {
   position: number;
 }
 
+interface ConversationItem {
+  key: string;
+  label: string;
+  group: string;
+}
+
+interface ConversationDetail {
+  id: string;
+  title: string;
+  knowledgeBaseId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface MessageRecord {
+  id: string;
+  role: 'USER' | 'ASSISTANT';
+  content: string;
+  createdAt: string;
+}
+
 type BubbleDataType = {
   role: string;
   content: string;
   citations?: Citation[];
 };
+
+interface StreamResponse {
+  event: 'agent_message' | 'message';
+  answer?: string;
+  metadata?: {
+    retriever_resources?: Array<{
+      document_name?: string;
+      dataset_name?: string;
+      content: string;
+      score: number;
+      dataset_id: string;
+      document_id: string;
+      segment_id: string;
+      position: number;
+    }>;
+  };
+}
 
 const DEFAULT_CONVERSATIONS_ITEMS = [
   {
@@ -152,13 +190,13 @@ const ChatScreen: React.FC = () => {
   const { knowledgeBases, currentKnowledgeBase, setCurrentKnowledgeBase, loading: kbLoading } = useKnowledgeBases();
 
   // 状态管理 - 使用更清晰的命名和注释
-  const [messageHistory, setMessageHistory] = useState<Record<string, any>>({}); // 存储所有会话的消息历史
-  const [conversations, setConversations] = useState<any[]>(DEFAULT_CONVERSATIONS_ITEMS); // 会话列表数据
-  const [conversationDetails, setConversationDetails] = useState<Record<string, any>>({}); // 存储会话详细信息
+  const [messageHistory, setMessageHistory] = useState<Record<string, BubbleDataType[]>>({}); // 存储所有会话的消息历史
+  const [conversations, setConversations] = useState<ConversationItem[]>(DEFAULT_CONVERSATIONS_ITEMS); // 会话列表数据
+  const [conversationDetails, setConversationDetails] = useState<Record<string, ConversationDetail>>({}); // 存储会话详细信息
   const [curConversation, setCurConversation] = useState<string>(DEFAULT_CONVERSATIONS_ITEMS[0].key); // 当前选中的会话
   const [conversationId, setConversationId] = useState<string | undefined>(undefined); // 当前会话ID（UUID格式）
   const [attachmentsOpen, setAttachmentsOpen] = useState(false); // 附件上传面板开关状态
-  const [attachedFiles, setAttachedFiles] = useState<any[]>([]); // 已上传的文件列表
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]); // 已上传的文件列表
   const [inputValue, setInputValue] = useState(''); // 输入框内容
   const [messages, setMessages] = useState<BubbleDataType[]>([]); // 当前会话的消息列表
   const [loading, setLoading] = useState(false); // 消息发送加载状态
@@ -186,7 +224,7 @@ const ChatScreen: React.FC = () => {
       // 消息交互：开始发送请求
       
       const isValidUUID = (s?: string) => !!s && /^[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$/.test(s);
-      const baseBody: any = { message: val, knowledgeBaseId: currentKnowledgeBase };
+      const baseBody = { message: val, knowledgeBaseId: currentKnowledgeBase };
       const sentConvId = isValidUUID(conversationId) ? conversationId : undefined;
       const makeBody = (withConv: boolean) => JSON.stringify(withConv && sentConvId ? { ...baseBody, conversationId: sentConvId } : baseBody);
 
@@ -211,18 +249,20 @@ const ChatScreen: React.FC = () => {
         setConversationId(respConvId);
         // 刷新侧边栏会话列表
         try {
-          const list = await apiGet<any[]>(`/api/conversations`);
-          setConversations(list.map((c: any) => ({ key: c.id, label: c.title, group: '最近' })));
+          const list = await apiGet<ConversationDetail[]>(`/api/conversations`);
+          setConversations(list.map((c) => ({ key: c.id, label: c.title, group: '最近' })));
           
           // 更新会话详细信息
-          const details: Record<string, any> = {};
+          const details: Record<string, ConversationDetail> = {};
           list.forEach(c => {
             details[c.id] = c;
           });
           setConversationDetails(details);
           
           setCurConversation(respConvId);
-        } catch {}
+        } catch (error) {
+          console.error('刷新会话列表失败:', error);
+        }
       }
 
       if (!response.body) {
@@ -251,7 +291,7 @@ const ChatScreen: React.FC = () => {
                 return;
               }
               try {
-                const jsonData = JSON.parse(rawData);
+                const jsonData = JSON.parse(rawData) as StreamResponse;
                 
                 // 文本增量
                 if (jsonData.event === 'agent_message' || jsonData.event === 'message') {
@@ -266,7 +306,7 @@ const ChatScreen: React.FC = () => {
                 // 处理知识库引用数据 - 检查所有可能的来源
                 const retrieverResources = jsonData?.metadata?.retriever_resources;
                 if (retrieverResources && Array.isArray(retrieverResources) && retrieverResources.length > 0) {
-                  const withCitations = retrieverResources.map((r: any) => ({
+                  const withCitations = retrieverResources.map((r) => ({
                     source: r.document_name || r.dataset_name || '未知来源',
                     content: r.content,
                     document_name: r.document_name,
@@ -307,7 +347,7 @@ const ChatScreen: React.FC = () => {
       // 获取最终的助手消息状态并输出调试信息
       setMessages(prev => [...prev]);
 
-    } catch (error: any) {
+    } catch (error) {
       if (error.name !== 'AbortError') {
         console.error('请求失败:', error);
         const errorMessage = { 
@@ -350,12 +390,12 @@ const ChatScreen: React.FC = () => {
     
     (async () => {
       try {
-        const list = await apiGet<any[]>(`/api/conversations`);
+        const list = await apiGet<ConversationDetail[]>(`/api/conversations`);
         if (Array.isArray(list) && list.length > 0) {
           setConversations(list.map((c) => ({ key: c.id, label: c.title, group: '最近' })));
           
           // 存储会话详细信息
-          const details: Record<string, any> = {};
+          const details: Record<string, ConversationDetail> = {};
           list.forEach(c => {
             details[c.id] = c;
           });
@@ -371,17 +411,17 @@ const ChatScreen: React.FC = () => {
           
           // 加载首个会话消息（404 视为空列表）
           try {
-            const msgs = await apiGet<any[]>(`/api/conversations/${list[0].id}`);
+            const msgs = await apiGet<MessageRecord[]>(`/api/conversations/${list[0].id}`);
             const cachedCitations = getCitationsFromCache(list[0].id);
             let assistantCount = 0;
             const mapped = msgs.map((m, index) => {
               const role = m.role === 'USER' ? 'user' : 'assistant';
-              let citations: any[] = [];
+              let citations: Citation[] = [];
               if (role === 'assistant') {
                 assistantCount += 1;
                 const byAssistantKey = cachedCitations[`a:${assistantCount}`] || [];
                 const byLegacyIndex = cachedCitations[index.toString()] || [];
-                citations = (byAssistantKey.length ? byAssistantKey : byLegacyIndex) as any[];
+                citations = (byAssistantKey.length ? byAssistantKey : byLegacyIndex) as Citation[];
               }
               
               // 恢复历史引用（静默）
@@ -393,15 +433,17 @@ const ChatScreen: React.FC = () => {
               };
             });
             setMessages(mapped);
-          } catch (e) {
+          } catch (error) {
+            console.error('加载会话消息失败:', error);
             setMessages([]);
           }
         }
-      } catch (e) {
+      } catch (error) {
         // 静默处理：未登录或加载失败
+        console.error('初始化加载失败:', error);
       }
     })();
-  }, []);
+  }, [setCurrentKnowledgeBase]);
 
   // 组件渲染
   const chatSider = (
@@ -447,17 +489,17 @@ const ChatScreen: React.FC = () => {
                   setCurrentKnowledgeBase(conversationDetail.knowledgeBaseId);
                 }
                 
-                apiGet<any[]>(`/api/conversations/${val}`).then(msgs => {
+                apiGet<MessageRecord[]>(`/api/conversations/${val}`).then(msgs => {
                   const cachedCitations = getCitationsFromCache(val as string);
                   let assistantCount = 0;
                   const mapped = msgs.map((m, index) => {
                     const role = m.role === 'USER' ? 'user' : 'assistant';
-                    let citations: any[] = [];
+                    let citations: Citation[] = [];
                     if (role === 'assistant') {
                       assistantCount += 1;
                       const byAssistantKey = cachedCitations[`a:${assistantCount}`] || [];
                       const byLegacyIndex = cachedCitations[index.toString()] || [];
-                      citations = (byAssistantKey.length ? byAssistantKey : byLegacyIndex) as any[];
+                      citations = (byAssistantKey.length ? byAssistantKey : byLegacyIndex) as Citation[];
                     }
                     
                     // 历史引用恢复，静默
@@ -469,7 +511,10 @@ const ChatScreen: React.FC = () => {
                     };
                   });
                   setMessages(mapped);
-                }).catch(() => setMessages([]));
+                }).catch((error) => {
+                  console.error('加载会话失败:', error);
+                  setMessages([]);
+                });
               } else {
                 setMessages([]);
               }
@@ -568,7 +613,7 @@ const ChatScreen: React.FC = () => {
 
             return {
               ...msg,
-              content: contentNode as any,
+              content: contentNode as React.ReactNode,
               classNames: {
                 content: isStreamingAssistant ? 'loading-message' : '',
               },
@@ -624,7 +669,7 @@ const ChatScreen: React.FC = () => {
                               abortController.current = new AbortController();
                               
                               const isValidUUID = (s?: string) => !!s && /^[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$/.test(s);
-                              const baseBody: any = { message: userMessage, knowledgeBaseId: currentKnowledgeBase };
+                              const baseBody = { message: userMessage, knowledgeBaseId: currentKnowledgeBase };
                               const sentConvId = isValidUUID(conversationId) ? conversationId : undefined;
                               const makeBody = (withConv: boolean) => JSON.stringify(withConv && sentConvId ? { ...baseBody, conversationId: sentConvId } : baseBody);
 
@@ -664,7 +709,7 @@ const ChatScreen: React.FC = () => {
                                     if (rawData.includes('[DONE]')) continue;
                                     
                                     try {
-                                      const jsonData = JSON.parse(rawData);
+                                      const jsonData = JSON.parse(rawData) as StreamResponse;
                                       
                                       // 在相同位置更新AI回复内容
                                       if (jsonData.event === 'agent_message' || jsonData.event === 'message') {
@@ -676,7 +721,7 @@ const ChatScreen: React.FC = () => {
                                       // 处理引用数据
                                       const retrieverResources = jsonData?.metadata?.retriever_resources;
                                       if (retrieverResources && Array.isArray(retrieverResources) && retrieverResources.length > 0) {
-                                        const withCitations = retrieverResources.map((r: any) => ({
+                                        const withCitations = retrieverResources.map((r) => ({
                                           source: r.document_name || r.dataset_name || '未知来源',
                                           content: r.content,
                                           document_name: r.document_name,
@@ -707,7 +752,7 @@ const ChatScreen: React.FC = () => {
                                   }
                                 }
                               }
-                            } catch (error: any) {
+                            } catch (error) {
                               if (error.name !== 'AbortError') {
                                 console.error('重新生成失败:', error);
                                 setMessages(prev => prev.map((item, i) => 
@@ -758,7 +803,7 @@ const ChatScreen: React.FC = () => {
                 } 
               },
               loadingRender: () => <Spin size="small" />,
-              messageRender: (content: any) => {
+              messageRender: (content: React.ReactNode) => {
                 if (typeof content === 'string') {
                   return renderMarkdown(content, false);
                 }
@@ -865,7 +910,7 @@ const ChatScreen: React.FC = () => {
       <Attachments
         beforeUpload={() => false}
         items={attachedFiles}
-        onChange={(info) => setAttachedFiles(info.fileList)}
+        onChange={(info) => setAttachedFiles(info.fileList || [])}
         placeholder={(type) =>
           type === 'drop'
             ? { title: '拖拽文件到此处' }

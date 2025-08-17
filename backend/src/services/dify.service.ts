@@ -300,7 +300,9 @@ export class DifyService {
       return resp.data as NodeJS.ReadableStream;
     }
     // 直接抛错由控制器处理
-    const err = new Error(`Dify file preview failed: ${resp.status}`) as Error & {
+    const err = new Error(
+      `Dify file preview failed: ${resp.status}`,
+    ) as Error & {
       status?: number;
       data?: any;
     };

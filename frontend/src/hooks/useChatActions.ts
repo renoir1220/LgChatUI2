@@ -1,9 +1,10 @@
 import { useCallback } from 'react';
 import { useChatContext } from '@/contexts/ChatContext';
+import { ChatRole } from '@lg/shared';
 
 // 消息操作Hook
 export function useMessageActions() {
-  const { state, actions } = useChatContext();
+  const { state, dispatch, actions } = useChatContext();
   
   // 复制消息内容
   const copyMessage = useCallback(async (content: string) => {
@@ -20,14 +21,14 @@ export function useMessageActions() {
   // 重新生成消息
   const regenerateMessage = useCallback(async (messageId: string) => {
     const message = state.messages.find(m => m.id === messageId);
-    if (!message || message.role !== 'assistant') return;
+    if (!message || message.role !== ChatRole.Assistant) return;
     
     // 找到上一条用户消息
     const messageIndex = state.messages.findIndex(m => m.id === messageId);
     const userMessage = state.messages
       .slice(0, messageIndex)
       .reverse()
-      .find(m => m.role === 'user');
+      .find(m => m.role === ChatRole.User);
     
     if (!userMessage) return;
     
@@ -35,7 +36,7 @@ export function useMessageActions() {
       actions.setStreaming(true);
       
       // 删除当前助手消息
-      actions.dispatch({ type: 'DELETE_MESSAGE', payload: messageId });
+      dispatch({ type: 'DELETE_MESSAGE', payload: messageId });
       
       // 重新发送用户消息触发生成
       await actions.sendMessage(userMessage.content);
@@ -111,7 +112,7 @@ export function useConversationActions() {
     try {
       actions.updateConversation(conversationId, { 
         title: newTitle.trim(),
-        updated_at: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       });
       
       // 会话重命名

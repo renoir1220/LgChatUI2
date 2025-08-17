@@ -58,6 +58,20 @@ export const CitationList: React.FC<{ citations?: CitationItem[]; kbId?: string 
     return { base: n.slice(0, lastDot), ext: n.slice(lastDot + 1) };
   };
 
+  // 把 Dify 的签名URL改写为后端代理，避免过期
+  const normalizeImageLinks = (content: string) => {
+    if (!content) return content;
+    try {
+      const kbQuery = kbId ? `?kb=${encodeURIComponent(kbId)}` : '';
+      return content
+        .replace(/\[image\]\(\/files\/([0-9a-fA-F-]{36})\/file-preview[^)]*\)/g, (_m, id) => `[image](/api/files/${id}/preview${kbQuery})`)
+        .replace(/!\[[^\]]*\]\(\/files\/([0-9a-fA-F-]{36})\/file-preview[^)]*\)/g, (_m, id) => `![image](/api/files/${id}/preview${kbQuery})`)
+        .replace(/<img[^>]+src="\/files\/([0-9a-fA-F-]{36})\/file-preview[^"]*"[^>]*>/g, (_m, id) => `<img src="/api/files/${id}/preview${kbQuery}" />`);
+    } catch {
+      return content;
+    }
+  };
+
   // Group citations by document_name and source
   const groupedCitations = useMemo(() => {
     const groups: Map<string, DocumentGroup> = new Map();
@@ -164,16 +178,3 @@ export const CitationList: React.FC<{ citations?: CitationItem[]; kbId?: string 
     </div>
   );
 };
-  // 把 Dify 的签名URL改写为后端代理，避免过期
-  const normalizeImageLinks = (content: string) => {
-    if (!content) return content;
-    try {
-      const kbQuery = kbId ? `?kb=${encodeURIComponent(kbId)}` : '';
-      return content
-        .replace(/\[image\]\(\/files\/([0-9a-fA-F-]{36})\/file-preview[^)]*\)/g, (_m, id) => `[image](/api/files/${id}/preview${kbQuery})`)
-        .replace(/!\[[^\]]*\]\(\/files\/([0-9a-fA-F-]{36})\/file-preview[^)]*\)/g, (_m, id) => `![image](/api/files/${id}/preview${kbQuery})`)
-        .replace(/<img[^>]+src=\"\/files\/([0-9a-fA-F-]{36})\/file-preview[^\"]*\"[^>]*>/g, (_m, id) => `<img src="/api/files/${id}/preview${kbQuery}" />`);
-    } catch {
-      return content;
-    }
-  };

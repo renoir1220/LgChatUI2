@@ -89,7 +89,7 @@ export class ConversationsRepository {
   // 更新会话信息
   async updateConversation(
     conversationId: string,
-    updates: { title?: string; knowledgeBaseId?: string }
+    updates: { title?: string; knowledgeBaseId?: string },
   ): Promise<void> {
     const setParts: string[] = [];
     const params: any[] = [];
@@ -113,7 +113,7 @@ export class ConversationsRepository {
 
     params.push(conversationId);
     const query = `UPDATE T_AI_CONVERSATIONS SET ${setParts.join(', ')} WHERE CONVERSATION_ID = @p${paramIndex}`;
-    
+
     await this.db.query(query, ...params);
   }
 

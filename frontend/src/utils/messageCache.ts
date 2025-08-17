@@ -3,8 +3,19 @@
  * 将消息的引用信息保存到Cookie中，用于历史记录恢复
  */
 
+interface Citation {
+  source: string;
+  content: string;
+  document_name: string;
+  score: number;
+  dataset_id: string;
+  document_id: string;
+  segment_id: string;
+  position: number;
+}
+
 interface MessageCitations {
-  [messageKey: string]: any[]; // messageKey -> citations数组（如 a:1 或 旧的 index）
+  [messageKey: string]: Citation[]; // messageKey -> citations数组（如 a:1 或 旧的 index）
 }
 
 const COOKIE_PREFIX = 'chat_cit_'; // 旧：每个会话一个cookie：chat_cit_<conversationId>
@@ -28,7 +39,7 @@ interface PackedConvCacheV1 {
   m: Record<string, PackedCitation[]>; // messageKey -> packed citations
 }
 
-function packCitations(items: any[]): PackedCitation[] {
+function packCitations(items: Citation[]): PackedCitation[] {
   return items.map((it) => {
     const tuple: PackedCitation = [
       it.source ?? '',
@@ -46,7 +57,7 @@ function packCitations(items: any[]): PackedCitation[] {
   });
 }
 
-function unpackCitations(packed: PackedCitation[]): any[] {
+function unpackCitations(packed: PackedCitation[]): Citation[] {
   return packed.map((t) => ({
     source: t[0],
     content: t[1],
@@ -77,13 +88,13 @@ function readConvCookie(conversationId: string): MessageCitations {
       result[k] = unpackCitations(json.m[k]);
     });
     return result;
-  } catch (error) {
+  } catch {
     // 读取会话Cookie缓存失败
     return {};
   }
 }
 
-function writeConvCookie(conversationId: string, data: MessageCitations) {
+export function writeConvCookie(conversationId: string, data: MessageCitations) {
   const key = getCookieKey(conversationId);
   const expires = new Date();
   expires.setTime(expires.getTime() + CACHE_EXPIRE_DAYS * 24 * 60 * 60 * 1000);
@@ -142,6 +153,7 @@ function readLegacyConv(conversationId: string): MessageCitations {
     const obj = JSON.parse(decoded) as Record<string, MessageCitations>;
     return obj?.[conversationId] || {};
   } catch {
+    // 缓存读取失败，返回空对象
     return {};
   }
 }
@@ -160,6 +172,7 @@ function readConvLS(conversationId: string): MessageCitations {
     Object.keys(json.m).forEach((k) => (result[k] = unpackCitations(json.m[k])));
     return result;
   } catch {
+    // 缓存读取失败，返回空对象
     return {};
   }
 }
@@ -171,13 +184,15 @@ function writeConvLS(conversationId: string, data: MessageCitations) {
   });
   try {
     localStorage.setItem(`${LS_PREFIX}${conversationId}`, JSON.stringify(packed));
-  } catch (e) {
+  } catch {
     // LS 爆满则做简单降级：按键名排序删旧键
     try {
       const keys = Object.keys(localStorage).filter((k) => k.startsWith(LS_PREFIX)).sort();
       for (let i = 0; i < Math.min(3, keys.length); i++) localStorage.removeItem(keys[i]);
       localStorage.setItem(`${LS_PREFIX}${conversationId}`, JSON.stringify(packed));
-    } catch {}
+    } catch {
+      // 清理缓存失败，忽略错误
+    }
   }
 }
 
@@ -187,7 +202,7 @@ function writeConvLS(conversationId: string, data: MessageCitations) {
  * @param messageIndex 消息索引
  * @param citations 引用信息数组
  */
-export function saveCitationsToCache(conversationId: string, messageIndex: number, citations: any[]) {
+export function saveCitationsToCache(conversationId: string, messageIndex: number, citations: Citation[]) {
   try {
     if (!conversationId || citations.length === 0) return;
 
@@ -195,7 +210,7 @@ export function saveCitationsToCache(conversationId: string, messageIndex: numbe
     conv[messageIndex.toString()] = citations;
     writeConvLS(conversationId, conv);
     // 保存引用信息到缓存(legacy键)
-  } catch (error) {
+  } catch {
     // 保存引用信息到缓存失败
   }
 }
@@ -207,7 +222,7 @@ export function saveCitationsToCache(conversationId: string, messageIndex: numbe
 export function saveAssistantCitationsToCache(
   conversationId: string,
   assistantOrdinal: number,
-  citations: any[],
+  citations: Citation[],
 ) {
   try {
     if (!conversationId || citations.length === 0) return;
@@ -217,7 +232,7 @@ export function saveAssistantCitationsToCache(
     conv[key] = citations;
     writeConvLS(conversationId, conv);
     // 保存引用信息到缓存(助手序号)
-  } catch (error) {
+  } catch {
     // 保存引用信息到缓存(助手序号)失败
   }
 }
@@ -250,7 +265,7 @@ export function getCitationsFromCache(conversationId: string): MessageCitations 
       return legacy;
     }
     return {};
-  } catch (error) {
+  } catch {
     // 从缓存获取引用信息失败
     return {};
   }
@@ -278,7 +293,9 @@ export function cleanupExpiredCache() {
             writeConvLS(convId, mc);
             convIds.push(convId);
           }
-        } catch {}
+        } catch {
+      // 清理缓存失败，忽略错误
+    }
       }
     });
     // 清理已迁移的cookie，以及旧的全局大cookie
@@ -286,7 +303,7 @@ export function cleanupExpiredCache() {
       document.cookie = `${COOKIE_PREFIX}${id}=; expires=${new Date(0).toUTCString()}; path=/; SameSite=Lax`;
     });
     document.cookie = `${LEGACY_CACHE_KEY}=; expires=${new Date(0).toUTCString()}; path=/; SameSite=Lax`;
-  } catch (error) {
+  } catch {
     // 清理缓存失败
   }
 }
@@ -301,7 +318,7 @@ export function clearConversationCache(conversationId: string) {
     const key = getCookieKey(conversationId);
     document.cookie = `${key}=; expires=${new Date(0).toUTCString()}; path=/; SameSite=Lax`;
     // 清除对话缓存
-  } catch (error) {
+  } catch {
     // 清除对话缓存失败
   }
 }
@@ -311,7 +328,7 @@ export function clearConversationCache(conversationId: string) {
  * @param conversationId 对话ID
  * @param messages 消息数组
  */
-export function batchSaveCitations(conversationId: string, messages: any[]) {
+export function batchSaveCitations(conversationId: string, messages: { role: string; citations?: Citation[] }[]) {
   try {
     if (!conversationId || !messages.length) return;
 
@@ -326,7 +343,7 @@ export function batchSaveCitations(conversationId: string, messages: any[]) {
     if (savedCount > 0) {
       // 批量保存引用信息
     }
-  } catch (error) {
+  } catch {
     // 批量保存引用信息失败
   }
 }

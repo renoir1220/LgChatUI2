@@ -36,9 +36,13 @@ export class TtsController {
       // 从环境变量获取配置
       const appid = process.env.VOLCENGINE_APPID;
       const accessToken = process.env.VOLCENGINE_ACCESS_TOKEN;
-      const defaultVoiceType = process.env.VOLCENGINE_VOICE_TYPE || 'zh_female_daimengchuanmei_moon_bigtts';
+      const defaultVoiceType =
+        process.env.VOLCENGINE_VOICE_TYPE ||
+        'zh_female_daimengchuanmei_moon_bigtts';
 
-      this.logger.log(`环境变量检查 - APPID: ${appid}, ACCESS_TOKEN: ...${accessToken?.slice(-4) || 'N/A'}, 默认音色: ${defaultVoiceType}`);
+      this.logger.log(
+        `环境变量检查 - APPID: ${appid}, ACCESS_TOKEN: ...${accessToken?.slice(-4) || 'N/A'}, 默认音色: ${defaultVoiceType}`,
+      );
 
       if (!appid || !accessToken) {
         throw new HttpException(
@@ -67,10 +71,9 @@ export class TtsController {
       res.send(audioBuffer);
 
       this.logger.log(`语音合成完成，大小: ${audioBuffer.length} 字节`);
-
     } catch (error) {
       this.logger.error('TTS合成失败', error);
-      
+
       if (error instanceof HttpException) {
         throw error;
       }

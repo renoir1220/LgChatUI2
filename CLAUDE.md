@@ -4,10 +4,18 @@
 
 ## 项目概览
 
-LgChatUI2 是一个全栈聊天应用，包含：
-- **后端**：NestJS API 服务器（基于 TypeScript 和 Express）
-- **前端**：React + Vite + TypeScript + TailwindCSS + shadcn
-- **架构**：前后端作为同级目录独立部署
+LgChatUI2 是一个全栈聊天应用，基于 npm workspaces 的 monorepo 架构：
+
+### 核心架构
+- **后端**：NestJS API 服务器（TypeScript + Express + MSSQL）
+- **前端**：React 18+ + Vite + TypeScript + TailwindCSS + shadcn/ui
+- **共享包**：@lg/shared（Zod 类型定义和校验）
+- **语音服务**：集成火山引擎 TTS API（WebSocket 实时语音合成）
+
+### 项目统计（截至 2025-01-17）
+- **代码规模**：64 个 TS/TSX 文件，约 7,852 行核心代码
+- **依赖管理**：npm workspaces，3 个子包
+- **代码质量**：前端 60 个 lint 问题，后端 151 个 lint 问题（需重构）
 
 ## 开发命令
 
@@ -41,18 +49,31 @@ npm run lint                   # ESLint 检查
 ## 架构详情
 
 ### 后端结构
-- **入口文件**：`backend/src/main.ts` - NestJS 应用启动
-- **主模块**：`backend/src/app.module.ts` - 根模块配置
-- **控制器**：`backend/src/app.controller.ts` - REST API 端点
-- **服务层**：`backend/src/app.service.ts` - 业务逻辑
-- **测试**：Jest 配置的单元测试和端到端测试
+- **入口**：`backend/src/main.ts` - NestJS 应用启动（端口 3000）
+- **核心模块**：`backend/src/app.module.ts` - 根模块配置
+- **控制器层**：
+  - `chat.controller.ts` - 聊天对话 API（SSE 流式响应）
+  - `auth.controller.ts` - 用户认证（JWT）
+  - `tts.controller.ts` - 语音合成（火山引擎 WebSocket）
+  - `knowledge-base.controller.ts` - 知识库管理
+  - `files.controller.ts` - 文件预览代理
+- **数据层**：
+  - `database/database.service.ts` - MSSQL 连接池
+  - `repositories/` - 数据访问层（conversations、messages、users）
+- **外部服务**：`services/dify.service.ts` - Dify AI 平台集成
 
 ### 前端结构
-- **入口文件**：`frontend/src/main.tsx` - React 应用根节点
-- **构建工具**：Vite + React 插件 + SWC
-- **样式系统**：TailwindCSS 4.x + shadcn/ui
-- **组件目录**：`frontend/src/components/`（含 shadcn/ui 配置）
-- **路径别名**：`@` 映射到 `frontend/src/`（通过 Vite 配置）
+- **入口**：`frontend/src/main.tsx` - React 18 应用根节点
+- **核心组件**：
+  - `ChatScreen.tsx` - 主聊天界面（983 行，需拆分）
+  - `CitationList.tsx` - 知识库引用展示
+  - `VoicePlayer.tsx` - 语音播放控件
+- **状态管理**：
+  - `contexts/ChatContext.tsx` - 聊天状态管理
+  - `hooks/useKnowledgeBases.ts` - 知识库选择逻辑
+- **工具层**：
+  - `utils/messageCache.ts` - 消息缓存（Cookie 存储）
+  - `lib/api.ts` - API 请求封装
 
 ## 关键配置文件
 
@@ -212,3 +233,214 @@ useEffect(() => {
 - [ ] 无未使用的导入和变量
 - [ ] 所有类型定义明确，无 any 使用
 - [ ] 代码格式符合项目规范
+
+## Claude 编码注意事项
+
+> **重要提醒**：以下是基于历史lint错误总结的编码规范，Claude在编写代码时必须严格遵守
+
+### 🚫 绝对禁止的编码行为
+
+#### 1. 滥用 any 类型
+**❌ 错误做法**：
+```typescript
+// 绝对不要这样做
+const [data, setData] = useState<any>([])
+const handleResponse = (response: any) => {}
+const items: any[] = []
+```
+
+**✅ 正确做法**：
+```typescript
+// 定义具体的接口类型
+interface ApiResponse {
+  data: ConversationItem[]
+  status: number
+}
+
+const [data, setData] = useState<ConversationItem[]>([])
+const handleResponse = (response: ApiResponse) => {}
+const items: ConversationItem[] = []
+```
+
+#### 2. 忽略未使用变量
+**❌ 错误做法**：
+```typescript
+// 不要保留未使用的变量
+try {
+  await apiCall()
+} catch (e) {  // e 未使用会报错
+  console.log('Error occurred')
+}
+```
+
+**✅ 正确做法**：
+```typescript
+// 使用下划线前缀或移除未使用变量
+try {
+  await apiCall()
+} catch (_error) {  // 明确标识未使用
+  console.log('Error occurred')
+}
+
+// 或者完全移除
+try {
+  await apiCall()
+} catch {
+  console.log('Error occurred')  
+}
+```
+
+#### 3. 空的 catch 块
+**❌ 错误做法**：
+```typescript
+// 绝不要使用空的异常处理
+try {
+  loadData()
+} catch {}  // 空catch块是危险的
+```
+
+**✅ 正确做法**：
+```typescript
+// 始终处理异常，即使是静默处理也要明确
+try {
+  loadData()
+} catch (error) {
+  console.error('加载数据失败:', error)
+  // 或者
+  // 静默处理，但要有注释说明原因
+}
+```
+
+#### 4. React Hooks 依赖缺失
+**❌ 错误做法**：
+```typescript
+// 使用了外部状态但未在依赖中声明
+useEffect(() => {
+  setCurrentKnowledgeBase(selectedId)  // setCurrentKnowledgeBase未在依赖中
+}, [selectedId])  // 缺少setCurrentKnowledgeBase依赖
+```
+
+**✅ 正确做法**：
+```typescript
+// 包含所有依赖
+useEffect(() => {
+  setCurrentKnowledgeBase(selectedId)
+}, [selectedId, setCurrentKnowledgeBase])
+
+// 或者使用函数式更新避免依赖
+useEffect(() => {
+  if (selectedId) {
+    setCurrentKnowledgeBase(selectedId)
+  }
+}, [selectedId])  // setter函数是稳定的，可以不加依赖
+```
+
+### 🎯 强制性编码规范
+
+#### 1. 类型定义优先
+```typescript
+// 先定义接口，再使用
+interface MessageItem {
+  id: string
+  content: string
+  role: 'user' | 'assistant'
+  timestamp: number
+}
+
+// 然后在组件中使用
+const [messages, setMessages] = useState<MessageItem[]>([])
+```
+
+#### 2. API 响应类型化
+```typescript
+// 为所有API响应定义类型
+interface ChatResponse {
+  success: boolean
+  data: {
+    messageId: string
+    content: string
+  }
+  error?: string
+}
+
+// 在API调用中使用
+const response = await apiFetch<ChatResponse>('/api/chat', {
+  method: 'POST',
+  body: JSON.stringify(requestData)
+})
+```
+
+#### 3. 事件处理器类型安全
+```typescript
+// 明确事件处理器的参数类型
+const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  event.preventDefault()
+  // 处理逻辑
+}
+
+const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  setValue(event.target.value)
+}
+```
+
+#### 4. 条件渲染类型安全
+```typescript
+// 确保条件渲染的类型安全
+interface Props {
+  user?: User  // 可选属性明确标记
+}
+
+// 在组件中安全使用
+const UserProfile: React.FC<Props> = ({ user }) => {
+  if (!user) {
+    return <div>未登录</div>
+  }
+  
+  return <div>{user.name}</div>  // 这里user肯定存在
+}
+```
+
+### 📋 代码审查清单
+
+每次编写组件时必须检查：
+
+1. **类型安全**
+   - [ ] 所有useState都有明确类型
+   - [ ] 所有函数参数都有类型注解
+   - [ ] API响应有对应的接口定义
+   - [ ] 没有使用any类型
+
+2. **React规范**
+   - [ ] useEffect依赖数组完整
+   - [ ] 没有在条件语句中调用Hooks
+   - [ ] 组件Props有明确的接口定义
+   - [ ] 事件处理器有正确的类型
+
+3. **代码清洁**
+   - [ ] 没有未使用的导入
+   - [ ] 没有未使用的变量
+   - [ ] 没有空的catch块
+   - [ ] 错误处理完整
+
+4. **性能考虑**
+   - [ ] 避免在render中创建新对象
+   - [ ] 合理使用useMemo和useCallback
+   - [ ] 列表渲染有稳定的key
+
+### 🔧 IDE配置建议
+
+为了避免这些错误，建议配置以下IDE设置：
+
+1. **启用严格的TypeScript检查**
+2. **启用ESLint自动修复**
+3. **配置保存时自动格式化**
+4. **启用未使用导入的高亮提示**
+
+### 💡 最佳实践总结
+
+1. **类型优先思维**：先思考数据结构，再编写代码
+2. **渐进式类型化**：从any开始，逐步完善为具体类型
+3. **防御性编程**：始终处理错误情况和边界条件
+4. **工具辅助**：充分利用TypeScript和ESLint的检查能力
+
+> **特别注意**：这些规范不仅是为了通过lint检查，更是为了提高代码质量、可维护性和运行时安全性。每个规范都有其深层的技术原因。

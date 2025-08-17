@@ -22,8 +22,11 @@ export class FilesController {
       stream.pipe(res);
     } catch (e: any) {
       const status = e?.status || 502;
-      res.status(status).json({ code: 'file_proxy_error', status, message: 'Failed to fetch file preview' });
+      res.status(status).json({
+        code: 'file_proxy_error',
+        status,
+        message: 'Failed to fetch file preview',
+      });
     }
   }
 }
-

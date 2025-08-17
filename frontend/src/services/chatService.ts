@@ -4,8 +4,7 @@ import type {
   Conversation, 
   ChatMessage, 
   KnowledgeBase, 
-  ChatRequest,
-  ConversationCreateRequest 
+  ChatRequest
 } from '@lg/shared';
 
 // 会话相关API
@@ -93,12 +92,10 @@ export const chatApi = {
       const decoder = new TextDecoder();
       let buffer = '';
       let completeMessage: ChatMessage | null = null;
-      let chunkCount = 0;
 
       try {
         while (true) {
           const { done, value } = await reader.read();
-          chunkCount++;
           // 读取流块
           
           if (done) {

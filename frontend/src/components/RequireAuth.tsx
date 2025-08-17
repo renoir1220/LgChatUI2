@@ -1,6 +1,7 @@
 import { Navigate, useLocation } from 'react-router-dom'
 import { isAuthenticated, validateToken } from '@/utils/auth'
-import { ReactElement, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
+import type { ReactElement } from 'react'
 
 interface RequireAuthProps {
   children: ReactElement

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react';
 import { api } from '@/services/chatService';
+import { ChatRole } from '@lg/shared';
 import type { 
   ChatMessage, 
   Conversation, 
@@ -286,6 +287,24 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     }, []),
     
     // 消息操作
+    loadMessages: useCallback(async (conversationId: string) => {
+      try {
+        const messages = await api.conversation.getMessages(conversationId);
+        dispatch({ type: 'SET_MESSAGES', payload: messages });
+      } catch (error) {
+        console.error('加载消息失败:', error);
+        dispatch({ type: 'SET_ERROR', payload: '加载消息失败' });
+      }
+    }, []),
+    
+    addMessage: useCallback((message: ChatMessage) => {
+      dispatch({ type: 'ADD_MESSAGE', payload: message });
+    }, []),
+    
+    updateMessage: useCallback((id: string, updates: Partial<ChatMessage>) => {
+      dispatch({ type: 'UPDATE_MESSAGE', payload: { id, updates } });
+    }, []),
+    
     sendMessage: useCallback(async (content: string) => {
       // sendMessage 开始
       if (!content.trim() || state.isStreaming) return;
@@ -306,10 +325,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         // 创建用户消息
         const userMessage: ChatMessage = {
           id: Date.now().toString(),
-          conversation_id: conversationId,
-          role: 'user',
+          conversationId: conversationId,
+          role: ChatRole.User,
           content,
-          created_at: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
         };
         
         dispatch({ type: 'ADD_MESSAGE', payload: userMessage });
@@ -329,10 +348,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         const tempAssistantMessageId = (Date.now() + 1).toString();
         const tempAssistantMessage: ChatMessage = {
           id: tempAssistantMessageId,
-          conversation_id: conversationId,
-          role: 'assistant',
+          conversationId: conversationId,
+          role: ChatRole.Assistant,
           content: '',
-          created_at: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
         };
         dispatch({ type: 'ADD_MESSAGE', payload: tempAssistantMessage });
         

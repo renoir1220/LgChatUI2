@@ -19,12 +19,12 @@ export class TtsService {
    */
   private generateMockAudio(text: string): Buffer {
     this.logger.log(`生成模拟音频: ${text.substring(0, 50)}...`);
-    
+
     // 生成一个简单的WAV文件头
     const sampleRate = 44100;
     const duration = Math.min(text.length * 0.1, 10); // 根据文本长度计算时长，最长10秒
     const numSamples = Math.floor(sampleRate * duration);
-    
+
     // WAV文件头 (44字节)
     const header = Buffer.alloc(44);
     header.write('RIFF', 0);
@@ -32,22 +32,22 @@ export class TtsService {
     header.write('WAVE', 8);
     header.write('fmt ', 12);
     header.writeUInt32LE(16, 16);
-    header.writeUInt16LE(1, 20);  // PCM格式
-    header.writeUInt16LE(1, 22);  // 单声道
+    header.writeUInt16LE(1, 20); // PCM格式
+    header.writeUInt16LE(1, 22); // 单声道
     header.writeUInt32LE(sampleRate, 24);
     header.writeUInt32LE(sampleRate * 2, 28);
     header.writeUInt16LE(2, 32);
     header.writeUInt16LE(16, 34);
     header.write('data', 36);
     header.writeUInt32LE(numSamples * 2, 40);
-    
+
     // 生成简单的正弦波音频数据
     const audioData = Buffer.alloc(numSamples * 2);
     for (let i = 0; i < numSamples; i++) {
-      const sample = Math.sin(2 * Math.PI * 440 * i / sampleRate) * 0.3; // 440Hz的音调
+      const sample = Math.sin((2 * Math.PI * 440 * i) / sampleRate) * 0.3; // 440Hz的音调
       audioData.writeInt16LE(Math.floor(sample * 32767), i * 2);
     }
-    
+
     return Buffer.concat([header, audioData]);
   }
 
@@ -79,7 +79,7 @@ export class TtsService {
     try {
       // 从环境变量获取appid
       const appid = process.env.VOLCENGINE_APPID;
-      
+
       const requestBody = {
         app: {
           appid,
@@ -104,21 +104,26 @@ export class TtsService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer;${apiKey}`,
+          Authorization: `Bearer;${apiKey}`,
         },
         body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        this.logger.error(`API Key TTS请求失败: ${response.status} ${response.statusText} - ${errorText}`);
-        throw new Error(`API Key TTS请求失败: ${response.status} ${response.statusText}`);
+        this.logger.error(
+          `API Key TTS请求失败: ${response.status} ${response.statusText} - ${errorText}`,
+        );
+        throw new Error(
+          `API Key TTS请求失败: ${response.status} ${response.statusText}`,
+        );
       }
 
       const audioBuffer = await response.arrayBuffer();
-      this.logger.log(`API Key TTS合成完成，大小: ${audioBuffer.byteLength} 字节`);
+      this.logger.log(
+        `API Key TTS合成完成，大小: ${audioBuffer.byteLength} 字节`,
+      );
       return Buffer.from(audioBuffer);
-
     } catch (error) {
       this.logger.error('API Key TTS合成失败', error);
       throw error;
@@ -131,21 +136,27 @@ export class TtsService {
   private voiceToCluster(voice: string): string {
     const v = (voice || '').trim();
     const lower = v.toLowerCase();
-    
+
     // ICL 系列音色通常以 "ICL_" 或 "S_" 开头，归属 volcano_icl 集群
-    if (v.startsWith('S_') || v.startsWith('ICL_') || lower.startsWith('icl_')) {
+    if (
+      v.startsWith('S_') ||
+      v.startsWith('ICL_') ||
+      lower.startsWith('icl_')
+    ) {
       return 'volcano_icl';
     }
-    
+
     // 明确的volcano_tts集群音色
-    if (lower.includes('bigtts') || 
-        lower.includes('daimengchuanmei') || 
-        lower.includes('qingxin') ||
-        lower.includes('qinghuan') ||
-        lower.includes('qinglan')) {
+    if (
+      lower.includes('bigtts') ||
+      lower.includes('daimengchuanmei') ||
+      lower.includes('qingxin') ||
+      lower.includes('qinghuan') ||
+      lower.includes('qinglan')
+    ) {
       return 'volcano_tts';
     }
-    
+
     // 默认集群
     return 'volcano_tts';
   }
@@ -167,9 +178,11 @@ export class TtsService {
     if (appid === 'test_appid' || accessToken === 'test_access_token') {
       return this.generateMockAudio(text);
     }
-    
-    this.logger.log(`使用配置 - APPID: ${appid}, ACCESS_TOKEN: ...${accessToken?.slice(-4) || 'N/A'}, 音色: ${voiceType}`);
-    
+
+    this.logger.log(
+      `使用配置 - APPID: ${appid}, ACCESS_TOKEN: ...${accessToken?.slice(-4) || 'N/A'}, 音色: ${voiceType}`,
+    );
+
     const headers = {
       Authorization: `Bearer;${accessToken}`,
     };
@@ -219,7 +232,9 @@ export class TtsService {
         new TextEncoder().encode(JSON.stringify(request)),
       );
 
-      this.logger.log(`TTS请求已发送 - reqid: ${request.request.reqid}, cluster: ${request.app.cluster}`);
+      this.logger.log(
+        `TTS请求已发送 - reqid: ${request.request.reqid}, cluster: ${request.app.cluster}`,
+      );
 
       // 接收音频数据
       const totalAudio: Uint8Array[] = [];
@@ -245,11 +260,11 @@ export class TtsService {
             } catch {
               errorInfo = { message: errorPayload };
             }
-            
+
             this.logger.error(
               `TTS服务返回错误 [code=${msg.errorCode ?? errorInfo?.code ?? 'N/A'}]: ${errorInfo.message || errorPayload}`,
             );
-            
+
             // 根据错误码提供更友好的错误信息
             if (
               msg.errorCode === 3001 ||
@@ -264,7 +279,9 @@ export class TtsService {
             } else if (msg.errorCode === 3003) {
               throw new Error('TTS服务器内部错误');
             } else {
-              throw new Error(`TTS服务错误: ${errorInfo.message || '未知错误'}`);
+              throw new Error(
+                `TTS服务错误: ${errorInfo.message || '未知错误'}`,
+              );
             }
           default:
             throw new Error(`未知消息类型: ${msg.toString()}`);
@@ -286,7 +303,10 @@ export class TtsService {
       }
 
       // 合并音频数据
-      const totalLength = totalAudio.reduce((sum, chunk) => sum + chunk.length, 0);
+      const totalLength = totalAudio.reduce(
+        (sum, chunk) => sum + chunk.length,
+        0,
+      );
       const result = new Uint8Array(totalLength);
       let offset = 0;
 
@@ -297,7 +317,6 @@ export class TtsService {
 
       this.logger.log(`音频合成完成，大小: ${result.length} 字节`);
       return Buffer.from(result);
-
     } catch (error) {
       this.logger.error('TTS合成失败', error);
       throw error;

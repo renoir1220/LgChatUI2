@@ -4,9 +4,9 @@ export const API_BASE = (import.meta.env?.VITE_API_BASE as string) || ''
 
 export async function apiFetch(path: string, options: RequestInit = {}) {
   const token = getToken();
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...(options.headers || {}),
+    ...(options.headers as Record<string, string> || {}),
   };
   
   // 自动添加Bearer token
