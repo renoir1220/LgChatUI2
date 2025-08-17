@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { apiGet } from '../lib/api';
+import { apiGet } from '../../shared/services/api';
 
 export interface KnowledgeBase {
   id: string;

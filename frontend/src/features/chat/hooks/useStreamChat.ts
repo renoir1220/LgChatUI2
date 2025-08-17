@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { apiFetch } from '../lib/api';
+import { apiFetch } from '../../shared/services/api';
 import { saveCitationsToCache, saveAssistantCitationsToCache } from '../utils/messageCache';
 import type { BubbleDataType, StreamResponse } from './useChatState';
 

@@ -8,8 +8,8 @@ import {
   SmileOutlined 
 } from '@ant-design/icons';
 import { Conversations } from '@ant-design/x';
-import logoTree from '../assets/logoTree.png';
-import { clearAuth, getUsername } from '../utils/auth';
+import logoTree from '../../../assets/logoTree.png';
+import { clearAuth, getUsername } from '../../auth/utils/auth';
 import type { ConversationItem } from '../hooks/useChatState';
 
 interface ChatSidebarProps {

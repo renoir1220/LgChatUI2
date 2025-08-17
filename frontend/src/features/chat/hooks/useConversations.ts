@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { apiGet } from '../lib/api';
+import { apiGet } from '../../shared/services/api';
 import { getCitationsFromCache, cleanupExpiredCache } from '../utils/messageCache';
 import type { ConversationItem, ConversationDetail, MessageRecord, BubbleDataType, Citation } from './useChatState';
 
@@ -18,9 +18,9 @@ export function useConversations(
 ) {
   
   /**
-   * 加载会话列表和首个会话的消息
+   * 加载会话列表（不自动切换会话）
    */
-  const loadConversations = async () => {
+  const loadConversations = async (shouldSelectFirst = false) => {
     try {
       cleanupExpiredCache();
       
@@ -35,20 +35,30 @@ export function useConversations(
         });
         setConversationDetails(details);
         
-        setCurConversation(list[0].id);
-        setConversationId(list[0].id);
-        
-        // 如果首个会话有知识库ID，自动设置
-        if (list[0].knowledgeBaseId) {
-          setCurrentKnowledgeBase(list[0].knowledgeBaseId);
+        // 只有在明确指定时才自动选择第一个会话（比如初始化时）
+        if (shouldSelectFirst) {
+          setCurConversation(list[0].id);
+          setConversationId(list[0].id);
+          
+          // 如果首个会话有知识库ID，自动设置
+          if (list[0].knowledgeBaseId) {
+            setCurrentKnowledgeBase(list[0].knowledgeBaseId);
+          }
+          
+          // 加载首个会话消息
+          await loadConversationMessages(list[0].id);
         }
-        
-        // 加载首个会话消息
-        await loadConversationMessages(list[0].id);
       }
     } catch (error) {
       console.error('初始化加载失败:', error);
     }
+  };
+
+  /**
+   * 初始化：加载会话列表并选择第一个会话
+   */
+  const initializeConversations = async () => {
+    await loadConversations(true); // 传入 true 表示要选择第一个会话
   };
 
   /**
@@ -115,30 +125,20 @@ export function useConversations(
   };
 
   /**
-   * 刷新会话列表
+   * 刷新会话列表（不切换当前会话）
    */
   const refreshConversations = async () => {
-    try {
-      const list = await apiGet<ConversationDetail[]>(`/api/conversations`);
-      setConversations(list.map((c) => ({ key: c.id, label: c.title, group: '最近' })));
-      
-      const details: Record<string, ConversationDetail> = {};
-      list.forEach(c => {
-        details[c.id] = c;
-      });
-      setConversationDetails(details);
-    } catch (error) {
-      console.error('刷新会话列表失败:', error);
-    }
+    await loadConversations(false); // 传入 false 表示不要选择第一个会话
   };
 
   // 初始化时加载会话
   useEffect(() => {
-    loadConversations();
-  }, [loadConversations]);
+    initializeConversations();
+  }, []); // 空依赖数组，只在组件挂载时执行一次
 
   return {
     loadConversations,
+    initializeConversations,
     loadConversationMessages,
     switchConversation,
     createNewConversation,

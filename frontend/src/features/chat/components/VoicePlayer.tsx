@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Button } from './button';
+import { Button } from '../../../components/ui/button';
 import { Volume2, VolumeX, Loader2 } from 'lucide-react';
 
 interface VoicePlayerProps {

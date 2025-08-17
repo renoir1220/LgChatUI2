@@ -3,7 +3,7 @@ import { message } from 'antd';
 import { useChatState } from '../hooks/useChatState';
 import { useStreamChat } from '../hooks/useStreamChat';
 import { useConversations } from '../hooks/useConversations';
-import { useKnowledgeBases } from '../hooks/useKnowledgeBases';
+import { useKnowledgeBases } from '../../knowledge-base/hooks/useKnowledgeBases';
 import { ChatSidebar } from './ChatSidebar';
 import { ChatMessageList } from './ChatMessageList';
 import { ChatInput } from './ChatInput';

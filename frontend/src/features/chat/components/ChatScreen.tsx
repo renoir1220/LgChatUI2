@@ -13,7 +13,7 @@ import {
   SmileOutlined,
 } from '@ant-design/icons';
 import { Copy, RotateCcw } from 'lucide-react';
-import logoTree from '../assets/logoTree.png';
+import logoTree from '../../../assets/logoTree.png';
 import {
   Attachments,
   Bubble,
@@ -25,16 +25,16 @@ import {
 } from '@ant-design/x';
 import { Avatar, Flex, Space, Spin, message, Dropdown, Skeleton, Divider } from 'antd';
 import { Button as AntdButton } from 'antd';
-import { Button } from './ui/button';
+import { Button } from '../../../components/ui/button';
 import { DownOutlined, CheckOutlined, DatabaseOutlined } from '@ant-design/icons';
 import MarkdownIt from 'markdown-it';
 import 'github-markdown-css/github-markdown.css';
 import './ChatMessage.css';
-import { CitationList } from './CitationList';
-import { VoicePlayer } from './ui/VoicePlayer';
-import { useKnowledgeBases } from '../hooks/useKnowledgeBases';
-import { apiFetch, apiGet } from '../lib/api';
-import { clearAuth, getUsername } from '../utils/auth';
+import { CitationList } from '../../knowledge-base/components/CitationList';
+import { VoicePlayer } from './VoicePlayer';
+import { useKnowledgeBases } from '../../knowledge-base/hooks/useKnowledgeBases';
+import { apiFetch, apiGet } from '../../shared/services/api';
+import { clearAuth, getUsername } from '../../auth/utils/auth';
 import { saveCitationsToCache, saveAssistantCitationsToCache, getCitationsFromCache, cleanupExpiredCache } from '../utils/messageCache';
 
 

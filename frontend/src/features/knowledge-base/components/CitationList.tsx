@@ -8,7 +8,7 @@ import {
   FilePptOutlined,
   FileUnknownOutlined,
 } from '@ant-design/icons';
-import { ContentWithImages } from './ContentWithImages';
+import { ContentWithImages } from '../../shared/components/ContentWithImages';
 
 const { Text } = Typography;
 

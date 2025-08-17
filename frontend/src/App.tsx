@@ -1,9 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import LoginScreen from './components/LoginScreen'
-import ChatScreenRefactored from './components/ChatScreenRefactored'
-import RequireAuth from './components/RequireAuth'
-import { NotificationProvider } from './contexts/NotificationContext'
-import { SettingsProvider } from './contexts/SettingsContext'
+import LoginScreen from './features/auth/components/LoginScreen'
+import ChatScreenRefactored from './features/chat/components/ChatScreenRefactored'
+import RequireAuth from './features/auth/components/RequireAuth'
+import { NotificationProvider } from './features/shared/contexts/NotificationContext'
+import { SettingsProvider } from './features/shared/contexts/SettingsContext'
 
 function App() {
   return (

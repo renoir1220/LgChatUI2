@@ -10,7 +10,7 @@ import {
   CheckOutlined,
   DatabaseOutlined
 } from '@ant-design/icons';
-import type { KnowledgeBase } from '../hooks/useKnowledgeBases';
+import type { KnowledgeBase } from '../../knowledge-base/hooks/useKnowledgeBases';
 
 interface ChatInputProps {
   inputValue: string;

@@ -2,7 +2,7 @@ import React from 'react';
 import { Bubble, Welcome, Prompts } from '@ant-design/x';
 import { Flex, Space, Spin, message, Divider } from 'antd';
 import { Button as AntdButton } from 'antd';
-import { Button } from './ui/button';
+import { Button } from '../../../components/ui/button';
 import { Copy, RotateCcw } from 'lucide-react';
 import {
   ShareAltOutlined,
@@ -15,8 +15,8 @@ import {
 import MarkdownIt from 'markdown-it';
 import 'github-markdown-css/github-markdown.css';
 import './ChatMessage.css';
-import { CitationList } from './CitationList';
-import { VoicePlayer } from './ui/VoicePlayer';
+import { CitationList } from '../../knowledge-base/components/CitationList';
+import { VoicePlayer } from './VoicePlayer';
 import type { BubbleDataType } from '../hooks/useChatState';
 
 // 初始化 markdown-it 渲染器

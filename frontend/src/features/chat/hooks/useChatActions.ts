@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useChatContext } from '@/contexts/ChatContext';
+import { useChatContext } from '../contexts/ChatContext';
 import { ChatRole } from '@lg/shared';
 
 // 消息操作Hook

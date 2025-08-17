@@ -1,5 +1,5 @@
-import { apiGet, apiPost, API_BASE } from '@/lib/api';
-import { getToken } from '@/utils/auth';
+import { apiGet, apiPost, API_BASE } from '../../shared/services/api';
+import { getToken } from '../../auth/utils/auth';
 import type { 
   Conversation, 
   ChatMessage, 

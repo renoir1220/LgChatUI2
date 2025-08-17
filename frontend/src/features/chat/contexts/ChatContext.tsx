@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react';
-import { api } from '@/services/chatService';
+import { api } from '../services/chatService';
 import { ChatRole } from '@lg/shared';
 import type { 
   ChatMessage, 
