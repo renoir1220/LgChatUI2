@@ -155,7 +155,7 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
                 list: { height: '100%' },
                 item: {
                   flex: 1,
-                  backgroundImage: 'linear-gradient(123deg, #e5f4ff 0%, #efe7ff 100%)',
+                  backgroundImage: 'linear-gradient(123deg, #E6EDFE 0%, #efe7ff 100%)',
                   borderRadius: 12,
                   border: 'none',
                 },
@@ -171,7 +171,7 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
               styles={{
                 item: {
                   flex: 1,
-                  backgroundImage: 'linear-gradient(123deg, #e5f4ff 0%, #efe7ff 100%)',
+                  backgroundImage: 'linear-gradient(123deg, #E6EDFE 0%, #efe7ff 100%)',
                   borderRadius: 12,
                   border: 'none',
                 },
