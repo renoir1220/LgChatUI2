@@ -1,14 +1,5 @@
 import { Injectable, LoggerService, Scope } from '@nestjs/common';
-
-export interface LogContext {
-  requestId?: string;
-  userId?: string;
-  method?: string;
-  url?: string;
-  userAgent?: string;
-  ip?: string;
-  [key: string]: any;
-}
+import { LogContext } from '@lg/shared';
 
 @Injectable({ scope: Scope.TRANSIENT })
 export class AppLoggerService implements LoggerService {

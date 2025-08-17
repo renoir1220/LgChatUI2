@@ -14,13 +14,7 @@ import { MessagesRepository } from './repositories/messages.repository';
 import { DifyService } from '../../shared/services/dify.service';
 import { ZodValidationPipe } from '../../shared/pipes/zod-validation.pipe';
 import { ChatRequestSchema, ChatRole } from '@lg/shared';
-import type { ChatRequest, Conversation } from '@lg/shared';
-
-interface AuthenticatedRequest {
-  user: {
-    username: string;
-  };
-}
+import type { ChatRequest, Conversation, AuthenticatedRequest } from '@lg/shared';
 
 @UseGuards(JwtAuthGuard)
 @Controller('api')

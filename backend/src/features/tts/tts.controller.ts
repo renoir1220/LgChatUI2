@@ -10,16 +10,8 @@ import {
 import * as express from 'express';
 import { TtsService } from './tts.service';
 import { ZodValidationPipe } from '../../shared/pipes/zod-validation.pipe';
-import { z } from 'zod';
-
-// TTS请求数据验证模式
-const TtsRequestSchema = z.object({
-  text: z.string().min(1, '文本不能为空').max(5000, '文本长度不能超过5000字符'),
-  voiceType: z.string().optional(),
-  encoding: z.string().optional().default('wav'),
-});
-
-type TtsRequest = z.infer<typeof TtsRequestSchema>;
+import { TtsRequestSchema } from '@lg/shared';
+import type { TtsRequest } from '@lg/shared';
 
 @Controller('api/tts')
 export class TtsController {

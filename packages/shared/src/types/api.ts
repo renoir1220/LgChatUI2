@@ -41,3 +41,38 @@ export type ApiResponse<T = any> = {
   error?: string;
 }
 
+// 标准错误响应接口（与后端GlobalExceptionFilter统一）
+export interface StandardErrorResponse {
+  statusCode: number;
+  message: string;
+  error: string;
+  timestamp: string;
+  path: string;
+  requestId?: string;
+}
+
+// 认证相关类型
+export interface JwtPayload {
+  sub: string;
+  username: string;
+  iat?: number;
+  exp?: number;
+}
+
+export interface AuthenticatedRequest {
+  user: {
+    username: string;
+  };
+}
+
+// 日志上下文类型
+export interface LogContext {
+  requestId?: string;
+  userId?: string;
+  method?: string;
+  url?: string;
+  userAgent?: string;
+  ip?: string;
+  [key: string]: any;
+}
+

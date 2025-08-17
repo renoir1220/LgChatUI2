@@ -19,13 +19,8 @@ import type {
   ChatMessage,
   CreateConversationRequest,
   UpdateConversationRequest,
+  AuthenticatedRequest,
 } from '@lg/shared';
-
-interface AuthenticatedRequest {
-  user: {
-    username: string;
-  };
-}
 
 @UseGuards(JwtAuthGuard)
 @Controller('api')
