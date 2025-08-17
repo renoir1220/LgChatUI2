@@ -66,9 +66,9 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
       {/* Top nav / brand */}
       <div className="relative z-10 flex items-center justify-between px-6 py-5 md:px-10">
         <div className="flex items-center gap-2 select-none">
-          <img src={logoTree} alt="朗珈GPT" className="size-8 rounded-md shadow-md" />
-          <span className="text-lg font-semibold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-blue-600">
-            朗珈GPT
+          <img src={logoTree} alt="朗珈软件" className="size-8 rounded-md shadow-md" />
+          <span className="text-lg font-semibold tracking-tight bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(to right, #0EA5E9, #1E40AF)' }}>
+            朗珈软件
           </span>
         </div>
       </div>
@@ -78,7 +78,7 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
         {/* Left branding panel */}
         <div className="mx-auto max-w-xl py-2 md:py-10">
           <h1 className="text-4xl font-bold leading-tight tracking-tight text-gray-900 md:text-5xl">
-            <span className="bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">朗珈GPT</span>
+            <span className="bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(to right, #0EA5E9, #1E40AF)' }}>朗珈GPT</span>
           </h1>
           <p className="mt-4 text-lg leading-relaxed text-gray-600">
             开始你的AI聊天之旅
