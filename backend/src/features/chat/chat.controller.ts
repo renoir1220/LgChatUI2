@@ -39,7 +39,7 @@ export class ChatController {
   @Post('chat')
   async chat(
     @Body(new ZodValidationPipe(ChatRequestSchema)) body: ChatRequest,
-    @Request() req: AuthenticatedRequest,
+    @Request() req: AuthenticatedRequest & express.Request,
     @Res() res: express.Response,
   ): Promise<void> {
     this.logger.log('开始处理聊天请求', {
