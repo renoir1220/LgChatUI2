@@ -52,31 +52,14 @@ src/
 │
 ├── features/                  # 业务功能模块
 │   ├── auth/                  # 用户认证模块
-│   │   ├── auth.module.ts
-│   │   ├── auth.controller.ts
-│   │   ├── auth.service.ts
-│   │   ├── guards/            # JWT守卫
-│   │   └── repositories/      # 用户数据访问
-│   │
 │   ├── chat/                  # 聊天功能模块
-│   │   ├── chat.module.ts
-│   │   ├── chat.controller.ts           # 流式聊天API
-│   │   ├── chat-history.controller.ts   # 会话历史管理
-│   │   ├── messages.controller.ts       # 消息操作
-│   │   └── repositories/               # 会话和消息数据访问
-│   │
 │   ├── tts/                   # 语音合成模块
-│   │   ├── tts.service.ts     # 火山引擎TTS集成
-│   │   └── volcengine/        # 火山引擎协议实现
-│   │
 │   ├── knowledge-base/        # 知识库模块
 │   └── files/                 # 文件处理模块
 │
 └── shared/                    # 共享基础设施
     ├── database/              # 数据库连接和配置
     ├── services/              # 公共服务
-    │   ├── dify.service.ts    # Dify AI平台集成
-    │   └── logger.service.ts  # 结构化日志服务
     ├── filters/               # 全局异常过滤器
     ├── interceptors/          # 请求拦截器
     ├── pipes/                 # 数据验证管道
@@ -85,27 +68,27 @@ src/
 
 ## 核心功能模块
 
-### 1. 认证模块 (auth/)
-- **JWT认证**: 基于用户名的简单认证
-- **守卫系统**: 自动保护需要认证的API
-- **用户管理**: 从员工数据库验证用户身份
+### 认证模块 (auth/)
+- JWT认证基于用户名的简单认证
+- 守卫系统自动保护需要认证的API
+- 从员工数据库验证用户身份
 
-### 2. 聊天模块 (chat/)
-- **流式对话**: SSE实现的实时聊天体验
-- **会话管理**: 创建、列表、重命名、删除会话
-- **消息存储**: 完整的对话历史记录
-- **知识库集成**: 支持基于知识库的问答
+### 聊天模块 (chat/)
+- SSE实现的实时流式对话体验
+- 完整的会话管理（创建、列表、重命名、删除）
+- 消息存储和历史记录
+- 知识库集成支持
 
-### 3. 语音合成模块 (tts/)
-- **火山引擎集成**: WebSocket连接的实时语音合成
-- **音频缓存**: 提高响应速度
-- **多音色支持**: 可配置的语音合成选项
+### 语音合成模块 (tts/)
+- 火山引擎WebSocket实时语音合成
+- 音频缓存提高响应速度
+- 多音色支持
 
-### 4. 共享服务 (shared/)
-- **结构化日志**: 生产环境友好的日志系统
-- **全局异常处理**: 统一的错误响应格式
-- **数据库服务**: MSSQL连接池管理
-- **Dify集成**: AI对话能力
+### 共享服务 (shared/)
+- 结构化日志系统（AppLoggerService）
+- 全局异常过滤器统一错误响应
+- MSSQL连接池管理
+- Dify AI平台集成
 
 ## 数据库设计
 
@@ -117,7 +100,7 @@ src/
 ### 核心表结构
 - **T_AI_CONVERSATION**: 会话信息
 - **T_AI_MESSAGE**: 消息记录
-- **T_AI_USER**: 用户信息（从员工库同步）
+- **T_AI_USER**: 用户信息
 
 所有AI相关表以`T_AI_`开头，便于识别和管理。
 
@@ -129,12 +112,12 @@ src/
 - 支持分页和过滤
 
 ### 流式API
-- **SSE(Server-Sent Events)**: 实时数据推送
-- **会话ID传递**: 通过HTTP头返回会话标识
-- **错误处理**: 流中的错误事件处理
+- SSE(Server-Sent Events)实时数据推送
+- 会话ID通过HTTP头返回
+- 完善的流中错误事件处理
 
-### 示例API端点
-```typescript
+### 主要API端点
+```
 POST /api/chat                    # 流式聊天
 GET  /api/conversations          # 获取会话列表
 POST /api/conversations          # 创建新会话
@@ -147,62 +130,40 @@ POST /api/tts                    # 语音合成
 ## 开发规范
 
 ### TypeScript规范
-```typescript
-// ✅ 正确：使用具体类型
-interface ChatRequest {
-  message: string;
-  conversationId?: string;
-  knowledgeBaseId?: string;
-}
-
-// ❌ 错误：避免使用any
-const handleRequest = (data: any) => { ... }
-
-// ✅ 正确：明确的错误处理
-try {
-  const result = await service.process(data);
-  return result;
-} catch (error) {
-  this.logger.error('处理失败', error.stack, { context });
-  throw new HttpException('处理失败', HttpStatus.INTERNAL_SERVER_ERROR);
-}
-```
+- 使用具体类型，避免any
+- 明确的错误处理和异常抛出
+- 完整的接口定义
 
 ### 日志规范
-```typescript
-// ✅ 正确：使用结构化日志
-this.logger.log('用户登录', { 
-  username, 
-  ip: req.ip,
-  userAgent: req.headers['user-agent']
-});
-
-// ❌ 错误：避免console.log
-console.log('用户登录:', username);
-```
+- 使用AppLoggerService替代console.log
+- 结构化日志包含上下文信息
+- 错误日志包含堆栈信息
 
 ### 错误处理规范
-```typescript
-// 业务异常：使用NestJS异常
-if (!user) {
-  throw new UnauthorizedException('用户不存在');
-}
+- 业务异常使用NestJS标准异常类
+- 系统异常记录详细日志后抛出通用异常
+- 全局异常过滤器统一处理
 
-// 系统异常：记录详细日志后抛出通用异常
-try {
-  await externalService.call();
-} catch (error) {
-  this.logger.error('外部服务调用失败', error.stack);
-  throw new HttpException('服务暂时不可用', HttpStatus.SERVICE_UNAVAILABLE);
-}
-```
+## 代码示例
+
+详细的代码示例和最佳实践请参考：
+
+- **TypeScript模式**: `../examples/backend/typescript-patterns.ts`
+- **API设计模式**: `../examples/backend/api-design.ts`  
+- **数据库操作模式**: `../examples/backend/database-patterns.ts`
+
+这些文件包含了完整的实现示例，涵盖：
+- 控制器、服务、仓储的标准实现
+- 错误处理和日志记录的最佳实践
+- 数据库操作和事务处理
+- API设计和流式响应处理
 
 ## 性能优化
 
 ### 数据库优化
 - 使用连接池避免连接开销
-- 合理的查询索引
-- 分页查询避免大数据集
+- 合理的查询索引和分页
+- 事务管理和批量操作
 
 ### 缓存策略
 - HTTP缓存头设置
@@ -226,15 +187,10 @@ try {
 - 数据库操作测试
 - 错误场景覆盖
 
-### E2E测试
-- 关键业务流程验证
-- 跨模块功能测试
-
 ## 部署和运维
 
 ### 环境配置
 ```bash
-# .env 配置示例
 NODE_ENV=production
 PORT=3000
 DB_HOST=192.168.200.246
@@ -265,14 +221,9 @@ DIFY_API_URL=https://api.dify.ai
 
 ### 调试工具
 ```bash
-# 查看运行日志
-npm run start:dev
-
-# 运行特定测试
-npm run test -- --testNamePattern="Chat"
-
-# 数据库连接测试
-node verify_migration.js
+npm run start:dev          # 查看运行日志
+npm run test -- --testNamePattern="Chat"  # 运行特定测试
+node verify_migration.js   # 数据库连接测试
 ```
 
 ## 扩展开发
@@ -295,4 +246,4 @@ node verify_migration.js
 
 ---
 
-**注意**: 本项目面向1-2人小团队开发，架构设计平衡了合理性和复杂度。在开发过程中应优先考虑功能实现和代码质量，避免过度设计。
+**注意**: 本项目面向1-2人小团队开发，架构设计平衡了合理性和复杂度。优先考虑功能实现和代码质量，避免过度设计。
