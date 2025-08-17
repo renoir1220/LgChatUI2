@@ -197,9 +197,9 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
           // 处理消息内容，包括引用
           const contentNode = (!isStreamingAssistant && msg.role === 'assistant' && msg.citations && msg.citations.length > 0)
             ? (
-                <div>
+                <div className="citation-container">
                   {renderMarkdown(msg.content, false)}
-                  <Divider style={{ margin: '8px 0' }} />
+                  <Divider style={{ margin: '12px 0 8px 0' }} />
                   <CitationList citations={msg.citations} kbId={currentKnowledgeBase} />
                 </div>
               )

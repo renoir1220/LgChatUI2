@@ -216,6 +216,22 @@
   color: #93c5fd !important;
 }
 
+/* 引用部分样式对齐 */
+.citation-container {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+.citation-container .ant-typography {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+.citation-container .ant-space {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
 /* 响应式优化 */
 @media (max-width: 768px) {
   .chat-markdown-body {
