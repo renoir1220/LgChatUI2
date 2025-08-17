@@ -5,6 +5,7 @@ import { Input } from '../../../components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card'
 import { apiPost } from '../../shared/services/api'
 import { setAuth } from '../utils/auth'
+import logoTree from '../../../assets/logoTree.png'
 import type { LoginRequest, LoginResponse } from '@lg/shared'
 
 interface LoginScreenProps {
@@ -65,9 +66,9 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
       {/* Top nav / brand */}
       <div className="relative z-10 flex items-center justify-between px-6 py-5 md:px-10">
         <div className="flex items-center gap-2 select-none">
-          <div className="size-8 rounded-md bg-gradient-to-br from-indigo-500 to-blue-500 shadow-md" />
+          <img src={logoTree} alt="朗珈GPT" className="size-8 rounded-md shadow-md" />
           <span className="text-lg font-semibold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-blue-600">
-            LG Chat
+            朗珈GPT
           </span>
         </div>
       </div>
@@ -77,10 +78,10 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
         {/* Left branding panel */}
         <div className="mx-auto max-w-xl py-2 md:py-10">
           <h1 className="text-4xl font-bold leading-tight tracking-tight text-gray-900 md:text-5xl">
-            <span className="bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">LG Chat</span>
+            <span className="bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">朗珈GPT</span>
           </h1>
           <p className="mt-4 text-lg leading-relaxed text-gray-600">
-            开始你的聊天之旅
+            开始你的AI聊天之旅
           </p>
         </div>
 
