@@ -46,7 +46,7 @@ export function useMessageActions() {
       actions.setError('重新生成失败');
       actions.setStreaming(false);
     }
-  }, [state.messages, actions]);
+  }, [state.messages, actions, dispatch]);
   
   // 点赞消息
   const likeMessage = useCallback(async (messageId: string) => {

@@ -35,10 +35,6 @@ export const CitationList: React.FC<{ citations?: CitationItem[]; kbId?: string 
   const [open, setOpen] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<DocumentGroup | null>(null);
 
-  if (!citations || citations.length === 0) {
-    return null;
-  }
-
   // 文件类型解析与图标映射
   const getFileIcon = (ext: string) => {
     const e = ext.toLowerCase();
@@ -103,6 +99,10 @@ export const CitationList: React.FC<{ citations?: CitationItem[]; kbId?: string 
     setSelectedDocument(group);
     setOpen(true);
   };
+
+  if (!citations || citations.length === 0) {
+    return null;
+  }
 
   return (
     <div style={{ marginTop: 4 }}>

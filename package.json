@@ -7,14 +7,35 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build -ws",
+    "dev": "concurrently --config .concurrently.json -n \"shared,backend,frontend\" -c \"blue,green,cyan\" \"npm run dev:shared\" \"npm run dev:be\" \"npm run dev:fe\"",
+    "dev:enhanced": "node scripts/dev.js",
     "dev:shared": "npm run dev -w @lg/shared",
-    "build:shared": "npm run build -w @lg/shared",
     "dev:fe": "npm run dev -w frontend",
     "dev:be": "npm run start:dev -w backend",
+    "dev:fe-only": "npm run build:shared && npm run dev:fe",
+    "dev:be-only": "npm run build:shared && npm run dev:be",
+    "start": "npm run dev",
+    "build": "npm run build:shared && npm run build -ws --if-present",
+    "build:shared": "npm run build -w @lg/shared",
+    "build:fe": "npm run build -w frontend",
+    "build:be": "npm run build -w backend",
+    "clean": "npm run clean -ws --if-present && rm -rf node_modules/.cache",
+    "clean:deps": "rm -rf node_modules packages/*/node_modules frontend/node_modules backend/node_modules",
+    "fresh": "npm run clean:deps && npm install",
+    "lint": "npm run lint -ws --if-present",
+    "lint:fix": "npm run lint:fix -ws --if-present",
+    "format": "npm run format -ws --if-present",
+    "typecheck": "npm run typecheck -ws --if-present",
+    "test": "npm run test -ws --if-present",
+    "test:watch": "npm run test:watch -ws --if-present",
+    "health": "curl -f http://localhost:3000/health || echo 'Backend not ready' && curl -f http://localhost:5173 || echo 'Frontend not ready'",
+    "ports": "lsof -i :3000,:5173 | grep LISTEN || echo 'No services running on default ports'",
     "postinstall": "npm run build:shared"
   },
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.0"
   }
 }

@@ -135,7 +135,7 @@ export function useConversations(
   // 初始化时加载会话
   useEffect(() => {
     loadConversations();
-  }, [setCurrentKnowledgeBase]);
+  }, [loadConversations]);
 
   return {
     loadConversations,
