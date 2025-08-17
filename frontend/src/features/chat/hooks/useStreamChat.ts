@@ -21,7 +21,8 @@ export function useStreamChat() {
     currentKnowledgeBase: string | undefined,
     messages: BubbleDataType[],
     setMessages: React.Dispatch<React.SetStateAction<BubbleDataType[]>>,
-    onConversationUpdate?: (newConversationId: string) => void
+    onConversationUpdate?: (newConversationId: string) => void,
+    isRegenerate?: boolean
   ): Promise<void> => {
     // 中止之前的请求
     abortController.current?.abort();
@@ -33,12 +34,21 @@ export function useStreamChat() {
       withConv && sentConvId ? { ...baseBody, conversationId: sentConvId } : baseBody
     );
 
-    const userMessage = { role: 'user' as const, content: message };
-    const botMessageIndex = messages.length + 1;
-    const assistantOrdinal = messages.filter((m) => m.role === 'assistant').length + 1;
+    let botMessageIndex: number;
+    let assistantOrdinal: number;
     
-    // 添加用户消息和空的助手消息
-    setMessages(prev => [...prev, userMessage, { role: 'assistant' as const, content: '', citations: [] }]);
+    if (isRegenerate) {
+      // 重新生成模式：不添加用户消息，只添加新的助手消息
+      botMessageIndex = messages.length;
+      assistantOrdinal = messages.filter((m) => m.role === 'assistant').length + 1;
+      setMessages(prev => [...prev, { role: 'assistant' as const, content: '', citations: [] }]);
+    } else {
+      // 普通发送模式：添加用户消息和助手消息
+      const userMessage = { role: 'user' as const, content: message };
+      botMessageIndex = messages.length + 1;
+      assistantOrdinal = messages.filter((m) => m.role === 'assistant').length + 1;
+      setMessages(prev => [...prev, userMessage, { role: 'assistant' as const, content: '', citations: [] }]);
+    }
 
     try {
       let response = await apiFetch(`/api/chat`, {

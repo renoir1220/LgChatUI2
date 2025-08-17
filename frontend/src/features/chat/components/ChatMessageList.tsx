@@ -7,7 +7,6 @@ import { Copy, RotateCcw } from 'lucide-react';
 import {
   ShareAltOutlined,
   EllipsisOutlined,
-  SmileOutlined,
   HeartOutlined,
   CommentOutlined,
   FileSearchOutlined
@@ -260,15 +259,7 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
         roles={{
           assistant: {
             placement: 'start',
-            avatar: { 
-              icon: '🤖', 
-              style: { 
-                background: '#f6f8fa',
-                border: '1px solid #e1e4e8',
-                width: '32px',
-                height: '32px'
-              } 
-            },
+            // 不显示头像，减少两侧留白
             loadingRender: () => <Spin size="small" />,
             messageRender: (content: React.ReactNode) => {
               if (typeof content === 'string') {
@@ -276,37 +267,26 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
               }
               return content;
             },
-            // styles: {
-            //   bubble: {
-            //     background: '#ffffff',
-            //     border: '1px solid #e1e4e8',
-            //     borderRadius: '12px',
-            //     padding: '12px 16px',
-            //     boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-            //     maxWidth: '100%'
-            //   }
-            // }
-          },
-          user: { 
-            placement: 'end', 
-            avatar: { 
-              icon: <SmileOutlined />, 
-              style: { 
-                background: '#2563eb',
-                width: '32px',
-                height: '32px'
-              } 
+            styles: {
+              content: {
+                background: '#ffffff',
+                border: '1px solid #e1e4e8',
+                borderRadius: 12,
+                boxShadow: '0 1px 2px 0 rgba(0,0,0,0.03)',
+              },
             },
+          },
+          user: {
+            placement: 'end',
+            // 不显示头像，减少两侧留白
             messageRender: (content) => renderMarkdown(content as string, true),
-            // styles: {
-            //   bubble: {
-            //     background: '#2563eb',
-            //     color: '#ffffff',
-            //     borderRadius: '12px',
-            //     padding: '12px 16px',
-            //     maxWidth: '100%'
-            //   }
-            // }
+            styles: {
+              content: {
+                background: '#2563eb',
+                color: '#ffffff',
+                borderRadius: 12,
+              },
+            },
           },
         }}
       />

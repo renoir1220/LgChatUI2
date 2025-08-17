@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { message } from 'antd';
 import { useChatState } from '../hooks/useChatState';
 import { useStreamChat } from '../hooks/useStreamChat';
@@ -14,6 +14,19 @@ import { conversationApi } from '../services/chatService';
  * 使用自定义Hooks进行状态管理，组件职责更加清晰
  */
 const ChatScreenRefactored: React.FC = () => {
+  // 响应式状态管理
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  // 监听屏幕尺寸变化
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // 聊天状态管理
   const {
     setMessageHistory,
@@ -85,7 +98,8 @@ const ChatScreenRefactored: React.FC = () => {
           setConversationId(newConversationId);
           setCurConversation(newConversationId);
           await refreshConversations();
-        }
+        },
+        false // 标记为普通发送模式
       );
     } catch (error) {
       console.error('发送消息失败:', error);
@@ -101,17 +115,27 @@ const ChatScreenRefactored: React.FC = () => {
     if (userMessageIndex >= 0 && messages[userMessageIndex]?.role === 'user') {
       const userMessage = messages[userMessageIndex].content;
       
-      // 清空当前AI回复内容，准备重新生成
-      setMessages(prev => prev.map((item, i) => 
-        i === messageIndex ? { ...item, content: '', citations: [] } : item
-      ));
-      
       setLoading(true);
       
       try {
-        // TODO: 实现重新生成逻辑，这里需要特殊的处理
-        // 暂时使用普通发送消息的逻辑
-        console.log('重新生成消息:', userMessage);
+        // 删除当前助手消息及其后的所有消息，保留到用户消息为止的历史
+        const truncatedMessages = messages.slice(0, messageIndex);
+        setMessages(truncatedMessages);
+        
+        // 重新发送用户消息以生成新回复
+        await sendMessage(
+          userMessage,
+          conversationId,
+          currentKnowledgeBase,
+          truncatedMessages,
+          setMessages,
+          async (newConversationId: string) => {
+            setConversationId(newConversationId);
+            setCurConversation(newConversationId);
+            await refreshConversations();
+          },
+          true // 标记为重新生成模式
+        );
       } catch (error) {
         console.error('重新生成失败:', error);
         message.error('重新生成失败');
@@ -140,27 +164,17 @@ const ChatScreenRefactored: React.FC = () => {
 
   // 删除会话处理
   const handleDeleteConversation = async (conversationKey: string) => {
-    console.log('=== 删除会话调试信息 ===');
-    console.log('要删除的会话ID:', conversationKey);
-    console.log('当前会话ID:', curConversation);
-    
     try {
-      console.log('开始调用删除API...');
       await conversationApi.deleteConversation(conversationKey);
-      console.log('删除API调用成功');
-      
       message.success('会话删除成功');
       
       // 如果删除的是当前会话，切换到新会话
       if (conversationKey === curConversation) {
-        console.log('删除的是当前会话，切换到新会话');
         createNewConversation();
       }
       
       // 刷新会话列表
-      console.log('刷新会话列表...');
       await refreshConversations();
-      console.log('会话列表刷新完成');
     } catch (error) {
       console.error('删除会话失败:', error);
       message.error('删除会话失败，请重试');
@@ -196,7 +210,7 @@ const ChatScreenRefactored: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', height: '100vh', width: '100vw' }}>
+    <div style={{ display: 'flex', height: '100vh', width: '100vw', position: 'relative' }}>
       {/* 侧边栏 */}
       <ChatSidebar
         conversations={conversations}
@@ -209,7 +223,12 @@ const ChatScreenRefactored: React.FC = () => {
       />
 
       {/* 主聊天区域 */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ 
+        flex: 1, 
+        display: 'flex', 
+        flexDirection: 'column',
+        minWidth: 0 // 防止flex溢出
+      }}>
         {/* 聊天标题栏 */}
         <div style={{ 
           padding: '0 24px', 
@@ -219,10 +238,13 @@ const ChatScreenRefactored: React.FC = () => {
           gap: 12, 
           paddingTop: 12, 
           borderBottom: '1px solid #f0f0f0', 
-          paddingBottom: 12 
+          paddingBottom: 12,
+          // 移动端时左侧边距与右侧一致，菜单已悬浮无需额外留白
+          paddingLeft: isMobile ? '24px' : '24px',
+          justifyContent: isMobile ? 'center' : 'flex-start'
         }}>
           <span style={{ fontWeight: 500 }}>{renderChatTitle()}</span>
-          <span style={{ flex: 1 }} />
+          {!isMobile && <span style={{ flex: 1 }} />}
         </div>
 
         {/* 消息列表 */}
