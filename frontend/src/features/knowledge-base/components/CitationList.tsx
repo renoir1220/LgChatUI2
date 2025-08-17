@@ -105,10 +105,10 @@ export const CitationList: React.FC<{ citations?: CitationItem[]; kbId?: string 
   }
 
   return (
-    <div className="citation-container">
+    <div style={{ marginTop: 4 }}>
       <Text strong style={{ display: 'block', marginBottom: 4 }}>引用</Text>
 
-      <Space size={[8,8]} wrap>
+      <Space size={[8,8]} wrap style={{ marginTop: 4 }}>
         {groupedCitations.map((group, idx) => {
           const fullTitle = group.document_name;
           const { base, ext } = getBaseNameAndExt(fullTitle);
