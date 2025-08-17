@@ -73,11 +73,6 @@ const ChatScreenRefactored: React.FC = () => {
 
     setLoading(true);
 
-    console.log('=== 发送消息调试信息 ===');
-    console.log('当前会话ID (conversationId):', conversationId);
-    console.log('当前选中会话 (curConversation):', curConversation);
-    console.log('知识库ID:', currentKnowledgeBase);
-    console.log('消息内容:', val);
 
     try {
       await sendMessage(
@@ -87,7 +82,6 @@ const ChatScreenRefactored: React.FC = () => {
         messages,
         setMessages,
         async (newConversationId: string) => {
-          console.log('收到新会话ID:', newConversationId);
           setConversationId(newConversationId);
           setCurConversation(newConversationId);
           await refreshConversations();

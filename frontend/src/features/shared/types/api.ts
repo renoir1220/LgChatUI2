@@ -1,72 +1,18 @@
-// 聊天相关类型定义
-export enum ChatRole {
-  User = 'USER',
-  Assistant = 'ASSISTANT',
-  System = 'SYSTEM',
-}
+// 从共享包导入聊天相关类型
+export type {
+  ChatRole,
+  ClientRole,
+  Citation,
+  ChatMessage,
+  ChatRequest,
+  KnowledgeBase,
+  ChatStreamEvent
+} from '@lg/shared';
 
-// 客户端友好的角色值，用于UI组件
-export type ClientRole = 'user' | 'assistant' | 'system';
-
-export function toClientRole(role: ChatRole): ClientRole {
-  switch (role) {
-    case ChatRole.User:
-      return 'user';
-    case ChatRole.Assistant:
-      return 'assistant';
-    default:
-      return 'system';
-  }
-}
-
-export function fromClientRole(role: ClientRole): ChatRole {
-  switch (role) {
-    case 'user':
-      return ChatRole.User;
-    case 'assistant':
-      return ChatRole.Assistant;
-    default:
-      return ChatRole.System;
-  }
-}
-
-export interface Citation {
-  source: string;
-  content: string;
-  document_name?: string;
-  score?: number;
-  dataset_id?: string;
-  document_id?: string;
-  segment_id?: string;
-  position?: number;
-}
-
-export interface ChatMessage {
-  id: string;
-  conversationId: string;
-  userId?: string;
-  role: ChatRole;
-  content: string;
-  createdAt: string;
-  citations?: Citation[];
-  metadata?: Record<string, unknown>;
-}
-
-export interface ChatRequest {
-  message: string;
-  conversationId?: string;
-  knowledgeBaseId?: string;
-  userId?: string;
-}
-
-export interface KnowledgeBase {
-  id: string;
-  name: string;
-  description?: string;
-  enabled: boolean;
-  apiKey?: string;
-  apiUrl?: string;
-}
+export {
+  toClientRole,
+  fromClientRole
+} from '@lg/shared';
 
 // 对话相关类型
 export interface Conversation {
@@ -144,18 +90,20 @@ export interface ApiResponse<T = unknown> {
   error?: string;
 }
 
-export enum AuthErrorCode {
-  UNAUTHORIZED = 'UNAUTHORIZED',
-  INVALID_CREDENTIALS = 'INVALID_CREDENTIALS',
-  TOKEN_EXPIRED = 'TOKEN_EXPIRED',
-  USER_NOT_FOUND = 'USER_NOT_FOUND',
-}
+export const AuthErrorCode = {
+  UNAUTHORIZED: 'UNAUTHORIZED',
+  INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
+  TOKEN_EXPIRED: 'TOKEN_EXPIRED',
+  USER_NOT_FOUND: 'USER_NOT_FOUND',
+} as const;
 
-// UI相关类型
+export type AuthErrorCode = typeof AuthErrorCode[keyof typeof AuthErrorCode];
+
+// UI相关类型 - 从共享包导入ClientRole和Citation类型
 export interface BubbleDataType {
-  role: ClientRole;
+  role: import('@lg/shared').ClientRole;
   content: string;
-  citations?: Citation[];
+  citations?: import('@lg/shared').Citation[];
 }
 
 export interface ConversationItem {
@@ -172,10 +120,3 @@ export interface ConversationDetail {
   updatedAt: string;
 }
 
-// 流式聊天事件类型
-export type ChatStreamEvent = {
-  event: 'message' | 'agent_message' | 'message_end' | string;
-  answer?: string;
-  metadata?: { retriever_resources?: Citation[] } & Record<string, unknown>;
-  retriever_resources?: Citation[];
-};

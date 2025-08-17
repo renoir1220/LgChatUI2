@@ -289,7 +289,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     // 消息操作
     loadMessages: useCallback(async (conversationId: string) => {
       try {
-        const messages = await api.conversation.getMessages(conversationId);
+        const messages = await api.message.getMessages(conversationId);
         dispatch({ type: 'SET_MESSAGES', payload: messages });
       } catch (error) {
         console.error('加载消息失败:', error);
@@ -406,14 +406,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: 'SET_STREAMING', payload: false });
       }
     }, [state.currentConversation, state.isStreaming, state.selectedKnowledgeBase, state.streamingContent]),
-    
-    addMessage: useCallback((message: ChatMessage) => {
-      dispatch({ type: 'ADD_MESSAGE', payload: message });
-    }, []),
-    
-    updateMessage: useCallback((id: string, updates: Partial<ChatMessage>) => {
-      dispatch({ type: 'UPDATE_MESSAGE', payload: { id, updates } });
-    }, []),
     
     // 知识库操作
     loadKnowledgeBases: useCallback(async () => {

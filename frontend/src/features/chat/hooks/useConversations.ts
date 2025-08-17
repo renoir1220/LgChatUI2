@@ -71,7 +71,7 @@ export function useConversations(
       let assistantCount = 0;
       
       const mapped = msgs.map((m, index) => {
-        const role = m.role === 'USER' ? 'user' : 'assistant';
+        const role = m.role === 'USER' ? 'user' as const : 'assistant' as const;
         let citations: Citation[] = [];
         
         if (role === 'assistant') {
@@ -99,10 +99,6 @@ export function useConversations(
    * 切换到指定会话
    */
   const switchConversation = async (conversationKey: string) => {
-    console.log('=== switchConversation 调试信息 ===');
-    console.log('切换到会话:', conversationKey);
-    console.log('会话详细信息:', conversationDetails[conversationKey]);
-    
     setCurConversation(conversationKey);
     setConversationId(typeof conversationKey === 'string' ? conversationKey : undefined);
     
@@ -117,8 +113,6 @@ export function useConversations(
     } else {
       setMessages([]);
     }
-    
-    console.log('会话切换完成，新的 conversationId:', conversationKey);
   };
 
   /**

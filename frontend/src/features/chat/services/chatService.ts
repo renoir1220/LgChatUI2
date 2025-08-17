@@ -6,6 +6,7 @@ import type {
   KnowledgeBase, 
   ChatRequest
 } from '@lg/shared';
+import type { CreateConversationRequest } from '../../shared/types/api';
 
 // 会话相关API
 export const conversationApi = {
@@ -15,7 +16,7 @@ export const conversationApi = {
   },
 
   // 创建新会话
-  createConversation: async (request: ConversationCreateRequest): Promise<Conversation> => {
+  createConversation: async (request: CreateConversationRequest): Promise<Conversation> => {
     return apiPost<Conversation>('/api/conversations', request);
   },
 

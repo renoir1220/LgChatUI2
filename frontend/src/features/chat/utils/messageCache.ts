@@ -3,16 +3,7 @@
  * 将消息的引用信息保存到Cookie中，用于历史记录恢复
  */
 
-interface Citation {
-  source: string;
-  content: string;
-  document_name: string;
-  score: number;
-  dataset_id: string;
-  document_id: string;
-  segment_id: string;
-  position: number;
-}
+import type { Citation } from '@lg/shared';
 
 interface MessageCitations {
   [messageKey: string]: Citation[]; // messageKey -> citations数组（如 a:1 或 旧的 index）
@@ -61,12 +52,12 @@ function unpackCitations(packed: PackedCitation[]): Citation[] {
   return packed.map((t) => ({
     source: t[0],
     content: t[1],
-    document_name: t[2],
-    score: t[3],
-    dataset_id: t[4],
-    document_id: t[5],
-    segment_id: t[6],
-    position: t[7],
+    ...(t[2] !== undefined && { document_name: t[2] }),
+    ...(t[3] !== undefined && { score: t[3] }),
+    ...(t[4] !== undefined && { dataset_id: t[4] }),
+    ...(t[5] !== undefined && { document_id: t[5] }),
+    ...(t[6] !== undefined && { segment_id: t[6] }),
+    ...(t[7] !== undefined && { position: t[7] }),
   }));
 }
 

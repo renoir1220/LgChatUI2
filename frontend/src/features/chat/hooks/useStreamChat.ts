@@ -23,12 +23,6 @@ export function useStreamChat() {
     setMessages: React.Dispatch<React.SetStateAction<BubbleDataType[]>>,
     onConversationUpdate?: (newConversationId: string) => void
   ): Promise<void> => {
-    // 调试信息
-    console.log('=== sendMessage 调试信息 ===');
-    console.log('传入的 conversationId:', conversationId);
-    console.log('conversationId 类型:', typeof conversationId);
-    console.log('conversationId 是否为有效UUID:', isValidUUID(conversationId));
-    
     // 中止之前的请求
     abortController.current?.abort();
     abortController.current = new AbortController();
@@ -38,16 +32,13 @@ export function useStreamChat() {
     const makeBody = (withConv: boolean) => JSON.stringify(
       withConv && sentConvId ? { ...baseBody, conversationId: sentConvId } : baseBody
     );
-    
-    console.log('处理后的 sentConvId:', sentConvId);
-    console.log('将发送的请求体:', makeBody(true));
 
-    const userMessage = { role: 'user', content: message };
+    const userMessage = { role: 'user' as const, content: message };
     const botMessageIndex = messages.length + 1;
     const assistantOrdinal = messages.filter((m) => m.role === 'assistant').length + 1;
     
     // 添加用户消息和空的助手消息
-    setMessages(prev => [...prev, userMessage, { role: 'assistant', content: '', citations: [] }]);
+    setMessages(prev => [...prev, userMessage, { role: 'assistant' as const, content: '', citations: [] }]);
 
     try {
       let response = await apiFetch(`/api/chat`, {
@@ -88,7 +79,7 @@ export function useStreamChat() {
       if (error instanceof Error && error.name !== 'AbortError') {
         console.error('请求失败:', error);
         const errorMessage = {
-          role: 'assistant',
+          role: 'assistant' as const,
           content: `请求失败: ${error.message}`,
           citations: []
         };
@@ -153,7 +144,7 @@ export function useStreamChat() {
               const withCitations = retrieverResources.map((r) => ({
                 source: r.document_name || r.dataset_name || '未知来源',
                 content: r.content,
-                document_name: r.document_name || '',
+                document_name: r.document_name,
                 score: r.score,
                 dataset_id: r.dataset_id,
                 document_id: r.document_id,

@@ -84,8 +84,9 @@ export function useMessageActions() {
   
   // 停止生成
   const stopGeneration = useCallback(() => {
-    actions.stopGeneration();
-  }, [actions]);
+    // TODO: 实现停止生成功能
+    console.log('停止生成请求');
+  }, []);
   
   return {
     copyMessage,
