@@ -25,12 +25,7 @@ import { FilesModule } from './features/files/files.module';
     KnowledgeBaseModule,
     FilesModule,
   ],
-  controllers: [
-    AppController,
-    HealthController,
-  ],
-  providers: [
-    AppService,
-  ],
+  controllers: [AppController, HealthController],
+  providers: [AppService],
 })
 export class AppModule {}

@@ -12,18 +12,28 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ConversationsRepository } from './repositories/conversations.repository';
 import { MessagesRepository } from './repositories/messages.repository';
 import { DifyService } from '../../shared/services/dify.service';
+import { AppLoggerService } from '../../shared/services/logger.service';
 import { ZodValidationPipe } from '../../shared/pipes/zod-validation.pipe';
+import { extractUserIdFromRequest } from '../../shared/utils/user.utils';
 import { ChatRequestSchema, ChatRole } from '@lg/shared';
-import type { ChatRequest, Conversation, AuthenticatedRequest } from '@lg/shared';
+import type {
+  ChatRequest,
+  Conversation,
+  AuthenticatedRequest,
+} from '@lg/shared';
 
 @UseGuards(JwtAuthGuard)
 @Controller('api')
 export class ChatController {
+  private readonly logger = new AppLoggerService();
+
   constructor(
     private readonly conversations: ConversationsRepository,
     private readonly messages: MessagesRepository,
     private readonly difyService: DifyService,
-  ) {}
+  ) {
+    this.logger.setContext('ChatController');
+  }
 
   // POST /api/chat - 流式聊天API
   @Post('chat')
@@ -32,24 +42,32 @@ export class ChatController {
     @Request() req: AuthenticatedRequest,
     @Res() res: express.Response,
   ): Promise<void> {
-    console.log('=== 开始处理聊天请求 ===');
-    console.log('请求体:', JSON.stringify(body, null, 2));
-    console.log('用户信息:', req.user);
+    this.logger.log('开始处理聊天请求', {
+      requestMethod: req.method,
+      requestUrl: req.url,
+      hasKnowledgeBase: !!body.knowledgeBaseId,
+      messageLength: body.message.length,
+    });
 
-    const username = req.user.username;
-    const userId = `user_${username}`;
+    const userId = extractUserIdFromRequest(req);
 
-    console.log('提取的userId:', userId);
+    this.logger.debug('用户信息处理完成', {
+      username: req.user.username,
+      userId,
+      conversationId: body.conversationId || 'new',
+    });
 
     try {
       // 1. 获取或创建会话
       let conversationId = body.conversationId;
       let conversation: Conversation;
 
-      console.log('处理会话ID:', conversationId);
       if (!conversationId) {
         // 创建新会话
-        console.log('创建新会话...');
+        this.logger.log('创建新会话', {
+          userId,
+          messagePreview: body.message.substring(0, 50),
+        });
         const title = this.generateConversationTitle(body.message);
         conversation = await this.conversations.createConversation(
           userId,
@@ -57,22 +75,23 @@ export class ChatController {
           body.knowledgeBaseId,
         );
         conversationId = conversation.id;
-        console.log('新会话创建成功:', conversationId);
+        this.logger.log('新会话创建成功', { conversationId, title });
       } else {
         // 验证会话是否属于该用户
-        console.log('验证会话所有权...');
+        this.logger.debug('验证会话所有权', { conversationId, userId });
         const owned = await this.messages.isConversationOwnedByUser(
           conversationId,
           userId,
         );
-        console.log('会话所有权验证结果:', owned);
         if (!owned) {
+          this.logger.warn('会话所有权验证失败', { conversationId, userId });
           throw new BadRequestException('Conversation not found');
         }
+        this.logger.debug('会话所有权验证通过', { conversationId, userId });
       }
 
       // 设置流式响应headers（包含会话ID）
-      console.log('设置SSE响应头...');
+      this.logger.debug('设置SSE响应头', { conversationId });
       res.writeHead(200, {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
@@ -83,28 +102,47 @@ export class ChatController {
       });
 
       // 2. 保存用户消息
-      console.log('保存用户消息到数据库...');
+      this.logger.debug('保存用户消息到数据库', {
+        conversationId,
+        messageLength: body.message.length,
+      });
       const userMessage = await this.messages.append(
         conversationId,
         ChatRole.User,
         body.message,
         userId,
       );
-      console.log('用户消息保存成功:', userMessage.id);
+      this.logger.log('用户消息保存成功', {
+        messageId: userMessage.id,
+        conversationId,
+      });
 
       // 3. 生成AI助手响应（流式）
-      console.log('开始生成AI响应...');
+      this.logger.log('开始生成AI响应', {
+        conversationId,
+        hasKnowledgeBase: !!body.knowledgeBaseId,
+      });
       const result = await this.generateStreamingResponse(
         res,
         conversationId,
         body.message,
         body.knowledgeBaseId,
       );
-      console.log('AI响应生成完成, 结果:', result);
-      console.log('=== 聊天请求处理完成 ===');
+      this.logger.log('聊天请求处理完成', {
+        conversationId,
+        assistantMessageId: result.messageId,
+        responseLength: result.content.length,
+      });
     } catch (error) {
-      console.error('=== 聊天请求处理出错 ===');
-      console.error('错误详情:', error);
+      this.logger.error(
+        '聊天请求处理出错',
+        error instanceof Error ? error.stack : undefined,
+        {
+          conversationId: body.conversationId,
+          userId,
+          errorMessage: error instanceof Error ? error.message : '未知错误',
+        },
+      );
       // 发送错误事件
       res.write(
         `data: ${JSON.stringify({
@@ -113,7 +151,7 @@ export class ChatController {
         })}\n\n`,
       );
     } finally {
-      console.log('关闭SSE连接');
+      this.logger.debug('关闭SSE连接');
       res.end();
     }
   }
@@ -124,18 +162,14 @@ export class ChatController {
     userMessage: string,
     knowledgeBaseId?: string,
   ): Promise<{ messageId: string; content: string }> {
-    console.log('--- generateStreamingResponse 开始 ---');
-    console.log(
-      '参数: conversationId:',
+    this.logger.debug('开始生成流式响应', {
       conversationId,
-      'userMessage:',
-      userMessage,
-      'knowledgeBaseId:',
-      knowledgeBaseId,
-    );
+      messageLength: userMessage.length,
+      hasKnowledgeBase: !!knowledgeBaseId,
+    });
 
     try {
-      console.log('调用Dify API...');
+      this.logger.debug('调用Dify API', { conversationId });
 
       // 调用Dify API获取流式响应
       // 不传递conversationId给Dify，让Dify自己管理会话
@@ -189,7 +223,7 @@ export class ChatController {
 
             // 处理消息结束事件
             if (streamData.event === 'message_end') {
-              console.log('收到消息结束事件');
+              this.logger.debug('收到消息结束事件', { conversationId });
 
               // 如果消息结束事件包含知识库引用信息，也要发送给前端
               if (streamData.metadata?.retriever_resources) {
@@ -214,17 +248,20 @@ export class ChatController {
         });
 
         stream.on('end', () => {
-          console.log('Dify流结束');
+          this.logger.debug('Dify流结束', { conversationId });
           resolve();
         });
 
         stream.on('error', (error: Error) => {
-          console.error('Dify流错误:', error);
+          this.logger.error('Dify流错误', error.stack, { conversationId });
           reject(error);
         });
       });
 
-      console.log('Dify流式响应完成，总内容长度:', assistantMessage.length);
+      this.logger.log('Dify流式响应完成', {
+        conversationId,
+        contentLength: assistantMessage.length,
+      });
 
       // 发送结束标记
       res.write(`data: [DONE]\n\n`);
@@ -241,7 +278,14 @@ export class ChatController {
         content: assistantMessage,
       };
     } catch (error) {
-      console.error('Error in generateStreamingResponse:', error);
+      this.logger.error(
+        'generateStreamingResponse方法出错',
+        error instanceof Error ? error.stack : undefined,
+        {
+          conversationId,
+          errorMessage: error instanceof Error ? error.message : '未知错误',
+        },
+      );
 
       // 发生错误时的备用响应
       const fallbackMessage = `抱歉，处理您的请求时遇到了问题：${error instanceof Error ? error.message : '未知错误'}。请稍后再试。`;

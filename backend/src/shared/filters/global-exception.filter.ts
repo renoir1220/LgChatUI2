@@ -17,7 +17,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
-    
+
     const requestId = request.headers['x-request-id'] as string;
 
     let status: number;
@@ -27,7 +27,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     if (exception instanceof HttpException) {
       status = exception.getStatus();
       const exceptionResponse = exception.getResponse();
-      
+
       if (typeof exceptionResponse === 'string') {
         message = exceptionResponse;
         error = exception.name;
@@ -39,7 +39,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       status = HttpStatus.INTERNAL_SERVER_ERROR;
       message = exception.message;
       error = 'Internal Server Error';
-      
+
       // 记录未处理的错误
       this.logger.error(
         `未处理的错误: ${exception.message}`,
@@ -50,7 +50,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       status = HttpStatus.INTERNAL_SERVER_ERROR;
       message = 'An unexpected error occurred';
       error = 'Internal Server Error';
-      
+
       this.logger.error(
         `未知错误类型: ${String(exception)}`,
         undefined,

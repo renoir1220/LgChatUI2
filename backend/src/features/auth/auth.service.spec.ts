@@ -108,7 +108,9 @@ describe('AuthService', () => {
     });
 
     it('应该在发生错误时返回null', async () => {
-      usersRepository.findByUsername.mockRejectedValue(new Error('Database error'));
+      usersRepository.findByUsername.mockRejectedValue(
+        new Error('Database error'),
+      );
 
       const result = await service.validateUser('test');
 

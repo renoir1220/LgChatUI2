@@ -16,7 +16,7 @@ export class RequestIdInterceptor implements NestInterceptor {
 
     // 生成或获取请求ID
     const requestId = (request.headers['x-request-id'] as string) || uuidv4();
-    
+
     // 设置请求ID到header中
     request.headers['x-request-id'] = requestId;
     response.setHeader('x-request-id', requestId);

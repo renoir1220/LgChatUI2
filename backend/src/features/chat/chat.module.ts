@@ -7,19 +7,8 @@ import { MessagesRepository } from './repositories/messages.repository';
 import { DifyService } from '../../shared/services/dify.service';
 
 @Module({
-  controllers: [
-    ChatController,
-    MessagesController, 
-    ChatHistoryController,
-  ],
-  providers: [
-    ConversationsRepository,
-    MessagesRepository,
-    DifyService,
-  ],
-  exports: [
-    ConversationsRepository,
-    MessagesRepository,
-  ],
+  controllers: [ChatController, MessagesController, ChatHistoryController],
+  providers: [ConversationsRepository, MessagesRepository, DifyService],
+  exports: [ConversationsRepository, MessagesRepository],
 })
 export class ChatModule {}

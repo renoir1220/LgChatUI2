@@ -28,7 +28,7 @@ export class LoggingInterceptor implements NestInterceptor {
         },
         error: (error) => {
           const duration = Date.now() - startTime;
-          
+
           // 记录错误请求
           this.logger.logWithRequest(
             'error',

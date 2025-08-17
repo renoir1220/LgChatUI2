@@ -1,15 +1,20 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersRepository } from './repositories/users.repository';
+import { AppLoggerService } from '../../shared/services/logger.service';
 import { LoginResponse } from '@lg/shared';
 import type { LoginRequest } from '@lg/shared';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new AppLoggerService();
+
   constructor(
     private usersRepository: UsersRepository,
     private jwtService: JwtService,
-  ) {}
+  ) {
+    this.logger.setContext('AuthService');
+  }
 
   async login(loginRequest: LoginRequest): Promise<LoginResponse> {
     const { username } = loginRequest;
@@ -41,7 +46,14 @@ export class AuthService {
       const user = await this.usersRepository.findByUsername(username);
       return user; // 如果找不到用户，直接返回null
     } catch (error) {
-      console.error('验证用户时出错:', error);
+      this.logger.error(
+        '验证用户时出错',
+        error instanceof Error ? error.stack : undefined,
+        {
+          username,
+          errorMessage: error instanceof Error ? error.message : '未知错误',
+        },
+      );
       return null;
     }
   }

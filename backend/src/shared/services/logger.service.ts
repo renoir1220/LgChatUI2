@@ -17,7 +17,7 @@ export class AppLoggerService implements LoggerService {
   ): string {
     const timestamp = new Date().toISOString();
     const ctx = this.context || 'Application';
-    
+
     const logEntry = {
       timestamp,
       level: level.toUpperCase(),
@@ -89,11 +89,7 @@ export class AppLoggerService implements LoggerService {
   }
 
   // HTTP请求日志
-  logHttpRequest(
-    request: any,
-    response: any,
-    duration: number,
-  ): void {
+  logHttpRequest(request: any, response: any, duration: number): void {
     const context: LogContext = {
       requestId: request.headers?.['x-request-id'],
       method: request.method,
@@ -105,7 +101,7 @@ export class AppLoggerService implements LoggerService {
     };
 
     const message = `${request.method} ${request.url} - ${response.statusCode} (${duration}ms)`;
-    
+
     if (response.statusCode >= 400) {
       this.error(message, undefined, context);
     } else {
