@@ -11,6 +11,7 @@ import { TtsModule } from './features/tts/tts.module';
 import { ChatModule } from './features/chat/chat.module';
 import { KnowledgeBaseModule } from './features/knowledge-base/knowledge-base.module';
 import { FilesModule } from './features/files/files.module';
+import { ReadmeSearchModule } from './features/readme-search/readme-search.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { FilesModule } from './features/files/files.module';
     ChatModule,
     KnowledgeBaseModule,
     FilesModule,
+    ReadmeSearchModule,
   ],
   controllers: [AppController, HealthController],
   providers: [AppService],
