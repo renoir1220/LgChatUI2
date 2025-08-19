@@ -9,7 +9,10 @@ import {
   DownOutlined,
   CheckOutlined,
   DatabaseOutlined,
-  PlusOutlined
+  PlusOutlined,
+  FileSearchOutlined,
+  ProjectOutlined,
+  SearchOutlined
 } from '@ant-design/icons';
 import type { KnowledgeBase } from '../../knowledge-base/hooks/useKnowledgeBases';
 
@@ -27,6 +30,7 @@ interface ChatInputProps {
   onAttachmentsToggle: () => void;
   onFilesChange: (files: UploadFile[]) => void;
   onKnowledgeBaseChange: (kbId: string) => void;
+  onQuickAction?: (action: string) => void;
 }
 
 /**
@@ -47,6 +51,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   onAttachmentsToggle,
   onFilesChange,
   onKnowledgeBaseChange,
+  onQuickAction,
 }) => {
   const handleSubmit = () => {
     if (inputValue.trim()) {
@@ -175,23 +180,100 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         }}>
           {/* 左侧功能按钮 */}
           <Flex gap={4} align="center">
-            {/* 添加附件按钮 */}
-            <AntdButton
-              type="text"
-              icon={<PlusOutlined style={{ fontSize: 16 }} />}
-              onClick={onAttachmentsToggle}
-              style={{
-                borderRadius: 16,
-                width: 28,
-                height: 28,
-                padding: 0,
-                color: '#666',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
+            {/* 功能菜单按钮 */}
+            <Dropdown
+              trigger={['click']}
+              placement="topLeft"
+              menu={{
+                items: [
+                  // 暂时隐藏上传文件功能
+                  // {
+                  //   key: 'upload-file',
+                  //   label: (
+                  //     <div style={{ 
+                  //       display: 'flex', 
+                  //       alignItems: 'center', 
+                  //       gap: 8,
+                  //       padding: '4px 0'
+                  //     }}>
+                  //       <PaperClipOutlined style={{ fontSize: 16, color: '#666' }} />
+                  //       <span>上传文件</span>
+                  //     </div>
+                  //   ),
+                  // },
+                  // {
+                  //   type: 'divider',
+                  // },
+                  {
+                    key: 'readme-query',
+                    label: (
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: 8,
+                        padding: '4px 0'
+                      }}>
+                        <FileSearchOutlined style={{ fontSize: 16, color: '#666' }} />
+                        <span>Readme查询</span>
+                      </div>
+                    ),
+                  },
+                  {
+                    key: 'requirement-progress',
+                    label: (
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: 8,
+                        padding: '4px 0'
+                      }}>
+                        <ProjectOutlined style={{ fontSize: 16, color: '#666' }} />
+                        <span>需求进展</span>
+                      </div>
+                    ),
+                  },
+                  {
+                    key: 'similar-requirements',
+                    label: (
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: 8,
+                        padding: '4px 0'
+                      }}>
+                        <SearchOutlined style={{ fontSize: 16, color: '#666' }} />
+                        <span>相似需求</span>
+                      </div>
+                    ),
+                  },
+                ],
+                onClick: ({ key }) => {
+                  // 暂时隐藏上传文件功能
+                  // if (key === 'upload-file') {
+                  //   onAttachmentsToggle();
+                  // } else 
+                  if (onQuickAction) {
+                    onQuickAction(key);
+                  }
+                },
               }}
-              title="上传文件"
-            />
+            >
+              <AntdButton
+                type="text"
+                icon={<PlusOutlined style={{ fontSize: 16 }} />}
+                style={{
+                  borderRadius: 16,
+                  width: 28,
+                  height: 28,
+                  padding: 0,
+                  color: '#666',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                title="功能菜单"
+              />
+            </Dropdown>
             
             {/* 知识库选择器 */}
             {kbLoading ? (

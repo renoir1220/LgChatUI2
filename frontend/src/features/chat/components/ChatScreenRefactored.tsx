@@ -162,6 +162,28 @@ const ChatScreenRefactored: React.FC = () => {
     createNewConversation();
   };
 
+  // 快捷操作处理
+  const handleQuickAction = (action: string) => {
+    let quickMessage = '';
+    
+    switch (action) {
+      case 'readme-query':
+        quickMessage = '查询参数：';
+        break;
+      case 'requirement-progress':
+        quickMessage = '查询需求进展';
+        break;
+      case 'similar-requirements':
+        quickMessage = '查询相似需求';
+        break;
+      default:
+        return;
+    }
+    
+    // 设置快捷消息到输入框
+    setInputValue(quickMessage);
+  };
+
   // 删除会话处理
   const handleDeleteConversation = async (conversationKey: string) => {
     try {
@@ -271,6 +293,7 @@ const ChatScreenRefactored: React.FC = () => {
           onAttachmentsToggle={() => setAttachmentsOpen(!attachmentsOpen)}
           onFilesChange={setAttachedFiles}
           onKnowledgeBaseChange={setCurrentKnowledgeBase}
+          onQuickAction={handleQuickAction}
         />
       </div>
     </div>
