@@ -109,6 +109,8 @@ export function useConversations(
     // 只有当conversationKey是有效的UUID时（即真实会话），才设置conversationId
     // 虚拟会话（如'default-0', 'new'）应该保持conversationId为undefined
     setConversationId(isValidUUID(conversationKey) ? conversationKey : undefined);
+    // 立即清空当前消息，给予用户即时反馈（由外层控制 loading 展示等待态）
+    setMessages([]);
     
     if (conversationKey && conversationKey !== 'new') {
       // 从会话详细信息中获取知识库ID，只在不同时才设置
