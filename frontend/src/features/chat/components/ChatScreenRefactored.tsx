@@ -338,6 +338,11 @@ const ChatScreenRefactored: React.FC = () => {
     return title;
   };
 
+  // 欢迎页模式（无有效会话且无消息）：用于让标题/输入区与欢迎背景有自然过渡
+  const isWelcomeMode = (!/^[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$/i.test(curConversation))
+    && (!messages || messages.length === 0);
+  const isNewConversation = curConversation === 'new';
+
   return (
     <div style={{ display: 'flex', height: '100vh', width: '100vw', position: 'relative' }}>
       {/* 侧边栏 */}
@@ -356,25 +361,35 @@ const ChatScreenRefactored: React.FC = () => {
         flex: 1, 
         display: 'flex', 
         flexDirection: 'column',
-        minWidth: 0 // 防止flex溢出
+        minWidth: 0, // 防止flex溢出
+        backgroundImage: isWelcomeMode 
+          ? 'radial-gradient(ellipse at top, #eff6ff 0%, #ffffff 50%, #e0e7ff 100%)'
+          : undefined,
+        backgroundAttachment: isWelcomeMode ? 'fixed' : undefined,
       }}>
-        {/* 聊天标题栏 */}
-        <div style={{ 
-          padding: '0 24px', 
-          marginBottom: '12px', 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: 12, 
-          paddingTop: 12, 
-          borderBottom: '1px solid #f0f0f0', 
-          paddingBottom: 12,
-          // 移动端时左侧边距与右侧一致，菜单已悬浮无需额外留白
-          paddingLeft: isMobile ? '24px' : '24px',
-          justifyContent: isMobile ? 'center' : 'flex-start'
-        }}>
-          <span style={{ fontWeight: 500 }}>{renderChatTitle()}</span>
-          {!isMobile && <span style={{ flex: 1 }} />}
-        </div>
+        {/* 聊天标题栏（新对话时不显示） */}
+        {!isNewConversation && (
+          <div style={{ 
+            padding: '0 24px', 
+            marginBottom: '12px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 12, 
+            // 明确高度对齐左侧标题栏（24px 内容 + 上下各16px 内边距 ≈ 56px）
+            height: 56,
+            boxSizing: 'border-box',
+            paddingTop: 16,
+            borderBottom: '1px solid #f0f0f0', 
+            paddingBottom: 16,
+            // 移动端时左侧边距与右侧一致，菜单已悬浮无需额外留白
+            paddingLeft: isMobile ? '24px' : '24px',
+            justifyContent: isMobile ? 'center' : 'flex-start',
+            backgroundColor: '#fff',
+          }}>
+            <span style={{ fontWeight: 500 }}>{renderChatTitle()}</span>
+            {!isMobile && <span style={{ flex: 1 }} />}
+          </div>
+        )}
 
         {/* 消息列表 */}
         <ChatMessageList
@@ -403,6 +418,7 @@ const ChatScreenRefactored: React.FC = () => {
           onFilesChange={setAttachedFiles}
           onKnowledgeBaseChange={setCurrentKnowledgeBase}
           onQuickAction={handleQuickAction}
+          glass={isWelcomeMode}
         />
       </div>
       

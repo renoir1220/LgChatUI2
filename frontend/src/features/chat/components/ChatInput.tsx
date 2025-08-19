@@ -30,6 +30,8 @@ interface ChatInputProps {
   onFilesChange: (files: UploadFile[]) => void;
   onKnowledgeBaseChange: (kbId: string) => void;
   onQuickAction?: (action: string) => void;
+  // 在欢迎页模式下使用玻璃质感，增强渐入过渡
+  glass?: boolean;
 }
 
 /**
@@ -51,6 +53,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   onFilesChange,
   onKnowledgeBaseChange,
   onQuickAction,
+  glass = false,
 }) => {
   const handleSubmit = () => {
     if (inputValue.trim()) {
@@ -92,10 +95,12 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       {/* 现代Chat UI布局 */}
       <div style={{
         borderRadius: 24,
-        border: '1px solid #e1e5e9',
-        backgroundColor: '#ffffff',
+        border: glass ? '1px solid rgba(255,255,255,0.5)' : '1px solid #e1e5e9',
+        backgroundColor: glass ? 'rgba(255,255,255,0.6)' : '#ffffff',
+        backdropFilter: glass ? 'blur(8px)' as any : undefined,
+        WebkitBackdropFilter: glass ? 'blur(8px)' as any : undefined,
         padding: '8px 12px 6px 12px',
-        boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)',
+        boxShadow: glass ? '0 4px 24px rgba(15, 23, 42, 0.08)' : '0 2px 12px rgba(0, 0, 0, 0.08)',
         transition: 'all 0.2s ease',
         position: 'relative'
       }}>
@@ -170,7 +175,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           justifyContent: 'space-between',
           marginTop: 6,
           paddingTop: 6,
-          borderTop: '1px solid #f0f0f0'
+          borderTop: glass ? '1px solid rgba(255,255,255,0.6)' : '1px solid #f0f0f0'
         }}>
           {/* 左侧功能按钮 */}
           <Flex gap={4} align="center">
