@@ -194,10 +194,12 @@ const ChatScreenRefactored: React.FC = () => {
   };
 
   // 客户字典选择处理
-  const handleDictionarySelect = (dictionary: DictionaryItem) => {
+  const handleDictionarySelect = async (dictionary: DictionaryItem) => {
     const progressMessage = `查询${dictionary.customerName}的需求进展情况`;
-    setInputValue(progressMessage);
     setIsDictionarySelectorOpen(false);
+    
+    // 自动发送查询消息
+    await handleSubmit(progressMessage);
   };
 
   // 删除会话处理
@@ -228,12 +230,15 @@ const ChatScreenRefactored: React.FC = () => {
   // 监听知识库变化，自动更新当前会话的知识库ID
   useEffect(() => {
     const updateConversationKnowledgeBase = async () => {
-      // 只有在真实会话（有conversationId）且知识库发生变化时才更新
+      // 只有在真实会话（有conversationId）且知识库存在时才更新
       if (conversationId && currentKnowledgeBase) {
         try {
           const conversationDetail = conversationDetails[conversationId];
-          // 如果当前会话的知识库ID与选择的不同，则更新
-          if (conversationDetail && conversationDetail.knowledgeBaseId !== currentKnowledgeBase) {
+          // 如果当前会话的知识库ID与选择的不同，或者会话还没有知识库ID，则更新
+          const currentKbId = conversationDetail?.knowledgeBaseId;
+          const needsUpdate = currentKbId !== currentKnowledgeBase;
+          
+          if (needsUpdate) {
             await conversationApi.updateConversation(conversationId, {
               knowledgeBaseId: currentKnowledgeBase
             });
