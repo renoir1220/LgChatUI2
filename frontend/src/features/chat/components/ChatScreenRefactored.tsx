@@ -134,6 +134,9 @@ const ChatScreenRefactored: React.FC = () => {
     }
   };
 
+  // 控制输入框聚焦到末尾的信号
+  const [focusAtEndSignal, setFocusAtEndSignal] = useState(0);
+
   // 重新生成消息
   const handleRegenerate = async (messageIndex: number) => {
     // 找到对应的用户消息
@@ -222,24 +225,44 @@ const ChatScreenRefactored: React.FC = () => {
 
   // 快捷操作处理
   const handleQuickAction = (action: string) => {
+    // 每个功能分别指定知识库（可按需扩展/修改）
+    const QUICK_ACTION_KB_MAP: Record<string, string> = {
+      'readme-query': '常见问题与需求',
+      'requirement-progress': '常见问题与需求',
+      'similar-requirements': '常见问题与需求',
+    };
+
+    const targetKbName = QUICK_ACTION_KB_MAP[action];
+    if (targetKbName) {
+      const kb = knowledgeBases.find(k => k.name === targetKbName);
+      if (kb) {
+        if (currentKnowledgeBase !== kb.id) {
+          setCurrentKnowledgeBase(kb.id);
+        }
+      } else {
+        message.warning(`未找到“${targetKbName}”知识库`);
+      }
+    }
+
     let quickMessage = '';
-    
     switch (action) {
       case 'readme-query':
         quickMessage = '查询参数：';
+        // 设置后将焦点移动到输入末尾，便于继续输入
+        // 由于受控输入，先设值再触发聚焦信号
+        setTimeout(() => setFocusAtEndSignal((s) => s + 1), 0);
         break;
       case 'requirement-progress':
-        // 打开客户字典选择器
+        // 打开客户字典选择器（优先切换至目标知识库）
         setIsDictionarySelectorOpen(true);
         return;
       case 'similar-requirements':
         quickMessage = '查询相似需求';
+        setTimeout(() => setFocusAtEndSignal((s) => s + 1), 0);
         break;
       default:
         return;
     }
-    
-    // 设置快捷消息到输入框
     setInputValue(quickMessage);
   };
 
@@ -400,6 +423,7 @@ const ChatScreenRefactored: React.FC = () => {
           messagesLoading={messagesLoading}
           onSubmit={handleSubmit}
           onRegenerate={handleRegenerate}
+          onQuickAction={handleQuickAction}
         />
 
         {/* 输入区域 */}
@@ -419,6 +443,7 @@ const ChatScreenRefactored: React.FC = () => {
           onKnowledgeBaseChange={setCurrentKnowledgeBase}
           onQuickAction={handleQuickAction}
           glass={isWelcomeMode}
+          focusAtEndSignal={focusAtEndSignal}
         />
       </div>
       

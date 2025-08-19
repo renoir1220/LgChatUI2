@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Sender, Attachments } from '@ant-design/x';
 import { Dropdown, Skeleton, Flex } from 'antd';
 import { Button as AntdButton } from 'antd';
@@ -32,6 +32,8 @@ interface ChatInputProps {
   onQuickAction?: (action: string) => void;
   // 在欢迎页模式下使用玻璃质感，增强渐入过渡
   glass?: boolean;
+  // 跳转焦点到输入框末尾的信号（每次变更时触发）
+  focusAtEndSignal?: number;
 }
 
 /**
@@ -54,13 +56,43 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   onKnowledgeBaseChange,
   onQuickAction,
   glass = false,
+  focusAtEndSignal,
 }) => {
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const handleSubmit = () => {
     if (inputValue.trim()) {
       onSubmit(inputValue);
       onInputChange('');
     }
   };
+
+  // 当收到外部聚焦信号时，将光标移动到输入框末尾
+  useEffect(() => {
+    if (focusAtEndSignal === undefined) return;
+    const root = containerRef.current;
+    if (!root) return;
+    // 兼容 textarea 或 contenteditable 元素
+    const el = (root.querySelector('textarea') || root.querySelector('[contenteditable="true"]')) as HTMLElement | null;
+    if (!el) return;
+    // 聚焦元素
+    (el as any).focus?.();
+    // 移动到末尾
+    if (el instanceof HTMLTextAreaElement) {
+      const len = el.value?.length ?? 0;
+      try {
+        el.setSelectionRange(len, len);
+      } catch {}
+    } else {
+      try {
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        range.collapse(false);
+        const sel = window.getSelection();
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+      } catch {}
+    }
+  }, [focusAtEndSignal]);
 
   const senderHeader = (
     <Sender.Header
@@ -87,7 +119,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   );
 
   return (
-    <div style={{ 
+    <div ref={containerRef} style={{ 
       paddingInline: 'max(16px, calc((100% - 800px) / 2))', 
       paddingTop: 8, 
       paddingBottom: 16 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Bubble } from '@ant-design/x';
 import { Space, Spin, message, Divider } from 'antd';
+import { Button as AntdButton } from 'antd';
 import { Button } from '../../../components/ui/button';
 import { Copy, RotateCcw } from 'lucide-react';
 import MarkdownIt from 'markdown-it';
@@ -12,6 +13,7 @@ import { VoicePlayer } from './VoicePlayer';
 import { RequirementMessage } from './RequirementMessage';
 import { detectMessageType, MessageType } from '../../shared/utils/messageTypeDetector';
 import { getUsername } from '../../auth/utils/auth';
+import { FileSearchOutlined, ProjectOutlined, SearchOutlined } from '@ant-design/icons';
 import type { BubbleDataType } from '../hooks/useChatState';
 
 // 初始化 markdown-it 渲染器
@@ -48,6 +50,8 @@ interface ChatMessageListProps {
   showWelcome?: boolean;
   // 新增：消息加载中（首次打开某会话时）
   messagesLoading?: boolean;
+  // 新增：欢迎页快捷操作（与输入区加号菜单一致）
+  onQuickAction?: (action: string) => void;
 }
 
 /**
@@ -62,6 +66,7 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
   onRegenerate,
   showWelcome = true,
   messagesLoading = false,
+  onQuickAction,
 }) => {
   // 复制消息到剪贴板
   const handleCopyMessage = async (content: string) => {
@@ -127,15 +132,70 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
         <div className="pointer-events-none absolute -top-24 -left-24 size-[38rem] rounded-full bg-gradient-to-tr from-indigo-300/40 to-blue-200/30 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-24 -right-24 size-[38rem] rounded-full bg-gradient-to-tr from-cyan-200/40 to-violet-200/30 blur-3xl" />
 
-        {/* 欢迎文字 */}
-        <div className="relative z-10 flex h-full w-full items-center justify-center p-6">
-          <div className="text-center select-none">
-            <h1 className="text-4xl font-bold leading-tight tracking-tight md:text-5xl">
+        {/* 欢迎文字与快捷操作：仅将欢迎词垂直居中，按钮独立放在其下方 */}
+        <div className="relative z-10 h-full w-full p-6">
+          {/* 欢迎词绝对垂直居中 */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <h1 className="text-center select-none text-4xl font-bold leading-tight tracking-tight md:text-5xl">
               <span className="bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(to right, #0EA5E9, #1E40AF)' }}>
                 {greeting}
                 {username ? `，${username}` : ''}
               </span>
             </h1>
+          </div>
+          {/* 按钮位于欢迎词下方，不影响其垂直居中 */}
+          <div
+            className="absolute left-1/2 -translate-x-1/2 flex flex-wrap items-center justify-center gap-3"
+            style={{ top: 'calc(50% + 64px)' }}
+          >
+            <AntdButton
+              size="large"
+              type="text"
+              icon={<FileSearchOutlined />}
+              onClick={() => onQuickAction?.('readme-query')}
+              style={{
+                borderRadius: 12,
+                border: '1px solid #1677ff',
+                background: 'transparent',
+                color: '#1677ff',
+                padding: '8px 18px',
+                height: 44,
+              }}
+            >
+              Readme查询
+            </AntdButton>
+            <AntdButton
+              size="large"
+              type="text"
+              icon={<ProjectOutlined />}
+              onClick={() => onQuickAction?.('requirement-progress')}
+              style={{
+                borderRadius: 12,
+                border: '1px solid #1677ff',
+                background: 'transparent',
+                color: '#1677ff',
+                padding: '8px 18px',
+                height: 44,
+              }}
+            >
+              需求进展
+            </AntdButton>
+            <AntdButton
+              size="large"
+              type="text"
+              icon={<SearchOutlined />}
+              onClick={() => onQuickAction?.('similar-requirements')}
+              style={{
+                borderRadius: 12,
+                border: '1px solid #1677ff',
+                background: 'transparent',
+                color: '#1677ff',
+                padding: '8px 18px',
+                height: 44,
+              }}
+            >
+              相似需求
+            </AntdButton>
           </div>
         </div>
       </div>
