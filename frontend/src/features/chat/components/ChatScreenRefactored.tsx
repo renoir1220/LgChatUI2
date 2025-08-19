@@ -8,6 +8,9 @@ import { ChatSidebar } from './ChatSidebar';
 import { ChatMessageList } from './ChatMessageList';
 import { ChatInput } from './ChatInput';
 import { conversationApi } from '../services/chatService';
+import { DictionarySelector } from '../../shared/components/DictionarySelector';
+import { useCustomerDict } from '../../shared/hooks/useCustomerDict';
+import type { DictionaryItem } from '../../shared/components/DictionarySelector';
 
 /**
  * 重构后的聊天界面组件
@@ -16,6 +19,10 @@ import { conversationApi } from '../services/chatService';
 const ChatScreenRefactored: React.FC = () => {
   // 响应式状态管理
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  
+  // 客户字典状态
+  const [isDictionarySelectorOpen, setIsDictionarySelectorOpen] = useState(false);
+  const { dictionaries } = useCustomerDict();
 
   // 监听屏幕尺寸变化
   useEffect(() => {
@@ -171,8 +178,9 @@ const ChatScreenRefactored: React.FC = () => {
         quickMessage = '查询参数：';
         break;
       case 'requirement-progress':
-        quickMessage = '查询需求进展';
-        break;
+        // 打开客户字典选择器
+        setIsDictionarySelectorOpen(true);
+        return;
       case 'similar-requirements':
         quickMessage = '查询相似需求';
         break;
@@ -182,6 +190,13 @@ const ChatScreenRefactored: React.FC = () => {
     
     // 设置快捷消息到输入框
     setInputValue(quickMessage);
+  };
+
+  // 客户字典选择处理
+  const handleDictionarySelect = (dictionary: DictionaryItem) => {
+    const progressMessage = `查询${dictionary.customerName}的需求进展情况`;
+    setInputValue(progressMessage);
+    setIsDictionarySelectorOpen(false);
   };
 
   // 删除会话处理
@@ -296,6 +311,15 @@ const ChatScreenRefactored: React.FC = () => {
           onQuickAction={handleQuickAction}
         />
       </div>
+      
+      {/* 客户字典选择器 */}
+      <DictionarySelector
+        dictionaries={dictionaries}
+        isOpen={isDictionarySelectorOpen}
+        onSelect={handleDictionarySelect}
+        onClose={() => setIsDictionarySelectorOpen(false)}
+        title="选择客户"
+      />
     </div>
   );
 };

@@ -31,7 +31,7 @@ export class CustomerDictRepository {
       // 查询分页数据
       const offset = (page - 1) * pageSize;
       const dataQuery = `
-        SELECT DISTINCT xq.customer_name, c.PYCODE
+        SELECT DISTINCT xq.customer_name, c.PYCODE, c.customer_id
         FROM BUS_XQ xq
         INNER JOIN BASE_CUSTOMER c ON xq.CUSTOMER_ID = c.CUSTOMER_ID
         ORDER BY xq.customer_name
@@ -42,10 +42,12 @@ export class CustomerDictRepository {
       const rows = await this.db.query<{
         customer_name: string;
         PYCODE: string;
+        customer_id: string;
       }>(dataQuery);
 
       // 转换为前端需要的格式
       const customers: CustomerDictItem[] = rows.map((row) => ({
+        customerId: row.customer_id,
         customerName: row.customer_name,
         pyCode: row.PYCODE || '',
       }));
@@ -53,6 +55,37 @@ export class CustomerDictRepository {
       return { customers, total };
     } catch (error) {
       throw new Error(`查询客户字典失败: ${error.message}`);
+    }
+  }
+
+  /**
+   * 获取所有客户字典（不分页）
+   */
+  async findAllCustomers(): Promise<{ customers: CustomerDictItem[] }> {
+    try {
+      const dataQuery = `
+        SELECT DISTINCT xq.customer_name, c.PYCODE, c.customer_id
+        FROM BUS_XQ xq
+        INNER JOIN BASE_CUSTOMER c ON xq.CUSTOMER_ID = c.CUSTOMER_ID
+        ORDER BY xq.customer_name
+      `;
+
+      const rows = await this.db.query<{
+        customer_name: string;
+        PYCODE: string;
+        customer_id: string;
+      }>(dataQuery);
+
+      // 转换为前端需要的格式
+      const customers: CustomerDictItem[] = rows.map((row) => ({
+        customerId: row.customer_id,
+        customerName: row.customer_name,
+        pyCode: row.PYCODE || '',
+      }));
+
+      return { customers };
+    } catch (error) {
+      throw new Error(`查询所有客户字典失败: ${error.message}`);
     }
   }
 

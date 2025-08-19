@@ -9,6 +9,7 @@ import {
 import {
   CustomerDictResponse,
   CustomerDictQuerySchema,
+  CustomerDictItem,
 } from '@lg/shared';
 import type { CustomerDictQuery } from '@lg/shared';
 import { CustomerDictService } from './customer-dict.service';
@@ -48,6 +49,31 @@ export class CustomerDictController {
     } catch (error) {
       this.logger.error('客户字典查询请求处理失败', error.stack, {
         query,
+        errorMessage: error.message,
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * 获取所有客户字典（用于选择器）
+   * GET /api/customer-dict/all
+   */
+  @Get('all')
+  @HttpCode(HttpStatus.OK)
+  async getAllCustomerDict(): Promise<{ customers: CustomerDictItem[] }> {
+    this.logger.log('接收获取所有客户字典请求');
+
+    try {
+      const result = await this.customerDictService.getAllCustomerDict();
+      
+      this.logger.log('获取所有客户字典成功', {
+        count: result.customers.length,
+      });
+
+      return result;
+    } catch (error) {
+      this.logger.error('获取所有客户字典失败', error.stack, {
         errorMessage: error.message,
       });
       throw error;

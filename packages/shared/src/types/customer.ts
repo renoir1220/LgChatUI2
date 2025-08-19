@@ -4,6 +4,8 @@ import { z } from 'zod';
  * 客户字典项
  */
 export interface CustomerDictItem {
+  /** 客户ID */
+  customerId: string;
   /** 客户名称 */
   customerName: string;
   /** 拼音码，用于前端过滤 */
@@ -24,6 +26,7 @@ export interface CustomerDictResponse {
  * 客户字典项的Zod Schema
  */
 export const CustomerDictItemSchema = z.object({
+  customerId: z.string().min(1, '客户ID不能为空'),
   customerName: z.string().min(1, '客户名称不能为空'),
   pyCode: z.string().min(1, '拼音码不能为空'),
 });
