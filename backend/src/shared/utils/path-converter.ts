@@ -19,17 +19,21 @@ export function convertRelativePathsToUrls(
   }
 
   try {
-    // 匹配 ../../files/ 开头的相对路径
+    // 匹配 ../../files/ 开头的相对路径，捕获后续完整路径
     // 支持多种文件扩展名：图片、文档等
     const relativePathRegex = /\.\.\/\.\.\/files\/([^"\s<>]+)/gi;
 
     // 将相对路径替换为完整URL
     const convertedText = text.replace(relativePathRegex, (match, filePath) => {
-      // 确保路径开头没有额外的斜杠
-      const cleanPath = filePath.startsWith('/')
-        ? filePath.substring(1)
-        : filePath;
-      return `${baseUrl}/Files/Tinymce/20250813/${cleanPath}`;
+      // 检查文件路径是否已经包含了 Tinymce/20250813/ 前缀
+      if (filePath.startsWith('Tinymce/20250813/')) {
+        // 如果已经包含了前缀，直接使用 baseUrl + /Files/ + filePath
+        return `${baseUrl}/Files/${filePath}`;
+      } else {
+        // 如果没有前缀，添加默认的 Tinymce/20250813/ 路径
+        const cleanPath = filePath.startsWith('/') ? filePath.substring(1) : filePath;
+        return `${baseUrl}/Files/Tinymce/20250813/${cleanPath}`;
+      }
     });
 
     return convertedText;
