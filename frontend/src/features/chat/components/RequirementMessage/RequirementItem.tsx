@@ -1,17 +1,14 @@
-import React, { useState } from 'react';
-import { Card } from '../../../../components/ui/card';
-import { Badge } from '../../../../components/ui/badge';
-import { Button } from '../../../../components/ui/button';
-import { RequirementDetail } from './RequirementDetail';
+import React from 'react';
+import { Collapse, Tag, Space, Typography } from 'antd';
 import { 
-  ChevronDown, 
-  ChevronRight, 
-  Calendar, 
-  User, 
-  Tag,
-  Clock
-} from 'lucide-react';
+  UserOutlined, 
+  TagOutlined, 
+  ClockCircleOutlined 
+} from '@ant-design/icons';
+import { RequirementDetail } from './RequirementDetail';
 import type { RequirementItem as RequirementItemType } from '@lg/shared';
+
+const { Text } = Typography;
 
 interface RequirementItemProps {
   requirement: RequirementItemType;
@@ -23,16 +20,16 @@ interface RequirementItemProps {
  */
 function getStageColor(stage: string): string {
   const stageColorMap: Record<string, string> = {
-    '需求评审': 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    '需求设计': 'bg-blue-100 text-blue-800 border-blue-200',
-    '研发分配': 'bg-purple-100 text-purple-800 border-purple-200',
-    '研发验证': 'bg-indigo-100 text-indigo-800 border-indigo-200',
-    '功能测试': 'bg-orange-100 text-orange-800 border-orange-200',
-    '现场更新': 'bg-green-100 text-green-800 border-green-200',
-    '产品发布': 'bg-emerald-100 text-emerald-800 border-emerald-200',
+    '需求评审': 'warning',
+    '需求设计': 'blue',
+    '研发分配': 'purple',
+    '研发验证': 'cyan',
+    '功能测试': 'orange',
+    '现场更新': 'green',
+    '产品发布': 'success',
   };
   
-  return stageColorMap[stage] || 'bg-gray-100 text-gray-800 border-gray-200';
+  return stageColorMap[stage] || 'default';
 }
 
 /**
@@ -43,84 +40,60 @@ export const RequirementItem: React.FC<RequirementItemProps> = ({
   requirement,
   index,
 }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  // 构建折叠面板的标题
+  const header = (
+    <div style={{ width: '100%' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+        <Text code style={{ color: '#1890ff', fontWeight: 500 }}>
+          {requirement.requirementCode}
+        </Text>
+        <Tag color={getStageColor(requirement.currentStage)}>
+          {requirement.currentStage}
+        </Tag>
+      </div>
+      
+      <div style={{ fontSize: 14, fontWeight: 500, color: '#262626', marginBottom: 4 }}>
+        {requirement.requirementName || '未命名需求'}
+      </div>
+      
+      <Space size={16} style={{ fontSize: 12, color: '#8c8c8c' }}>
+        {requirement.product && (
+          <Space size={4}>
+            <TagOutlined />
+            <span>{requirement.product}</span>
+          </Space>
+        )}
+        {requirement.creator && (
+          <Space size={4}>
+            <UserOutlined />
+            <span>{requirement.creator}</span>
+          </Space>
+        )}
+        <Space size={4}>
+          <ClockCircleOutlined />
+          <span>更新于 {requirement.lastUpdateDate}</span>
+        </Space>
+      </Space>
+    </div>
+  );
 
-  const handleToggle = () => {
-    setIsExpanded(!isExpanded);
-  };
+  const items = [
+    {
+      key: requirement.requirementCode,
+      label: header,
+      children: <RequirementDetail requirement={requirement} />,
+    },
+  ];
 
   return (
-    <Card className="border border-gray-200 hover:border-gray-300 transition-colors duration-200">
-      {/* 一级列表显示：需求编号、需求名称、最后修改时间 */}
-      <div 
-        className="p-4 cursor-pointer select-none"
-        onClick={handleToggle}
-      >
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            {/* 需求编号和状态 */}
-            <div className="flex items-center gap-2 mb-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0 hover:bg-gray-100 rounded-full"
-              >
-                {isExpanded ? (
-                  <ChevronDown className="h-4 w-4 text-gray-500" />
-                ) : (
-                  <ChevronRight className="h-4 w-4 text-gray-500" />
-                )}
-              </Button>
-              
-              <span className="text-sm font-mono text-blue-600 font-medium">
-                {requirement.requirementCode}
-              </span>
-              
-              <Badge 
-                variant="outline" 
-                className={`text-xs ${getStageColor(requirement.currentStage)}`}
-              >
-                {requirement.currentStage}
-              </Badge>
-            </div>
-
-            {/* 需求名称 */}
-            <h4 className="text-sm font-medium text-gray-900 mb-2 leading-relaxed">
-              {/* TODO(human): 添加需求名称的多行文本截断显示功能 */}
-              {requirement.requirementName || '未命名需求'}
-            </h4>
-
-            {/* 基本信息 */}
-            <div className="flex items-center gap-4 text-xs text-gray-500">
-              {requirement.product && (
-                <div className="flex items-center gap-1">
-                  <Tag className="h-3 w-3" />
-                  <span>{requirement.product}</span>
-                </div>
-              )}
-              
-              {requirement.creator && (
-                <div className="flex items-center gap-1">
-                  <User className="h-3 w-3" />
-                  <span>{requirement.creator}</span>
-                </div>
-              )}
-              
-              <div className="flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                <span>更新于 {requirement.lastUpdateDate}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 展开的详细内容 */}
-      {isExpanded && (
-        <div className="border-t border-gray-100">
-          <RequirementDetail requirement={requirement} />
-        </div>
-      )}
-    </Card>
+    <Collapse
+      items={items}
+      ghost
+      style={{ 
+        marginBottom: index < 2 ? 8 : 0,
+        border: 'none'
+      }}
+      expandIconPosition="end"
+    />
   );
 };

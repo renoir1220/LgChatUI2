@@ -1,9 +1,10 @@
 import React from 'react';
-import { Card } from '../../../../components/ui/card';
-import { Badge } from '../../../../components/ui/badge';
+import { Typography, Tag, Space, Divider } from 'antd';
+import { FileTextOutlined, UserOutlined } from '@ant-design/icons';
 import { RequirementItem } from './RequirementItem';
-import { FileText, Calendar, User } from 'lucide-react';
 import type { RequirementListResponse } from '@lg/shared';
+
+const { Title, Text } = Typography;
 
 interface RequirementMessageProps {
   data: RequirementListResponse;
@@ -25,33 +26,31 @@ export const RequirementMessage: React.FC<RequirementMessageProps> = ({
     (requirements.length > 0 ? requirements[0].customerName : '未知客户');
 
   return (
-    <Card className="max-w-full p-0 border-0 shadow-none bg-transparent">
-      {/* 头部信息 */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-gray-200 rounded-lg p-4 mb-3">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center gap-2">
-            <FileText className="h-5 w-5 text-blue-600" />
-            <h3 className="font-semibold text-gray-900">需求清单</h3>
-          </div>
-          <Badge variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-100">
-            共 {total} 条需求
-          </Badge>
-        </div>
-        
-        {displayCustomerName && (
-          <div className="flex items-center gap-2 mt-2">
-            <User className="h-4 w-4 text-gray-500" />
-            <span className="text-sm text-gray-600">客户：{displayCustomerName}</span>
-          </div>
-        )}
-      </div>
+    <div style={{ width: '100%', maxWidth: 'none' }}>
+      {/* 头部信息 - 使用简洁的排版 */}
+      <Space align="center" style={{ marginBottom: 16, width: '100%', justifyContent: 'space-between' }}>
+        <Space>
+          <FileTextOutlined style={{ color: '#1890ff' }} />
+          <Title level={4} style={{ margin: 0, color: '#262626' }}>需求清单</Title>
+          {displayCustomerName && (
+            <>
+              <Divider type="vertical" />
+              <Space size={4}>
+                <UserOutlined style={{ color: '#8c8c8c' }} />
+                <Text type="secondary">{displayCustomerName}</Text>
+              </Space>
+            </>
+          )}
+        </Space>
+        <Tag color="blue">共 {total} 条需求</Tag>
+      </Space>
 
       {/* 需求列表 */}
-      <div className="space-y-3">
+      <div>
         {requirements.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
-            <p>暂无需求数据</p>
+          <div style={{ textAlign: 'center', padding: '48px 0', color: '#8c8c8c' }}>
+            <FileTextOutlined style={{ fontSize: 24, marginBottom: 8, opacity: 0.5 }} />
+            <div>暂无需求数据</div>
           </div>
         ) : (
           requirements.map((requirement, index) => (
@@ -63,16 +62,6 @@ export const RequirementMessage: React.FC<RequirementMessageProps> = ({
           ))
         )}
       </div>
-      
-      {/* 底部提示 */}
-      {requirements.length > 0 && (
-        <div className="mt-4 pt-3 border-t border-gray-100">
-          <div className="flex items-center justify-center gap-1 text-xs text-gray-400">
-            <Calendar className="h-3 w-3" />
-            <span>点击需求项查看详细内容</span>
-          </div>
-        </div>
-      )}
-    </Card>
+    </div>
   );
 };
