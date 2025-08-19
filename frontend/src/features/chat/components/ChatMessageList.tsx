@@ -17,6 +17,8 @@ import 'github-markdown-css/github-markdown.css';
 import './ChatMessage.css';
 import { CitationList } from '../../knowledge-base/components/CitationList';
 import { VoicePlayer } from './VoicePlayer';
+import { RequirementMessage } from './RequirementMessage';
+import { detectMessageType, MessageType } from '../../shared/utils/messageTypeDetector';
 import logoTree from '../../../assets/logoTree.png';
 import type { BubbleDataType } from '../hooks/useChatState';
 
@@ -113,7 +115,23 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
   // 复制消息到剪贴板
   const handleCopyMessage = async (content: string) => {
     try {
-      await navigator.clipboard.writeText(content);
+      // 检测消息类型，如果是需求消息，复制格式化文本
+      const messageData = detectMessageType(content);
+      let textToCopy = content;
+      
+      if (messageData.type === MessageType.REQUIREMENTS && messageData.data?.requirements) {
+        const { requirements, total } = messageData.data.requirements;
+        const customerName = requirements.length > 0 ? requirements[0].customerName : '未知客户';
+        
+        textToCopy = `需求清单 - ${customerName} (共${total}条)\n\n` +
+          requirements.map((req, index) => 
+            `${index + 1}. ${req.requirementCode} - ${req.requirementName}\n` +
+            `   状态：${req.currentStage} | 产品：${req.product}\n` +
+            `   创建人：${req.creator} | 更新时间：${req.lastUpdateDate}\n`
+          ).join('\n');
+      }
+      
+      await navigator.clipboard.writeText(textToCopy);
       message.success('消息已复制到剪贴板');
     } catch {
       message.error('复制失败');
@@ -200,16 +218,38 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
         items={messages.map((msg, index) => {
           const isStreamingAssistant = loading && index === messages.length - 1 && msg.role === 'assistant';
           
-          // 处理消息内容，包括引用
-          const contentNode = (!isStreamingAssistant && msg.role === 'assistant' && msg.citations && msg.citations.length > 0)
-            ? (
+          // 检测消息类型并处理消息内容
+          let contentNode: React.ReactNode;
+          
+          if (!isStreamingAssistant && msg.role === 'assistant') {
+            // 检测消息类型
+            const messageData = detectMessageType(msg.content);
+            
+            if (messageData.type === MessageType.REQUIREMENTS && messageData.data?.requirements) {
+              // 渲染需求消息
+              contentNode = (
+                <RequirementMessage 
+                  data={messageData.data.requirements}
+                  customerName={messageData.data.customerName}
+                />
+              );
+            } else if (msg.citations && msg.citations.length > 0) {
+              // 渲染带引用的普通消息
+              contentNode = (
                 <div>
                   {renderMarkdown(msg.content, false)}
                   <Divider style={{ margin: '8px 0' }} />
                   <CitationList citations={msg.citations} kbId={currentKnowledgeBase} />
                 </div>
-              )
-            : msg.content;
+              );
+            } else {
+              // 渲染普通消息
+              contentNode = msg.content;
+            }
+          } else {
+            // 用户消息或流式消息
+            contentNode = msg.content;
+          }
 
           return {
             ...msg,

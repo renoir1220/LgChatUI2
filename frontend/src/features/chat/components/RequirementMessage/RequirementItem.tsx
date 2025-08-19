@@ -85,7 +85,8 @@ export const RequirementItem: React.FC<RequirementItemProps> = ({
             </div>
 
             {/* 需求名称 */}
-            <h4 className="text-sm font-medium text-gray-900 mb-2 line-clamp-2 leading-relaxed">
+            <h4 className="text-sm font-medium text-gray-900 mb-2 leading-relaxed">
+              {/* TODO(human): 添加需求名称的多行文本截断显示功能 */}
               {requirement.requirementName || '未命名需求'}
             </h4>
 
