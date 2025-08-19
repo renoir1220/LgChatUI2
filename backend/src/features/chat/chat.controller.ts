@@ -15,11 +15,13 @@ import { DifyService } from '../../shared/services/dify.service';
 import { AppLoggerService } from '../../shared/services/logger.service';
 import { ZodValidationPipe } from '../../shared/pipes/zod-validation.pipe';
 import { extractUserIdFromRequest } from '../../shared/utils/user.utils';
+import { StreamingCitationParser } from '../../shared/utils/citation-parser.util';
 import { ChatRequestSchema, ChatRole } from '@lg/shared';
 import type {
   ChatRequest,
   Conversation,
   AuthenticatedRequest,
+  Citation,
 } from '@lg/shared';
 
 @UseGuards(JwtAuthGuard)
@@ -186,6 +188,9 @@ export class ChatController {
 
       let assistantMessage = '';
       let buffer = '';
+      // 初始化citation解析器
+      const citationParser = new StreamingCitationParser();
+      const allExtractedCitations: Citation[] = [];
 
       // 使用Node.js流处理
       await new Promise<void>((resolve, reject) => {
@@ -208,16 +213,31 @@ export class ChatController {
               streamData.event === 'agent_message'
             ) {
               if (streamData.answer) {
-                assistantMessage += streamData.answer;
+                // 使用citation解析器处理流式内容
+                const parseResult = citationParser.processChunk(streamData.answer);
+                
+                // 累加清理后的内容到助手消息
+                assistantMessage += parseResult.cleanContent;
+                
+                // 收集提取的citations
+                if (parseResult.extractedCitations.length > 0) {
+                  allExtractedCitations.push(...parseResult.extractedCitations);
+                  this.logger.debug('从流式响应中提取到citations', {
+                    conversationId,
+                    citationCount: parseResult.extractedCitations.length,
+                  });
+                }
 
-                // 发送流式内容到前端
-                res.write(
-                  `data: ${JSON.stringify({
-                    event: streamData.event,
-                    answer: streamData.answer,
-                    metadata: streamData.metadata,
-                  })}\n\n`,
-                );
+                // 发送清理后的内容到前端（移除了citation标签）
+                if (parseResult.cleanContent) {
+                  res.write(
+                    `data: ${JSON.stringify({
+                      event: streamData.event,
+                      answer: parseResult.cleanContent,
+                      metadata: streamData.metadata,
+                    })}\n\n`,
+                  );
+                }
               }
             }
 
@@ -225,8 +245,38 @@ export class ChatController {
             if (streamData.event === 'message_end') {
               this.logger.debug('收到消息结束事件', { conversationId });
 
-              // 如果消息结束事件包含知识库引用信息，也要发送给前端
-              if (streamData.metadata?.retriever_resources) {
+              // 合并来自citation标签和retriever_resources的引用信息
+              const existingResources = streamData.metadata?.retriever_resources || [];
+              const allCitations = [...existingResources, ...allExtractedCitations];
+
+              // 去重处理（基于content或segment_id）
+              const uniqueCitations = allCitations.filter((citation, index, arr) => {
+                return arr.findIndex(c => 
+                  c.content === citation.content || 
+                  (c.segment_id && c.segment_id === citation.segment_id)
+                ) === index;
+              });
+
+              this.logger.log('合并引用信息完成', {
+                conversationId,
+                originalResourcesCount: existingResources.length,
+                extractedCitationsCount: allExtractedCitations.length,
+                finalCitationsCount: uniqueCitations.length,
+              });
+
+              // 发送合并后的引用信息到前端
+              if (uniqueCitations.length > 0) {
+                res.write(
+                  `data: ${JSON.stringify({
+                    event: 'message_end',
+                    metadata: {
+                      ...streamData.metadata,
+                      retriever_resources: uniqueCitations,
+                    },
+                  })}\n\n`,
+                );
+              } else if (streamData.metadata) {
+                // 如果没有引用但有其他metadata，仍然发送
                 res.write(
                   `data: ${JSON.stringify({
                     event: 'message_end',
