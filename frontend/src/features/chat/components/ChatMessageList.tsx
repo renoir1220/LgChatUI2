@@ -11,7 +11,6 @@ import { CitationList } from '../../knowledge-base/components/CitationList';
 import { VoicePlayer } from './VoicePlayer';
 import { RequirementMessage } from './RequirementMessage';
 import { detectMessageType, MessageType } from '../../shared/utils/messageTypeDetector';
-import logoTree from '../../../assets/logoTree.png';
 import { getUsername } from '../../auth/utils/auth';
 import type { BubbleDataType } from '../hooks/useChatState';
 
@@ -108,7 +107,20 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
         </div>
       );
     }
-    const username = getUsername() || '用户';
+    const username = getUsername();
+    // 根据北京时间生成问候语
+    const getBeijingGreeting = () => {
+      const now = new Date();
+      const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+      const beijing = new Date(utc + 8 * 3600000);
+      const h = beijing.getHours();
+      if (h >= 5 && h < 11) return '早晨好';
+      if (h >= 11 && h < 13) return '中午好';
+      if (h >= 13 && h < 18) return '下午好';
+      if (h >= 18 && h < 23) return '晚上好';
+      return '凌晨好';
+    };
+    const greeting = getBeijingGreeting();
     return (
       <div className="relative flex-1 h-full overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-50 via-white to-indigo-100">
         {/* 装饰性渐变圆斑 */}
@@ -118,15 +130,12 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
         {/* 欢迎文字 */}
         <div className="relative z-10 flex h-full w-full items-center justify-center p-6">
           <div className="text-center select-none">
-            <div className="mx-auto mb-4 size-12 rounded-md shadow-md overflow-hidden bg-white/70 ring-1 ring-black/5 backdrop-blur-md flex items-center justify-center">
-              <img src={logoTree} alt="logo" className="size-8" />
-            </div>
             <h1 className="text-4xl font-bold leading-tight tracking-tight md:text-5xl">
               <span className="bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(to right, #0EA5E9, #1E40AF)' }}>
-                你好：{username}
+                {greeting}
+                {username ? `，${username}` : ''}
               </span>
             </h1>
-            <p className="mt-4 text-lg leading-relaxed text-gray-600">开始你的 AI 聊天之旅</p>
           </div>
         </div>
       </div>
