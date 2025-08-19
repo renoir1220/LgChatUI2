@@ -1,4 +1,4 @@
-import { apiGet } from './api';
+import { apiGet, showApiError } from './api';
 
 export interface CustomerDictItem {
   customerId: string;
@@ -19,6 +19,7 @@ export const getAllCustomerDict = async (): Promise<CustomerDictResponse> => {
     return response;
   } catch (error) {
     console.error('获取客户字典失败:', error);
+    showApiError(error, '加载客户列表失败');
     throw error;
   }
 };

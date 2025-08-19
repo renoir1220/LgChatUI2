@@ -8,6 +8,7 @@ import { ChatSidebar } from './ChatSidebar';
 import { ChatMessageList } from './ChatMessageList';
 import { ChatInput } from './ChatInput';
 import { conversationApi } from '../services/chatService';
+import { showApiError } from '../../shared/services/api';
 import { DictionarySelector } from '../../shared/components/DictionarySelector';
 import { useCustomerDict } from '../../shared/hooks/useCustomerDict';
 import type { DictionaryItem } from '../../shared/components/DictionarySelector';
@@ -111,6 +112,7 @@ const ChatScreenRefactored: React.FC = () => {
       );
     } catch (error) {
       console.error('发送消息失败:', error);
+      showApiError(error, '发送消息失败，请重试');
     } finally {
       setLoading(false);
     }
@@ -146,7 +148,7 @@ const ChatScreenRefactored: React.FC = () => {
         );
       } catch (error) {
         console.error('重新生成失败:', error);
-        message.error('重新生成失败');
+        showApiError(error, '重新生成失败');
       } finally {
         setLoading(false);
       }
@@ -217,7 +219,7 @@ const ChatScreenRefactored: React.FC = () => {
       await refreshConversations();
     } catch (error) {
       console.error('删除会话失败:', error);
-      message.error('删除会话失败，请重试');
+      showApiError(error, '删除会话失败，请重试');
     }
   };
 
@@ -254,7 +256,8 @@ const ChatScreenRefactored: React.FC = () => {
           }
         } catch (error) {
           console.error('更新会话知识库失败:', error);
-          // 不显示错误提示，静默处理
+          // 对于知识库更新失败，显示错误提示
+          showApiError(error, '保存会话设置失败');
         }
       }
     };

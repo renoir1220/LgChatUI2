@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { apiGet } from '../../shared/services/api';
+import { apiGet, showApiError } from '../../shared/services/api';
 
 export interface KnowledgeBase {
   id: string;
@@ -30,7 +30,12 @@ export function useKnowledgeBases() {
         // 后端暂未实现时，保持空列表，不阻塞聊天功能
         if (!mounted) return;
         setKnowledgeBases([]);
-        setError(e instanceof Error ? e.message : '加载失败');
+        const errorMessage = e instanceof Error ? e.message : '加载失败';
+        setError(errorMessage);
+        // 知识库加载失败不影响核心聊天功能，所以只在调试时显示错误
+        if (process.env.NODE_ENV === 'development') {
+          showApiError(e, '加载知识库列表失败');
+        }
       } finally {
         if (mounted) setLoading(false);
       }

@@ -49,6 +49,18 @@ export const RequirementItem: React.FC<RequirementItemProps> = ({
     }}>
       {/* 左侧主要信息 */}
       <div style={{ flex: 1, minWidth: 0 }}>
+        {/* 需求说明 - 放在最上面 */}
+        <div style={{ 
+          fontSize: 16, 
+          fontWeight: 600, 
+          color: '#262626', 
+          marginBottom: 6,
+          lineHeight: 1.4
+        }}>
+          {requirement.requirementName || '未命名需求'}
+        </div>
+        
+        {/* 标签行 */}
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 6, flexWrap: 'wrap' }}>
           <Text code style={{ color: '#1890ff', fontWeight: 500, marginRight: 8 }}>
             {requirement.requirementCode}
@@ -63,23 +75,15 @@ export const RequirementItem: React.FC<RequirementItemProps> = ({
           )}
         </div>
         
-        <div style={{ 
-          fontSize: 16, 
-          fontWeight: 600, 
-          color: '#262626', 
-          marginBottom: 6,
-          lineHeight: 1.4
-        }}>
-          {requirement.requirementName || '未命名需求'}
-        </div>
-        
+        {/* 灰色字行 */}
         <div style={{ 
           display: 'flex', 
           alignItems: 'center',
           gap: '20px',
           fontSize: 12, 
           color: '#8c8c8c',
-          flexWrap: 'wrap'
+          flexWrap: 'wrap',
+          marginBottom: 6
         }}>
           {requirement.product && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>

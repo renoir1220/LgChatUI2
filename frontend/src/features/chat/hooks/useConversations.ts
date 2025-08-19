@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { apiGet } from '../../shared/services/api';
+import { apiGet, showApiError } from '../../shared/services/api';
 import { getCitationsFromCache, cleanupExpiredCache } from '../utils/messageCache';
 import type { ConversationItem, ConversationDetail, MessageRecord, BubbleDataType, Citation } from './useChatState';
 
@@ -55,6 +55,7 @@ export function useConversations(
       }
     } catch (error) {
       console.error('初始化加载失败:', error);
+      showApiError(error, '加载会话列表失败');
     }
   };
 
@@ -96,6 +97,7 @@ export function useConversations(
     } catch (error) {
       console.error('加载会话消息失败:', error);
       setMessages([]);
+      showApiError(error, '加载会话消息失败');
     }
   };
 
