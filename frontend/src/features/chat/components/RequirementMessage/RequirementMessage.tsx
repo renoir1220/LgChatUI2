@@ -46,20 +46,22 @@ export const RequirementMessage: React.FC<RequirementMessageProps> = ({
       </Space>
 
       {/* 需求列表 */}
-      <div>
+      <div style={{ width: '100%' }}>
         {requirements.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 0', color: '#8c8c8c' }}>
             <FileTextOutlined style={{ fontSize: 24, marginBottom: 8, opacity: 0.5 }} />
             <div>暂无需求数据</div>
           </div>
         ) : (
-          requirements.map((requirement, index) => (
-            <RequirementItem
-              key={requirement.requirementCode}
-              requirement={requirement}
-              index={index}
-            />
-          ))
+          <div style={{ width: '100%' }}>
+            {requirements.map((requirement, index) => (
+              <RequirementItem
+                key={requirement.requirementCode}
+                requirement={requirement}
+                index={index}
+              />
+            ))}
+          </div>
         )}
       </div>
     </div>

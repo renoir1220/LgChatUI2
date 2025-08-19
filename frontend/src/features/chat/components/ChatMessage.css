@@ -216,6 +216,30 @@
   color: #93c5fd !important;
 }
 
+/* 需求消息组件样式优化 */
+.requirement-collapse {
+  width: 100% !important;
+}
+
+.requirement-collapse .ant-collapse-item {
+  width: 100% !important;
+}
+
+.requirement-collapse .ant-collapse-header {
+  width: 100% !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.requirement-collapse .ant-collapse-content {
+  width: 100% !important;
+}
+
+.requirement-collapse .ant-collapse-content-box {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
 /* 响应式优化 */
 @media (max-width: 768px) {
   .chat-markdown-body {
