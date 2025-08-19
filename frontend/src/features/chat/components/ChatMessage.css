@@ -217,11 +217,7 @@
 }
 
 /* 需求消息组件样式优化 */
-.requirement-collapse {
-  width: 100% !important;
-}
-
-.requirement-collapse .ant-collapse-item {
+.requirement-message-container {
   width: 100% !important;
 }
 
@@ -229,10 +225,9 @@
   width: 100% !important;
   padding-left: 0 !important;
   padding-right: 0 !important;
-}
-
-.requirement-collapse .ant-collapse-content {
-  width: 100% !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  box-sizing: border-box !important;
 }
 
 .requirement-collapse .ant-collapse-content-box {
@@ -240,13 +235,37 @@
   padding-right: 0 !important;
 }
 
+.requirement-message-container .ant-space {
+  width: 100% !important;
+  justify-content: space-between !important;
+}
+
 /* 响应式优化 */
-@media (max-width: 768px) {
+/* 大屏幕时设置最小宽度以撑开组件 */
+@media (min-width: 1024px) {
+  .requirement-collapse .ant-collapse-header {
+    min-width: 768px !important;
+  }
+}
+
+/* 中等屏幕时适度撑开 */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .requirement-collapse .ant-collapse-header {
+    min-width: 600px !important;
+  }
+}
+
+/* 小屏幕时不设置最小宽度，保持响应式 */
+@media (max-width: 767px) {
   .chat-markdown-body {
     font-size: 14px;
   }
   
   .chat-markdown-body pre {
     padding: 8px 12px !important;
+  }
+  
+  .requirement-collapse .ant-collapse-header {
+    min-width: auto !important;
   }
 }

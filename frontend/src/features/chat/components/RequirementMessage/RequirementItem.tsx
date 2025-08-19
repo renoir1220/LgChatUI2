@@ -40,9 +40,13 @@ export const RequirementItem: React.FC<RequirementItemProps> = ({
   requirement,
   index,
 }) => {
-  // 构建折叠面板的标题 - 使用更宽的布局
+  // 构建折叠面板的标题 - 充分利用可用宽度
   const header = (
-    <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+    <div style={{ 
+      display: 'flex', 
+      justifyContent: 'space-between', 
+      alignItems: 'flex-start' 
+    }}>
       {/* 左侧主要信息 */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
@@ -59,7 +63,7 @@ export const RequirementItem: React.FC<RequirementItemProps> = ({
           fontWeight: 500, 
           color: '#262626', 
           marginBottom: 6,
-          lineHeight: 1.4 
+          lineHeight: 1.4
         }}>
           {requirement.requirementName || '未命名需求'}
         </div>
@@ -109,8 +113,7 @@ export const RequirementItem: React.FC<RequirementItemProps> = ({
       ghost
       style={{ 
         marginBottom: index < 2 ? 8 : 0,
-        border: 'none',
-        width: '100%'
+        border: 'none'
       }}
       expandIconPosition="end"
       // 自定义样式确保充分利用宽度

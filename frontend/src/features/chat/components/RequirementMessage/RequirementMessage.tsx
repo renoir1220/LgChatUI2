@@ -26,7 +26,7 @@ export const RequirementMessage: React.FC<RequirementMessageProps> = ({
     (requirements.length > 0 ? requirements[0].customerName : '未知客户');
 
   return (
-    <div style={{ width: '100%', maxWidth: 'none' }}>
+    <div className="requirement-message-container">
       {/* 头部信息 - 使用简洁的排版 */}
       <Space align="center" style={{ marginBottom: 16, width: '100%', justifyContent: 'space-between' }}>
         <Space>
@@ -46,14 +46,14 @@ export const RequirementMessage: React.FC<RequirementMessageProps> = ({
       </Space>
 
       {/* 需求列表 */}
-      <div style={{ width: '100%' }}>
+      <div>
         {requirements.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 0', color: '#8c8c8c' }}>
             <FileTextOutlined style={{ fontSize: 24, marginBottom: 8, opacity: 0.5 }} />
             <div>暂无需求数据</div>
           </div>
         ) : (
-          <div style={{ width: '100%' }}>
+          <div>
             {requirements.map((requirement, index) => (
               <RequirementItem
                 key={requirement.requirementCode}
