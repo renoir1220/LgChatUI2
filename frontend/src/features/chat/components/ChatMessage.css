@@ -235,10 +235,32 @@
   padding-right: 0 !important;
 }
 
-.requirement-message-container .ant-space {
-  width: 100% !important;
-  justify-content: space-between !important;
+/* 需求详情中的富文本内容样式 */
+.requirement-message-container img {
+  max-width: 100% !important;
+  height: auto !important;
+  border-radius: 4px !important;
+  margin: 8px 0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
 }
+
+.requirement-message-container a {
+  color: #2563eb !important;
+  text-decoration: none !important;
+  display: inline-block !important;
+  margin: 0 2px !important;
+  transition: transform 0.2s ease !important;
+}
+
+.requirement-message-container a:hover {
+  color: #1d4ed8 !important;
+  transform: scale(1.1) !important;
+}
+
+.requirement-message-container div[style*="height: 1em"] {
+  margin: 0.5em 0 !important;
+}
+
 
 /* 响应式优化 */
 /* 大屏幕时设置最小宽度以撑开组件 */

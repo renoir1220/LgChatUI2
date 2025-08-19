@@ -1,4 +1,5 @@
 import React from 'react';
+import DOMPurify from 'dompurify';
 
 interface RichTextRendererProps {
   content: string;
@@ -6,8 +7,8 @@ interface RichTextRendererProps {
 }
 
 /**
- * 简单文本渲染器组件
- * 用于渲染纯文本内容，保留换行符
+ * 富文本渲染器组件
+ * 用于渲染包含HTML标签的内容，支持安全的HTML渲染
  */
 export const RichTextRenderer: React.FC<RichTextRendererProps> = ({
   content,
@@ -21,48 +22,38 @@ export const RichTextRenderer: React.FC<RichTextRendererProps> = ({
     );
   }
 
-  // 简单处理换行符和URL链接
+  // 处理HTML内容
   const processedContent = React.useMemo(() => {
-    return content
-      .split('\n')
-      .map((line, index) => {
-        // 检测URL链接并转换
-        const urlRegex = /(https?:\/\/[^\s]+)/g;
-        if (urlRegex.test(line)) {
-          const parts = line.split(urlRegex);
-          return (
-            <span key={index}>
-              {parts.map((part, partIndex) => {
-                if (urlRegex.test(part)) {
-                  return (
-                    <a
-                      key={partIndex}
-                      href={part}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 underline"
-                    >
-                      🔗 查看链接
-                    </a>
-                  );
-                }
-                return part;
-              })}
-            </span>
-          );
-        }
-        return <span key={index}>{line}</span>;
+    // 检测是否包含HTML标签
+    const hasHtmlTags = /<[^>]+>/.test(content);
+    
+    if (hasHtmlTags) {
+      // 配置DOMPurify，允许安全的HTML标签和属性
+      const cleanHtml = DOMPurify.sanitize(content, {
+        ALLOWED_TAGS: ['div', 'p', 'br', 'img', 'a', 'span', 'strong', 'b', 'em', 'i', 'u'],
+        ALLOWED_ATTR: ['src', 'href', 'target', 'rel', 'alt', 'title', 'class', 'style'],
+        KEEP_CONTENT: true,
+        RETURN_DOM: false,
+        RETURN_DOM_FRAGMENT: false,
       });
+
+      // 处理空白元素
+      const processedHtml = cleanHtml
+        .replace(/<div>&nbsp;<\/div>/g, '<div style="height: 1em;"></div>') // 处理空白div
+        .replace(/<div><\/div>/g, '<div style="height: 1em;"></div>'); // 处理空div
+
+      return processedHtml;
+    } else {
+      // 纯文本处理，保留换行符
+      return content.replace(/\n/g, '<br>');
+    }
   }, [content]);
 
   return (
-    <div className={`text-sm text-gray-700 leading-relaxed whitespace-pre-wrap ${className}`}>
-      {processedContent.map((line, index) => (
-        <React.Fragment key={index}>
-          {line}
-          {index < processedContent.length - 1 && <br />}
-        </React.Fragment>
-      ))}
-    </div>
+    <div 
+      className={`text-sm text-gray-700 leading-relaxed ${className}`}
+      style={{ lineHeight: '1.6' }}
+      dangerouslySetInnerHTML={{ __html: processedContent }}
+    />
   );
 };

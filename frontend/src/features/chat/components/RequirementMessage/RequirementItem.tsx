@@ -1,5 +1,5 @@
 import React from 'react';
-import { Collapse, Tag, Space, Typography } from 'antd';
+import { Collapse, Tag, Typography } from 'antd';
 import { 
   UserOutlined, 
   TagOutlined, 
@@ -49,13 +49,18 @@ export const RequirementItem: React.FC<RequirementItemProps> = ({
     }}>
       {/* 左侧主要信息 */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-          <Text code style={{ color: '#1890ff', fontWeight: 500 }}>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 6, flexWrap: 'wrap' }}>
+          <Text code style={{ color: '#1890ff', fontWeight: 500, marginRight: 8 }}>
             {requirement.requirementCode}
           </Text>
-          <Tag color={getStageColor(requirement.currentStage)}>
+          <Tag color={getStageColor(requirement.currentStage)} style={{ marginRight: 8 }}>
             {requirement.currentStage}
           </Tag>
+          {requirement.versionName && (
+            <Tag color="blue" style={{ fontSize: 11, marginRight: 8 }}>
+              {requirement.versionName}
+            </Tag>
+          )}
         </div>
         
         <div style={{ 
@@ -68,33 +73,31 @@ export const RequirementItem: React.FC<RequirementItemProps> = ({
           {requirement.requirementName || '未命名需求'}
         </div>
         
-        <Space size={20} style={{ fontSize: 12, color: '#8c8c8c' }} wrap>
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center',
+          gap: '20px',
+          fontSize: 12, 
+          color: '#8c8c8c',
+          flexWrap: 'wrap'
+        }}>
           {requirement.product && (
-            <Space size={4}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <TagOutlined />
               <span>{requirement.product}</span>
-            </Space>
+            </div>
           )}
           {requirement.creator && (
-            <Space size={4}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <UserOutlined />
               <span>{requirement.creator}</span>
-            </Space>
+            </div>
           )}
-          <Space size={4}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <ClockCircleOutlined />
             <span>更新于 {requirement.lastUpdateDate}</span>
-          </Space>
-        </Space>
-      </div>
-      
-      {/* 右侧补充信息（如果需要） */}
-      <div style={{ marginLeft: 16, flexShrink: 0 }}>
-        {requirement.versionName && (
-          <Tag color="blue" style={{ fontSize: 11 }}>
-            {requirement.versionName}
-          </Tag>
-        )}
+          </div>
+        </div>
       </div>
     </div>
   );
