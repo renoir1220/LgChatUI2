@@ -16,6 +16,7 @@ import { AppLoggerService } from '../../shared/services/logger.service';
 import { ZodValidationPipe } from '../../shared/pipes/zod-validation.pipe';
 import { extractUserIdFromRequest } from '../../shared/utils/user.utils';
 import { StreamingCitationParser } from '../../shared/utils/citation-parser.util';
+import { ErrorHandlerUtil } from '../../shared/utils/error-handler.util';
 import { ChatRequestSchema, ChatRole } from '@lg/shared';
 import type {
   ChatRequest,
@@ -136,22 +137,12 @@ export class ChatController {
         responseLength: result.content.length,
       });
     } catch (error) {
-      this.logger.error(
-        '聊天请求处理出错',
-        error instanceof Error ? error.stack : undefined,
-        {
-          conversationId: body.conversationId,
-          userId,
-          errorMessage: error instanceof Error ? error.message : '未知错误',
-        },
-      );
-      // 发送错误事件
-      res.write(
-        `data: ${JSON.stringify({
-          event: 'error',
-          error: error instanceof Error ? error.message : '处理请求时发生错误',
-        })}\n\n`,
-      );
+      // 使用统一的错误处理工具
+      ErrorHandlerUtil.handleStreamingError(error, res, {
+        conversationId: body.conversationId,
+        userId,
+        operation: 'chat',
+      });
     } finally {
       this.logger.debug('关闭SSE连接');
       res.end();
@@ -337,28 +328,17 @@ export class ChatController {
         },
       );
 
-      // 发生错误时的备用响应
-      const fallbackMessage = `抱歉，处理您的请求时遇到了问题：${error instanceof Error ? error.message : '未知错误'}。请稍后再试。`;
-
-      // 使用前端期待的格式发送错误消息
+      // 发送错误事件到前端，而不是作为普通消息
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
       res.write(
         `data: ${JSON.stringify({
-          event: 'message',
-          answer: fallbackMessage,
+          event: 'error',
+          error: `处理请求时发生错误：${errorMessage}。请稍后再试。`,
         })}\n\n`,
       );
 
-      // 保存错误消息到数据库
-      const savedMessage = await this.messages.append(
-        conversationId,
-        ChatRole.Assistant,
-        fallbackMessage,
-      );
-
-      return {
-        messageId: savedMessage.id,
-        content: fallbackMessage,
-      };
+      // 不将错误消息保存到数据库，直接抛出异常让上层处理
+      throw error;
     }
   }
 

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../../../shared/database/database.service';
+import { PAGINATION_CONSTANTS } from '../../../shared/constants/pagination.constants';
 import { ChatMessage, ChatRole } from '@lg/shared';
 
 @Injectable()
@@ -9,30 +10,31 @@ export class MessagesRepository {
   async listByConversation(
     conversationId: string,
     page = 1,
-    pageSize = 50,
+    pageSize = PAGINATION_CONSTANTS.MESSAGES_PAGE_SIZE,
   ): Promise<ChatMessage[]> {
-    const offset = (page - 1) * pageSize + 1;
-    const end = page * pageSize;
+    // 使用OFFSET/FETCH并在SQL层直接处理类型转换，减少应用层开销
+    const offset = (page - 1) * pageSize;
     const rows = await this.db.query<any>(
-      `WITH M AS (
-        SELECT MESSAGE_ID, CONVERSATION_ID, ROLE, CONTENT, CREATED_AT,
-               ROW_NUMBER() OVER (ORDER BY CREATED_AT ASC) AS rn
-        FROM T_AI_MESSAGES WHERE CONVERSATION_ID = @p0
-      )
-      SELECT CONVERT(varchar(36), MESSAGE_ID) AS id,
+      `SELECT CONVERT(varchar(36), MESSAGE_ID) AS id,
              CONVERT(varchar(36), CONVERSATION_ID) AS conversationId,
-             ROLE AS role,
+             CASE ROLE WHEN 'USER' THEN 'USER' ELSE 'ASSISTANT' END AS role,
              CONTENT AS content,
              CONVERT(varchar(33), CREATED_AT, 126) AS createdAt
-      FROM M WHERE rn BETWEEN @p1 AND @p2`,
+      FROM T_AI_MESSAGES 
+      WHERE CONVERSATION_ID = @p0
+      ORDER BY CREATED_AT ASC
+      OFFSET @p1 ROWS
+      FETCH NEXT @p2 ROWS ONLY`,
       conversationId,
       offset,
-      end,
+      pageSize,
     );
+    
+    // 直接返回，无需额外类型转换
     return rows.map((r) => ({
       id: r.id,
       conversationId: r.conversationId,
-      role: r.role === 'USER' ? ChatRole.User : ChatRole.Assistant,
+      role: r.role as ChatRole, // SQL已经处理了枚举转换
       content: r.content,
       createdAt: r.createdAt,
     }));

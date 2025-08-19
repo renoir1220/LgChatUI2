@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../../../shared/database/database.service';
+import { PAGINATION_CONSTANTS } from '../../../shared/constants/pagination.constants';
 import { Conversation } from '@lg/shared';
 
 @Injectable()
@@ -41,25 +42,23 @@ export class ConversationsRepository {
   async listByUser(
     userId: string,
     page = 1,
-    pageSize = 20,
+    pageSize = PAGINATION_CONSTANTS.CONVERSATIONS_PAGE_SIZE,
   ): Promise<Conversation[]> {
-    const offset = (page - 1) * pageSize + 1;
-    const end = page * pageSize;
+    // 使用OFFSET/FETCH语法替代窗口函数，性能更好
+    const offset = (page - 1) * pageSize;
     const rows = await this.db.query<any>(
-      `WITH C AS (
-        SELECT CONVERSATION_ID, TITLE, KNOWLEDGE_BASE_ID, CREATED_AT,
-               ROW_NUMBER() OVER (ORDER BY CREATED_AT DESC) AS rn
-        FROM T_AI_CONVERSATIONS
-        WHERE USER_ID = @p0
-      )
-      SELECT CONVERT(varchar(36), CONVERSATION_ID) AS id,
+      `SELECT CONVERT(varchar(36), CONVERSATION_ID) AS id,
              TITLE as title,
              KNOWLEDGE_BASE_ID as knowledgeBaseId,
              CONVERT(varchar(33), CREATED_AT, 126) AS createdAt
-      FROM C WHERE rn BETWEEN @p1 AND @p2`,
+      FROM T_AI_CONVERSATIONS
+      WHERE USER_ID = @p0
+      ORDER BY CREATED_AT DESC
+      OFFSET @p1 ROWS
+      FETCH NEXT @p2 ROWS ONLY`,
       userId,
       offset,
-      end,
+      pageSize,
     );
     return rows as Conversation[];
   }
