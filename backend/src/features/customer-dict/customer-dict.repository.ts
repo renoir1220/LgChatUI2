@@ -88,5 +88,4 @@ export class CustomerDictRepository {
       throw new Error(`查询所有客户字典失败: ${error.message}`);
     }
   }
-
 }

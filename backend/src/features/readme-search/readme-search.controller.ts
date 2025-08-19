@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Query, BadRequestException, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Query,
+  BadRequestException,
+  Req,
+} from '@nestjs/common';
 import { ReadmeSearchService } from './readme-search.service';
 import { ReadmeSearchDto } from './dto/readme-search.dto';
 import { AppLoggerService } from '../../shared/services/logger.service';
@@ -33,7 +41,9 @@ export class ReadmeSearchController {
 
     // 验证关键词参数
     if (!query.keywords) {
-      throw new BadRequestException('请提供keywords参数，例如: ?keywords=切片,列表');
+      throw new BadRequestException(
+        '请提供keywords参数，例如: ?keywords=切片,列表',
+      );
     }
 
     if (keywords.length === 0) {
@@ -55,7 +65,8 @@ export class ReadmeSearchController {
     }
 
     try {
-      const result = await this.readmeSearchService.searchReadmeConfigs(keywords);
+      const result =
+        await this.readmeSearchService.searchReadmeConfigs(keywords);
 
       this.logger.log('README搜索完成', {
         keywords,
@@ -64,16 +75,19 @@ export class ReadmeSearchController {
 
       // 使用正确的分隔符计算实际记录数量
       const separator = '='.repeat(50);
-      const actualRecordCount = result.includes(separator) 
-        ? result.split(separator).filter(item => item.trim()).length
-        : (result.trim() ? 1 : 0);
+      const actualRecordCount = result.includes(separator)
+        ? result.split(separator).filter((item) => item.trim()).length
+        : result.trim()
+          ? 1
+          : 0;
 
       return {
         success: true,
         data: result,
-        message: result === '查询结果过大，请缩小查询范围' ? 
-          '查询结果过大，请缩小查询范围' : 
-          `找到 ${actualRecordCount} 条相关配置信息`,
+        message:
+          result === '查询结果过大，请缩小查询范围'
+            ? '查询结果过大，请缩小查询范围'
+            : `找到 ${actualRecordCount} 条相关配置信息`,
       };
     } catch (error) {
       this.logger.error('README搜索失败', error, {
@@ -92,7 +106,7 @@ export class ReadmeSearchController {
   async getSearchSuggestions() {
     try {
       const suggestions = await this.readmeSearchService.getSearchSuggestions();
-      
+
       return {
         success: true,
         data: suggestions,
@@ -100,7 +114,7 @@ export class ReadmeSearchController {
       };
     } catch (error) {
       this.logger.error('获取搜索建议失败', error);
-      
+
       throw new BadRequestException(`获取搜索建议失败: ${error.message}`);
     }
   }
@@ -118,7 +132,7 @@ export class ReadmeSearchController {
 
     // 将body转换为query格式并调用GET方法的逻辑
     const mockQuery = {
-      keywords: body.keywords || body.query || body.search
+      keywords: body.keywords || body.query || body.search,
     };
 
     return this.searchReadme(mockQuery, req);

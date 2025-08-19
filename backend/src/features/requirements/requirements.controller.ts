@@ -18,15 +18,15 @@ const GetRequirementsByCustomerQuerySchema = z.object({
   page: z
     .string()
     .optional()
-    .transform(val => val ? parseInt(val, 10) : 1)
-    .refine(val => val >= 1 && Number.isInteger(val), {
+    .transform((val) => (val ? parseInt(val, 10) : 1))
+    .refine((val) => val >= 1 && Number.isInteger(val), {
       message: '页码必须是大于等于1的整数',
     }),
   pageSize: z
     .string()
     .optional()
-    .transform(val => val ? parseInt(val, 10) : 10)
-    .refine(val => val >= 1 && val <= 100 && Number.isInteger(val), {
+    .transform((val) => (val ? parseInt(val, 10) : 10))
+    .refine((val) => val >= 1 && val <= 100 && Number.isInteger(val), {
       message: '每页数量必须是1-100之间的整数',
     }),
 });
@@ -35,8 +35,12 @@ const GetRequirementsCountQuerySchema = z.object({
   customerName: z.string().min(1, '客户名称不能为空'),
 });
 
-type GetRequirementsByCustomerQuery = z.infer<typeof GetRequirementsByCustomerQuerySchema>;
-type GetRequirementsCountQuery = z.infer<typeof GetRequirementsCountQuerySchema>;
+type GetRequirementsByCustomerQuery = z.infer<
+  typeof GetRequirementsByCustomerQuerySchema
+>;
+type GetRequirementsCountQuery = z.infer<
+  typeof GetRequirementsCountQuerySchema
+>;
 
 @Controller('api/requirements')
 export class RequirementsController {
@@ -109,9 +113,10 @@ export class RequirementsController {
     this.logger.log('接收到客户需求总数查询请求', { customerName });
 
     try {
-      const total = await this.requirementsService.getRequirementsCountByCustomer(
-        customerName,
-      );
+      const total =
+        await this.requirementsService.getRequirementsCountByCustomer(
+          customerName,
+        );
 
       this.logger.log('客户需求总数查询成功', {
         customerName,

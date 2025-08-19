@@ -31,7 +31,11 @@ export class RequirementsService {
     try {
       // 并行查询列表和总数
       const [requirements, total] = await Promise.all([
-        this.requirementsRepository.findByCustomerName(customerName, page, pageSize),
+        this.requirementsRepository.findByCustomerName(
+          customerName,
+          page,
+          pageSize,
+        ),
         this.requirementsRepository.countByCustomerName(customerName),
       ]);
 
@@ -66,7 +70,8 @@ export class RequirementsService {
     this.logger.log('开始获取客户需求总数', { customerName });
 
     try {
-      const total = await this.requirementsRepository.countByCustomerName(customerName);
+      const total =
+        await this.requirementsRepository.countByCustomerName(customerName);
 
       this.logger.log('客户需求总数获取成功', {
         customerName,

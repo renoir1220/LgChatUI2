@@ -205,11 +205,13 @@ export class ChatController {
             ) {
               if (streamData.answer) {
                 // 使用citation解析器处理流式内容
-                const parseResult = citationParser.processChunk(streamData.answer);
-                
+                const parseResult = citationParser.processChunk(
+                  streamData.answer,
+                );
+
                 // 累加清理后的内容到助手消息
                 assistantMessage += parseResult.cleanContent;
-                
+
                 // 收集提取的citations
                 if (parseResult.extractedCitations.length > 0) {
                   allExtractedCitations.push(...parseResult.extractedCitations);
@@ -237,16 +239,25 @@ export class ChatController {
               this.logger.debug('收到消息结束事件', { conversationId });
 
               // 合并来自citation标签和retriever_resources的引用信息
-              const existingResources = streamData.metadata?.retriever_resources || [];
-              const allCitations = [...existingResources, ...allExtractedCitations];
+              const existingResources =
+                streamData.metadata?.retriever_resources || [];
+              const allCitations = [
+                ...existingResources,
+                ...allExtractedCitations,
+              ];
 
               // 去重处理（基于content或segment_id）
-              const uniqueCitations = allCitations.filter((citation, index, arr) => {
-                return arr.findIndex(c => 
-                  c.content === citation.content || 
-                  (c.segment_id && c.segment_id === citation.segment_id)
-                ) === index;
-              });
+              const uniqueCitations = allCitations.filter(
+                (citation, index, arr) => {
+                  return (
+                    arr.findIndex(
+                      (c) =>
+                        c.content === citation.content ||
+                        (c.segment_id && c.segment_id === citation.segment_id),
+                    ) === index
+                  );
+                },
+              );
 
               this.logger.log('合并引用信息完成', {
                 conversationId,

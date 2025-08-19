@@ -14,19 +14,24 @@ export class ReadmeSearchDto {
    */
   getKeywords(): string[] {
     if (!this.keywords) return [];
-    
+
     // 处理单个字符串转数组的情况
     if (typeof this.keywords === 'string') {
-      return this.keywords.split(',').map(keyword => keyword.trim()).filter(keyword => keyword.length > 0);
+      return this.keywords
+        .split(',')
+        .map((keyword) => keyword.trim())
+        .filter((keyword) => keyword.length > 0);
     }
-    
+
     // 处理数组情况
     if (Array.isArray(this.keywords)) {
-      return this.keywords.map(keyword => 
-        typeof keyword === 'string' ? keyword.trim() : String(keyword).trim()
-      ).filter(keyword => keyword.length > 0);
+      return this.keywords
+        .map((keyword) =>
+          typeof keyword === 'string' ? keyword.trim() : String(keyword).trim(),
+        )
+        .filter((keyword) => keyword.length > 0);
     }
-    
+
     return [];
   }
 }

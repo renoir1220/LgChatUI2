@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../../shared/database/database.service';
 import { AppLoggerService } from '../../shared/services/logger.service';
+import { convertArrayPaths } from '../../shared/utils/path-converter';
 import type { RequirementItem } from '@lg/shared';
 
 @Injectable()
@@ -23,7 +24,7 @@ export class RequirementsRepository {
     pageSize: number = 10,
   ): Promise<RequirementItem[]> {
     const offset = (page - 1) * pageSize;
-    
+
     const query = `
       SELECT
         ISNULL(XQ_CODE,'') AS requirementCode,
@@ -56,7 +57,8 @@ export class RequirementsRepository {
         offset,
       });
 
-      const result = await this.databaseService.query(query, 
+      const result = await this.databaseService.query(
+        query,
         customerName,
         offset,
         pageSize,
@@ -67,7 +69,20 @@ export class RequirementsRepository {
         resultCount: result.length,
       });
 
-      return result;
+      // 转换文本字段中的相对路径为完整URL
+      const convertedResult = convertArrayPaths(
+        result,
+        [
+          'content',
+          'requirementEvaluation',
+          'designContent',
+          'productDescription',
+          'developmentDescription',
+        ],
+        'https://crm.logene.com',
+      );
+
+      return convertedResult;
     } catch (error) {
       this.logger.error('查询客户需求列表失败', error, {
         customerName,
@@ -93,9 +108,7 @@ export class RequirementsRepository {
     try {
       this.logger.log('查询客户需求总数', { customerName });
 
-      const result = await this.databaseService.query(query, 
-        customerName,
-      );
+      const result = await this.databaseService.query(query, customerName);
 
       const total = result[0]?.total || 0;
 

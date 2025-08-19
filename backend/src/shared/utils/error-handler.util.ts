@@ -1,4 +1,7 @@
-import { BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { AppLoggerService } from '../services/logger.service';
 
 /**
@@ -20,20 +23,23 @@ export class ErrorHandlerUtil {
     operation: string,
   ): never {
     this.logger.error(`数据库操作失败: ${operation}`, error.stack, context);
-    
+
     // 根据错误类型返回适当的HTTP异常
-    if (error.number === 2) { // SQL Server连接错误
+    if (error.number === 2) {
+      // SQL Server连接错误
       throw new InternalServerErrorException('数据库连接失败');
     }
-    
-    if (error.number === 547) { // 外键约束错误
+
+    if (error.number === 547) {
+      // 外键约束错误
       throw new BadRequestException('数据关联性错误');
     }
-    
-    if (error.number === 2627) { // 主键冲突
+
+    if (error.number === 2627) {
+      // 主键冲突
       throw new BadRequestException('数据已存在');
     }
-    
+
     // 通用数据库错误
     throw new InternalServerErrorException('数据库操作失败');
   }
@@ -50,19 +56,19 @@ export class ErrorHandlerUtil {
     serviceName: string,
   ): never {
     this.logger.error(`外部服务调用失败: ${serviceName}`, error.stack, context);
-    
+
     if (error.code === 'ECONNREFUSED') {
       throw new InternalServerErrorException(`${serviceName}服务不可用`);
     }
-    
+
     if (error.response?.status === 401) {
       throw new InternalServerErrorException(`${serviceName}认证失败`);
     }
-    
+
     if (error.response?.status === 429) {
       throw new InternalServerErrorException(`${serviceName}请求过于频繁`);
     }
-    
+
     throw new InternalServerErrorException(`${serviceName}服务异常`);
   }
 
@@ -78,7 +84,7 @@ export class ErrorHandlerUtil {
     context: Record<string, any>,
   ): void {
     this.logger.error('流式响应处理错误', error.stack, context);
-    
+
     // 发送错误事件到前端
     try {
       response.write(
@@ -102,9 +108,9 @@ export class ErrorHandlerUtil {
     error: any,
     context: Record<string, any>,
   ): never {
-    this.logger.warn('数据验证失败', { 
-      errorMessage: error.message, 
-      ...context 
+    this.logger.warn('数据验证失败', {
+      errorMessage: error.message,
+      ...context,
     });
     throw new BadRequestException(`数据验证失败: ${error.message}`);
   }
@@ -120,12 +126,19 @@ export class ErrorHandlerUtil {
     }
 
     const sensitiveFields = [
-      'password', 'token', 'secret', 'key', 'authorization',
-      'jwt', 'apiKey', 'accessToken', 'refreshToken'
+      'password',
+      'token',
+      'secret',
+      'key',
+      'authorization',
+      'jwt',
+      'apiKey',
+      'accessToken',
+      'refreshToken',
     ];
 
     const sanitized = { ...data };
-    
+
     for (const field of sensitiveFields) {
       if (field in sanitized) {
         sanitized[field] = '***REDACTED***';

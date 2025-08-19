@@ -31,16 +31,16 @@ export class StreamingCitationParser {
     // 使用正则表达式匹配Citations标签（不区分大小写）
     const citationRegex = /<Citations[^>]*>(.*?)<\/Citations>/gs;
     const matches = Array.from(this.buffer.matchAll(citationRegex));
-    
+
     // 添加调试日志
     if (this.buffer.includes('<Citations>')) {
       console.log('🔍 检测到Citations标签:', {
         bufferLength: this.buffer.length,
         matchCount: matches.length,
-        bufferPreview: this.buffer.substring(0, 200) + '...'
+        bufferPreview: this.buffer.substring(0, 200) + '...',
       });
     }
-    
+
     let cleanContent = this.buffer;
     const newCitations: Citation[] = [];
 
@@ -48,7 +48,7 @@ export class StreamingCitationParser {
     for (const match of matches) {
       const fullMatch = match[0];
       const citationContent = match[1];
-      
+
       try {
         // 尝试解析citation内容为JSON，现在返回Citation数组
         const citationDataArray = this.parseCitationContent(citationContent);
@@ -64,18 +64,20 @@ export class StreamingCitationParser {
     }
 
     // 检查是否有不完整的开始标签
-    const incompleteStartMatch = cleanContent.match(/<Citations[^>]*>(?![^<]*<\/Citations>)/);
+    const incompleteStartMatch = cleanContent.match(
+      /<Citations[^>]*>(?![^<]*<\/Citations>)/,
+    );
     const hasIncompleteTag = !!incompleteStartMatch;
 
     if (hasIncompleteTag) {
       // 如果有不完整的标签，只返回完整部分
-      const incompleteIndex = incompleteStartMatch!.index!;
+      const incompleteIndex = incompleteStartMatch.index!;
       const completeContent = cleanContent.substring(0, incompleteIndex);
       this.buffer = cleanContent.substring(incompleteIndex); // 保留不完整部分到下次处理
-      
+
       // 添加新解析的citations
       this.extractedCitations.push(...newCitations);
-      
+
       return {
         cleanContent: completeContent,
         extractedCitations: [...this.extractedCitations],
@@ -85,7 +87,7 @@ export class StreamingCitationParser {
       // 没有不完整标签，清空缓冲区
       this.buffer = '';
       this.extractedCitations.push(...newCitations);
-      
+
       return {
         cleanContent,
         extractedCitations: [...this.extractedCitations],
@@ -118,22 +120,27 @@ export class StreamingCitationParser {
     try {
       // 尝试直接解析为JSON
       const parsed = JSON.parse(content);
-      
+
       // 添加调试日志
       console.log('📝 解析Citations JSON:', {
         success: parsed.success,
         hasData: !!parsed.data,
         dataLength: parsed.data?.length || 0,
         message: parsed.message,
-        dataPreview: parsed.data ? parsed.data.substring(0, 500) + '...' : 'no data'
+        dataPreview: parsed.data
+          ? parsed.data.substring(0, 500) + '...'
+          : 'no data',
       });
-      
+
       // 如果是包装格式 {"success": true, "data": "...", "message": "..."}
       if (parsed.success && parsed.data) {
         // 按分隔符拆分多条记录
         const separator = '='.repeat(50);
-        const records = parsed.data.split(separator).map((record: string) => record.trim()).filter((record: string) => record.length > 0);
-        
+        const records = parsed.data
+          .split(separator)
+          .map((record: string) => record.trim())
+          .filter((record: string) => record.length > 0);
+
         console.log('🔍 拆分Citations记录:', {
           原始数据长度: parsed.data.length,
           分隔符: separator,
@@ -141,10 +148,10 @@ export class StreamingCitationParser {
           每条记录预览: records.map((record: string, index: number) => ({
             索引: index + 1,
             长度: record.length,
-            预览: record.substring(0, 100) + '...'
-          }))
+            预览: record.substring(0, 100) + '...',
+          })),
         });
-        
+
         // 为每条记录创建独立的citation对象，但使用相同的document_name便于前端分组
         if (records.length > 0) {
           const baseDocumentName = parsed.message || '知识库文档';
@@ -159,31 +166,35 @@ export class StreamingCitationParser {
             position: index,
           }));
         }
-        
+
         // 如果拆分失败，返回原始数据作为单条citation
-        return [{
-          source: '知识库检索',
-          content: parsed.data,
-          document_name: parsed.message || '知识库文档',
-          score: 1.0,
-          dataset_id: undefined,
-          document_id: undefined,
-          segment_id: undefined,
-          position: 0,
-        }];
+        return [
+          {
+            source: '知识库检索',
+            content: parsed.data,
+            document_name: parsed.message || '知识库文档',
+            score: 1.0,
+            dataset_id: undefined,
+            document_id: undefined,
+            segment_id: undefined,
+            position: 0,
+          },
+        ];
       }
-      
+
       // 如果是直接的citation格式
-      return [{
-        source: parsed.source || parsed.document_name || '未知来源',
-        content: parsed.content || parsed.data || '',
-        document_name: parsed.document_name,
-        score: parsed.score,
-        dataset_id: parsed.dataset_id,
-        document_id: parsed.document_id,
-        segment_id: parsed.segment_id,
-        position: parsed.position,
-      }];
+      return [
+        {
+          source: parsed.source || parsed.document_name || '未知来源',
+          content: parsed.content || parsed.data || '',
+          document_name: parsed.document_name,
+          score: parsed.score,
+          dataset_id: parsed.dataset_id,
+          document_id: parsed.document_id,
+          segment_id: parsed.segment_id,
+          position: parsed.position,
+        },
+      ];
     } catch (error) {
       console.warn('解析Citations JSON失败:', error);
       // 如果不是JSON格式，尝试解析为简单文本格式

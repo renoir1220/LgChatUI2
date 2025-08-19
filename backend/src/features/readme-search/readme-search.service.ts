@@ -22,9 +22,9 @@ export class ReadmeSearchService {
    */
   async searchReadmeConfigs(keywords: string[]): Promise<string> {
     // 构建动态WHERE条件
-    const whereConditions = keywords.map((_, index) => 
-      `FUNCTION1 LIKE @p${index}`
-    ).join(' AND ');
+    const whereConditions = keywords
+      .map((_, index) => `FUNCTION1 LIKE @p${index}`)
+      .join(' AND ');
 
     // 第一次查询：不过滤SWITCH
     const basicSql = `
@@ -43,11 +43,10 @@ export class ReadmeSearchService {
       ORDER BY CREATE_TIME DESC, SEQ_NO DESC
     `;
 
-
     try {
       // 准备参数，使用数据库服务的query方法
-      const params = keywords.map(keyword => `%${keyword.trim()}%`);
-      
+      const params = keywords.map((keyword) => `%${keyword.trim()}%`);
+
       // 执行第一次查询
       const result = await this.databaseService.query(basicSql, ...params);
 
@@ -57,7 +56,9 @@ export class ReadmeSearchService {
 
       // 格式化结果
       const formattedResults = result.map((row: any) => row.formatted_result);
-      const combinedResult = formattedResults.join('\n\n' + '='.repeat(50) + '\n\n');
+      const combinedResult = formattedResults.join(
+        '\n\n' + '='.repeat(50) + '\n\n',
+      );
 
       // 检查结果长度
       if (combinedResult.length > this.MAX_RESULT_LENGTH) {
@@ -87,17 +88,23 @@ export class ReadmeSearchService {
           ORDER BY CREATE_TIME DESC, SEQ_NO DESC
         `;
 
-
         // 执行过滤后的查询
-        const filteredResult = await this.databaseService.query(filteredSql, ...params);
+        const filteredResult = await this.databaseService.query(
+          filteredSql,
+          ...params,
+        );
 
         if (!filteredResult || filteredResult.length === 0) {
           return '查询结果过大且没有找到带开关配置的项目，请使用更具体的关键词。';
         }
 
         // 格式化过滤后的结果
-        const filteredFormattedResults = filteredResult.map((row: any) => row.formatted_result);
-        const filteredCombinedResult = filteredFormattedResults.join('\n\n' + '='.repeat(50) + '\n\n');
+        const filteredFormattedResults = filteredResult.map(
+          (row: any) => row.formatted_result,
+        );
+        const filteredCombinedResult = filteredFormattedResults.join(
+          '\n\n' + '='.repeat(50) + '\n\n',
+        );
 
         // 再次检查长度
         if (filteredCombinedResult.length > this.MAX_RESULT_LENGTH) {
@@ -130,14 +137,13 @@ export class ReadmeSearchService {
         每条记录长度: result.map((row: any, index: number) => ({
           index: index + 1,
           length: row.formatted_result.length,
-          preview: row.formatted_result.substring(0, 100) + '...'
+          preview: row.formatted_result.substring(0, 100) + '...',
         })),
         合并后总长度: combinedResult.length,
-        分隔符数量: (combinedResult.match(/={50}/g) || []).length
+        分隔符数量: (combinedResult.match(/={50}/g) || []).length,
       });
 
       return combinedResult;
-
     } catch (error) {
       this.logger.error('README搜索数据库错误', error, {
         keywords,
@@ -180,20 +186,30 @@ export class ReadmeSearchService {
 
     try {
       const result = await this.databaseService.query(sql);
-      
+
       const suggestions = result.map((row: any) => row.keyword);
-      
+
       this.logger.log('获取搜索建议成功', {
         suggestionCount: suggestions.length,
       });
 
       return suggestions;
-
     } catch (error) {
       this.logger.error('获取搜索建议失败', error);
-      
+
       // 返回默认建议
-      return ['切片', '报告', '列表', '打印', '查询', '登记', '工作站', '状态', '设置', '导出'];
+      return [
+        '切片',
+        '报告',
+        '列表',
+        '打印',
+        '查询',
+        '登记',
+        '工作站',
+        '状态',
+        '设置',
+        '导出',
+      ];
     }
   }
 

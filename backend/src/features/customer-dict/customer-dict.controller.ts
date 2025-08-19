@@ -33,13 +33,14 @@ export class CustomerDictController {
   @Get()
   @HttpCode(HttpStatus.OK)
   async getCustomerDict(
-    @Query(new ZodValidationPipe(CustomerDictQuerySchema)) query: CustomerDictQuery,
+    @Query(new ZodValidationPipe(CustomerDictQuerySchema))
+    query: CustomerDictQuery,
   ): Promise<CustomerDictResponse> {
     this.logger.log('接收客户字典查询请求', query);
 
     try {
       const result = await this.customerDictService.getCustomerDict(query);
-      
+
       this.logger.log('客户字典查询请求处理成功', {
         total: result.total,
         returnedCount: result.customers.length,
@@ -66,7 +67,7 @@ export class CustomerDictController {
 
     try {
       const result = await this.customerDictService.getAllCustomerDict();
-      
+
       this.logger.log('获取所有客户字典成功', {
         count: result.customers.length,
       });
@@ -91,7 +92,7 @@ export class CustomerDictController {
 
     try {
       const result = await this.customerDictService.getCustomerStats();
-      
+
       this.logger.log('客户字典统计信息查询成功', result);
 
       return result;
@@ -102,5 +103,4 @@ export class CustomerDictController {
       throw error;
     }
   }
-
 }

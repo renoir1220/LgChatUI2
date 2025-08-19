@@ -11,9 +11,7 @@ import { AppLoggerService } from '../../shared/services/logger.service';
 export class CustomerDictService {
   private readonly logger = new AppLoggerService();
 
-  constructor(
-    private readonly customerDictRepository: CustomerDictRepository,
-  ) {
+  constructor(private readonly customerDictRepository: CustomerDictRepository) {
     this.logger.setContext(CustomerDictService.name);
   }
 
@@ -21,7 +19,9 @@ export class CustomerDictService {
    * 查询客户字典列表
    * @param query 查询参数
    */
-  async getCustomerDict(query: CustomerDictQuery): Promise<CustomerDictResponse> {
+  async getCustomerDict(
+    query: CustomerDictQuery,
+  ): Promise<CustomerDictResponse> {
     const { keyword, page = 1, pageSize = 50 } = query;
 
     this.logger.log('开始查询客户字典', {
@@ -89,10 +89,14 @@ export class CustomerDictService {
     this.logger.log('获取客户字典统计信息');
 
     try {
-      const result = await this.customerDictRepository.findCustomers(undefined, 1, 1);
-      
-      this.logger.log('客户字典统计信息获取成功', { 
-        totalCustomers: result.total 
+      const result = await this.customerDictRepository.findCustomers(
+        undefined,
+        1,
+        1,
+      );
+
+      this.logger.log('客户字典统计信息获取成功', {
+        totalCustomers: result.total,
       });
 
       return { totalCustomers: result.total };

@@ -29,7 +29,7 @@ export class MessagesRepository {
       offset,
       pageSize,
     );
-    
+
     // 直接返回，无需额外类型转换
     return rows.map((r) => ({
       id: r.id,
