@@ -102,7 +102,10 @@ export class ErrorHandlerUtil {
     error: any,
     context: Record<string, any>,
   ): never {
-    this.logger.warn('数据验证失败', error.message, context);
+    this.logger.warn('数据验证失败', { 
+      errorMessage: error.message, 
+      ...context 
+    });
     throw new BadRequestException(`数据验证失败: ${error.message}`);
   }
 

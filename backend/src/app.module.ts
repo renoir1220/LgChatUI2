@@ -12,6 +12,7 @@ import { ChatModule } from './features/chat/chat.module';
 import { KnowledgeBaseModule } from './features/knowledge-base/knowledge-base.module';
 import { FilesModule } from './features/files/files.module';
 import { ReadmeSearchModule } from './features/readme-search/readme-search.module';
+import { CustomerDictModule } from './features/customer-dict/customer-dict.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { ReadmeSearchModule } from './features/readme-search/readme-search.modul
     KnowledgeBaseModule,
     FilesModule,
     ReadmeSearchModule,
+    CustomerDictModule,
   ],
   controllers: [AppController, HealthController],
   providers: [AppService],

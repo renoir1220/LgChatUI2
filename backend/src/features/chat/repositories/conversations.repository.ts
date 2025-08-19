@@ -41,8 +41,8 @@ export class ConversationsRepository {
   // 列出与指定用户相关的会话（根据 USER_ID 字段关联）
   async listByUser(
     userId: string,
-    page = 1,
-    pageSize = PAGINATION_CONSTANTS.CONVERSATIONS_PAGE_SIZE,
+    page: number = 1,
+    pageSize: number = PAGINATION_CONSTANTS.CONVERSATIONS_PAGE_SIZE,
   ): Promise<Conversation[]> {
     // 使用OFFSET/FETCH语法替代窗口函数，性能更好
     const offset = (page - 1) * pageSize;

@@ -9,8 +9,8 @@ export class MessagesRepository {
 
   async listByConversation(
     conversationId: string,
-    page = 1,
-    pageSize = PAGINATION_CONSTANTS.MESSAGES_PAGE_SIZE,
+    page: number = 1,
+    pageSize: number = PAGINATION_CONSTANTS.MESSAGES_PAGE_SIZE,
   ): Promise<ChatMessage[]> {
     // 使用OFFSET/FETCH并在SQL层直接处理类型转换，减少应用层开销
     const offset = (page - 1) * pageSize;
