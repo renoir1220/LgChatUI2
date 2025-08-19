@@ -22,7 +22,10 @@ export function useKnowledgeBases() {
         if (!mounted) return;
         const list = Array.isArray(data) ? data : [];
         setKnowledgeBases(list);
-        if (list.length && !currentKnowledgeBase) setCurrentKnowledgeBase(list[0].id);
+        // 只在初始化时设置默认知识库，避免覆盖用户选择
+        if (list.length && currentKnowledgeBase === undefined) {
+          setCurrentKnowledgeBase(list[0].id);
+        }
       } catch (e) {
         // 后端暂未实现时，保持空列表，不阻塞聊天功能
         if (!mounted) return;
@@ -35,7 +38,7 @@ export function useKnowledgeBases() {
 
     fetchKB();
     return () => { mounted = false; };
-  }, [currentKnowledgeBase]);
+  }, []); // 移除 currentKnowledgeBase 依赖，只在组件挂载时获取一次
 
   return {
     knowledgeBases,

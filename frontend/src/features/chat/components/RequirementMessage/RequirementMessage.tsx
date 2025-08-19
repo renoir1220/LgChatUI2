@@ -1,6 +1,6 @@
 import React from 'react';
-import { Typography, Divider } from 'antd';
-import { UserOutlined } from '@ant-design/icons';
+import { Typography } from 'antd';
+import { MedicineBoxOutlined } from '@ant-design/icons';
 import { RequirementItem } from './RequirementItem';
 import type { RequirementListResponse } from '@lg/shared';
 
@@ -27,25 +27,44 @@ export const RequirementMessage: React.FC<RequirementMessageProps> = ({
 
   return (
     <div className="requirement-message-container">
-      {/* 头部信息 - 使用简洁的排版 */}
+      {/* 头部信息 - 突出显示客户名称 */}
       <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
         marginBottom: 16, 
-        width: '100%', 
-        justifyContent: 'space-between' 
+        width: '100%'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Title level={4} style={{ margin: 0, color: '#262626' }}>需求清单({total})</Title>
-          {displayCustomerName && (
-            <>
-              <Divider type="vertical" />
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <UserOutlined style={{ color: '#8c8c8c' }} />
-                <Text type="secondary">{displayCustomerName}</Text>
-              </div>
-            </>
-          )}
+        {/* 客户名称 - 主要标题 */}
+        {displayCustomerName && (
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            marginBottom: 8,
+            gap: 8
+          }}>
+            <MedicineBoxOutlined style={{ 
+              color: '#1890ff', 
+              fontSize: 16 
+            }} />
+            <Title level={3} style={{ 
+              margin: 0, 
+              color: '#262626',
+              fontWeight: 600 
+            }}>
+              {displayCustomerName}
+            </Title>
+          </div>
+        )}
+        
+        {/* 需求清单标题 - 副标题 */}
+        <div style={{ 
+          paddingLeft: displayCustomerName ? 24 : 0 
+        }}>
+          <Text style={{ 
+            fontSize: 14, 
+            color: '#8c8c8c',
+            fontWeight: 500
+          }}>
+            需求清单 ({total}条)
+          </Text>
         </div>
       </div>
 

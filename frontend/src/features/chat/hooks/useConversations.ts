@@ -17,7 +17,8 @@ export function useConversations(
   setCurConversation: React.Dispatch<React.SetStateAction<string>>,
   setConversationId: React.Dispatch<React.SetStateAction<string | undefined>>,
   setMessages: React.Dispatch<React.SetStateAction<BubbleDataType[]>>,
-  setCurrentKnowledgeBase: (id: string) => void
+  setCurrentKnowledgeBase: (id: string) => void,
+  currentKnowledgeBase?: string
 ) {
   
   /**
@@ -43,8 +44,8 @@ export function useConversations(
           setCurConversation(list[0].id);
           setConversationId(list[0].id);
           
-          // 如果首个会话有知识库ID，自动设置
-          if (list[0].knowledgeBaseId) {
+          // 如果首个会话有知识库ID且与当前不同，才自动设置
+          if (list[0].knowledgeBaseId && list[0].knowledgeBaseId !== currentKnowledgeBase) {
             setCurrentKnowledgeBase(list[0].knowledgeBaseId);
           }
           
@@ -108,9 +109,10 @@ export function useConversations(
     setConversationId(isValidUUID(conversationKey) ? conversationKey : undefined);
     
     if (conversationKey && conversationKey !== 'new') {
-      // 从会话详细信息中获取知识库ID并自动设置
+      // 从会话详细信息中获取知识库ID，只在不同时才设置
       const conversationDetail = conversationDetails[conversationKey];
-      if (conversationDetail && conversationDetail.knowledgeBaseId) {
+      if (conversationDetail && conversationDetail.knowledgeBaseId && 
+          conversationDetail.knowledgeBaseId !== currentKnowledgeBase) {
         setCurrentKnowledgeBase(conversationDetail.knowledgeBaseId);
       }
       

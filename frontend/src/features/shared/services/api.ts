@@ -53,6 +53,18 @@ export async function apiPost<T = unknown>(path: string, body?: unknown): Promis
   return resp.json() as Promise<T>;
 }
 
+export async function apiPut<T = unknown>(path: string, body?: unknown): Promise<T> {
+  const resp = await apiFetch(path, {
+    method: 'PUT',
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  
+  // 处理空响应体的情况
+  const text = await resp.text();
+  return text ? JSON.parse(text) : {} as T;
+}
+
 export async function apiDelete<T = unknown>(path: string): Promise<T> {
   const resp = await apiFetch(path, { method: 'DELETE' });
   if (!resp.ok) throw new Error(`HTTP ${resp.status}`);

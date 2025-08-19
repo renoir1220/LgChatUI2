@@ -80,7 +80,8 @@ const ChatScreenRefactored: React.FC = () => {
     setCurConversation,
     setConversationId,
     setMessages,
-    setCurrentKnowledgeBase
+    setCurrentKnowledgeBase,
+    currentKnowledgeBase
   );
 
   // 发送消息处理
@@ -223,6 +224,38 @@ const ChatScreenRefactored: React.FC = () => {
     abortRequest();
     setLoading(false);
   };
+
+  // 监听知识库变化，自动更新当前会话的知识库ID
+  useEffect(() => {
+    const updateConversationKnowledgeBase = async () => {
+      // 只有在真实会话（有conversationId）且知识库发生变化时才更新
+      if (conversationId && currentKnowledgeBase) {
+        try {
+          const conversationDetail = conversationDetails[conversationId];
+          // 如果当前会话的知识库ID与选择的不同，则更新
+          if (conversationDetail && conversationDetail.knowledgeBaseId !== currentKnowledgeBase) {
+            await conversationApi.updateConversation(conversationId, {
+              knowledgeBaseId: currentKnowledgeBase
+            });
+            
+            // 更新本地会话详情
+            setConversationDetails(prev => ({
+              ...prev,
+              [conversationId]: {
+                ...prev[conversationId],
+                knowledgeBaseId: currentKnowledgeBase
+              }
+            }));
+          }
+        } catch (error) {
+          console.error('更新会话知识库失败:', error);
+          // 不显示错误提示，静默处理
+        }
+      }
+    };
+
+    updateConversationKnowledgeBase();
+  }, [currentKnowledgeBase, conversationId, conversationDetails, setConversationDetails]);
 
   // 保存消息历史到本地状态
   useEffect(() => {

@@ -1,10 +1,11 @@
-import { apiGet, apiPost, apiDelete, API_BASE } from '../../shared/services/api';
+import { apiGet, apiPost, apiDelete, apiPut, API_BASE } from '../../shared/services/api';
 import { getToken } from '../../auth/utils/auth';
 import type { 
   Conversation, 
   ChatMessage, 
   KnowledgeBase, 
-  ChatRequest
+  ChatRequest,
+  UpdateConversationRequest
 } from '@lg/shared';
 import type { CreateConversationRequest } from '../../shared/types/api';
 
@@ -33,6 +34,11 @@ export const conversationApi = {
   // 重命名会话
   renameConversation: async (id: string, title: string): Promise<Conversation> => {
     return apiPost<Conversation>(`/api/conversations/${id}/rename`, { title });
+  },
+
+  // 更新会话信息
+  updateConversation: async (id: string, updates: UpdateConversationRequest): Promise<void> => {
+    return apiPut<void>(`/api/conversations/${id}`, updates);
   },
 };
 

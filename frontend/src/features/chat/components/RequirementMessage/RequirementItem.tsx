@@ -64,8 +64,8 @@ export const RequirementItem: React.FC<RequirementItemProps> = ({
         </div>
         
         <div style={{ 
-          fontSize: 14, 
-          fontWeight: 500, 
+          fontSize: 16, 
+          fontWeight: 600, 
           color: '#262626', 
           marginBottom: 6,
           lineHeight: 1.4
