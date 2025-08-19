@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { message } from 'antd';
 import { useChatState } from '../hooks/useChatState';
 import { useStreamChat } from '../hooks/useStreamChat';
@@ -18,6 +19,14 @@ import type { DictionaryItem } from '../../shared/components/DictionarySelector'
  * 使用自定义Hooks进行状态管理，组件职责更加清晰
  */
 const ChatScreenRefactored: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  // 从URL获取初始会话ID，避免刷新时闪烁
+  const initialConversationFromUrl = useMemo(() => {
+    const c = searchParams.get('c');
+    const isValid = !!c && /^[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$/.test(c);
+    return isValid ? c : undefined;
+  }, [searchParams]);
+
   // 响应式状态管理
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   
@@ -56,7 +65,10 @@ const ChatScreenRefactored: React.FC = () => {
     setAttachedFiles,
     inputValue,
     setInputValue,
-  } = useChatState();
+  } = useChatState(initialConversationFromUrl);
+
+  // 首次进入某会话时的消息加载指示
+  const [messagesLoading, setMessagesLoading] = useState(false);
 
   // 知识库管理
   const { 
@@ -107,6 +119,10 @@ const ChatScreenRefactored: React.FC = () => {
           setConversationId(newConversationId);
           setCurConversation(newConversationId);
           await refreshConversations();
+          // 创建或定位到真实会话后，同步到URL，刷新也能保持
+          const next = new URLSearchParams(searchParams);
+          next.set('c', newConversationId);
+          setSearchParams(next, { replace: true });
         },
         false // 标记为普通发送模式
       );
@@ -143,6 +159,10 @@ const ChatScreenRefactored: React.FC = () => {
             setConversationId(newConversationId);
             setCurConversation(newConversationId);
             await refreshConversations();
+            // 同步URL
+            const next = new URLSearchParams(searchParams);
+            next.set('c', newConversationId);
+            setSearchParams(next, { replace: true });
           },
           true // 标记为重新生成模式
         );
@@ -160,7 +180,18 @@ const ChatScreenRefactored: React.FC = () => {
   // 会话切换处理
   const handleConversationChange = async (conversationKey: string) => {
     abortRequest();
+    setMessagesLoading(true);
     await switchConversation(conversationKey);
+    setMessagesLoading(false);
+    // 将当前会话同步到URL，便于刷新/分享
+    const isValidUUID = (s?: string) => !!s && /^[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$/.test(s);
+    const next = new URLSearchParams(searchParams);
+    if (isValidUUID(conversationKey)) {
+      next.set('c', conversationKey);
+    } else {
+      next.delete('c');
+    }
+    setSearchParams(next, { replace: true });
   };
 
   // 新建会话处理
@@ -170,7 +201,24 @@ const ChatScreenRefactored: React.FC = () => {
       return;
     }
     createNewConversation();
+    // 新建会话时移除URL中的会话参数
+    const next = new URLSearchParams(searchParams);
+    next.delete('c');
+    setSearchParams(next, { replace: true });
   };
+
+  // 初次加载：若URL包含会话ID，主动加载消息，避免欢迎界面闪烁
+  useEffect(() => {
+    if (initialConversationFromUrl && curConversation === initialConversationFromUrl) {
+      setMessagesLoading(true);
+      void (async () => {
+        await switchConversation(initialConversationFromUrl);
+        setMessagesLoading(false);
+      })();
+    }
+    // 仅在首次挂载时执行
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 快捷操作处理
   const handleQuickAction = (action: string) => {
@@ -213,6 +261,9 @@ const ChatScreenRefactored: React.FC = () => {
       // 如果删除的是当前会话，切换到新会话
       if (conversationKey === curConversation) {
         createNewConversation();
+        const next = new URLSearchParams(searchParams);
+        next.delete('c');
+        setSearchParams(next, { replace: true });
       }
       
       // 刷新会话列表
@@ -330,6 +381,8 @@ const ChatScreenRefactored: React.FC = () => {
           messages={messages}
           loading={loading}
           currentKnowledgeBase={currentKnowledgeBase}
+          showWelcome={!/^[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$/.test(curConversation)}
+          messagesLoading={messagesLoading}
           onSubmit={handleSubmit}
           onRegenerate={handleRegenerate}
         />

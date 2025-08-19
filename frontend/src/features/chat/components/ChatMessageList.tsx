@@ -99,6 +99,10 @@ interface ChatMessageListProps {
   currentKnowledgeBase: string | undefined;
   onSubmit: (message: string) => void;
   onRegenerate: (messageIndex: number) => void;
+  // 新增：控制是否展示欢迎界面；当为真实会话但消息尚未加载时禁用欢迎界面
+  showWelcome?: boolean;
+  // 新增：消息加载中（首次打开某会话时）
+  messagesLoading?: boolean;
 }
 
 /**
@@ -111,6 +115,8 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
   currentKnowledgeBase,
   onSubmit,
   onRegenerate,
+  showWelcome = true,
+  messagesLoading = false,
 }) => {
   // 复制消息到剪贴板
   const handleCopyMessage = async (content: string) => {
@@ -147,8 +153,15 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
     onRegenerate(messageIndex);
   };
 
-  // 如果没有消息，显示欢迎界面
+  // 如果没有消息，根据上下文显示欢迎界面或加载中
   if (!messages || messages.length === 0) {
+    if (!showWelcome) {
+      return (
+        <div style={{ flex: 1, height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Spin spinning={messagesLoading} tip="加载会话中..." />
+        </div>
+      );
+    }
     return (
       <div style={{ flex: 1, height: '100%', overflow: 'auto' }}>
         <Space

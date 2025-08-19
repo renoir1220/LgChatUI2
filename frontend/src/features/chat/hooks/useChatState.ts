@@ -64,13 +64,20 @@ const DEFAULT_CONVERSATIONS_ITEMS: ConversationItem[] = [
  * 聊天状态管理Hook
  * 管理所有与聊天相关的状态和逻辑
  */
-export function useChatState() {
+export function useChatState(initialCurConversation?: string) {
   // 状态管理
   const [messageHistory, setMessageHistory] = useState<Record<string, BubbleDataType[]>>({});
   const [conversations, setConversations] = useState<ConversationItem[]>(DEFAULT_CONVERSATIONS_ITEMS);
   const [conversationDetails, setConversationDetails] = useState<Record<string, ConversationDetail>>({});
-  const [curConversation, setCurConversation] = useState<string>(DEFAULT_CONVERSATIONS_ITEMS[0].key);
-  const [conversationId, setConversationId] = useState<string | undefined>(undefined);
+  // 启动：若有初始会话ID（来自路由），直接使用；否则为“new”
+  const isValidUUID = (s?: string) => !!s && /^[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$/.test(s);
+  const initialCur = initialCurConversation && isValidUUID(initialCurConversation)
+    ? initialCurConversation
+    : 'new';
+  const [curConversation, setCurConversation] = useState<string>(initialCur);
+  const [conversationId, setConversationId] = useState<string | undefined>(
+    isValidUUID(initialCur) ? initialCur : undefined
+  );
   const [messages, setMessages] = useState<BubbleDataType[]>([]);
   const [loading, setLoading] = useState(false);
   

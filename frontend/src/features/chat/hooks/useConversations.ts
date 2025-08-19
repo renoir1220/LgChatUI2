@@ -60,10 +60,10 @@ export function useConversations(
   };
 
   /**
-   * 初始化：加载会话列表并选择第一个会话
+   * 初始化：仅加载会话列表，不自动切换到第一条历史
    */
   const initializeConversations = async () => {
-    await loadConversations(true); // 传入 true 表示要选择第一个会话
+    await loadConversations(false); // 初始化时不自动选择第一会话
   };
 
   /**
