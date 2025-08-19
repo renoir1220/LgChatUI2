@@ -150,7 +150,9 @@ export const chatApi = {
                   // 未知的SSE事件类型
                 }
               } catch (parseError) {
-                console.error('解析SSE数据失败:', parseError);
+                if (process.env.NODE_ENV === 'development') {
+                  console.error('解析SSE数据失败:', parseError);
+                }
               }
             } else if (line.startsWith('event: ')) {
               // 收到SSE事件
@@ -166,9 +168,15 @@ export const chatApi = {
       if (error instanceof Error && error.name === 'AbortError') {
         // 聊天请求被中止
       } else {
-        console.error('聊天请求失败:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('聊天请求失败:', error);
+        }
         if (onError) {
-          onError(error as Error);
+          // 安全的类型检查，避免强制类型断言
+          const errorObj = error instanceof Error 
+            ? error 
+            : new Error(String(error) || '未知错误');
+          onError(errorObj);
         }
       }
     }

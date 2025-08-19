@@ -45,6 +45,7 @@ type ChatAction =
   | { type: 'DELETE_MESSAGE'; payload: string }
   | { type: 'SET_STREAMING_CONTENT'; payload: string }
   | { type: 'APPEND_STREAMING_CONTENT'; payload: string }
+  | { type: 'APPEND_STREAMING_CONTENT_AND_UPDATE_MESSAGE'; payload: { chunk: string; messageId: string } }
   | { type: 'CLEAR_STREAMING_CONTENT' }
   
   | { type: 'SET_KNOWLEDGE_BASES'; payload: KnowledgeBase[] }
@@ -143,6 +144,21 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
     case 'APPEND_STREAMING_CONTENT':
       return { ...state, streamingContent: state.streamingContent + action.payload };
     
+    case 'APPEND_STREAMING_CONTENT_AND_UPDATE_MESSAGE': {
+      const { chunk, messageId } = action.payload;
+      const newStreamingContent = state.streamingContent + chunk;
+      
+      return {
+        ...state,
+        streamingContent: newStreamingContent,
+        messages: state.messages.map(msg => 
+          msg.id === messageId 
+            ? { ...msg, content: newStreamingContent }
+            : msg
+        )
+      };
+    }
+    
     case 'CLEAR_STREAMING_CONTENT':
       return { ...state, streamingContent: '' };
     
@@ -226,7 +242,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         const conversations = await api.conversation.getConversations();
         dispatch({ type: 'SET_CONVERSATIONS', payload: conversations });
       } catch (error) {
-        console.error('加载会话列表失败:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('加载会话列表失败:', error);
+        }
         dispatch({ type: 'SET_ERROR', payload: '加载会话列表失败' });
       } finally {
         dispatch({ type: 'SET_LOADING', payload: false });
@@ -241,7 +259,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         const messages = await api.message.getMessages(conversation.id);
         dispatch({ type: 'SET_MESSAGES', payload: messages });
       } catch (error) {
-        console.error('加载会话消息失败:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('加载会话消息失败:', error);
+        }
         dispatch({ type: 'SET_ERROR', payload: '加载会话消息失败' });
       } finally {
         dispatch({ type: 'SET_LOADING', payload: false });
@@ -256,7 +276,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: 'SET_MESSAGES', payload: [] }); // 清空消息
         return conversation;
       } catch (error) {
-        console.error('创建会话失败:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('创建会话失败:', error);
+        }
         dispatch({ type: 'SET_ERROR', payload: '创建会话失败' });
         return null;
       }
@@ -271,7 +293,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           dispatch({ type: 'UPDATE_CONVERSATION', payload: { id, updates } });
         }
       } catch (error) {
-        console.error('更新会话失败:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('更新会话失败:', error);
+        }
         dispatch({ type: 'SET_ERROR', payload: '更新会话失败' });
       }
     }, []),
@@ -281,7 +305,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         await api.conversation.deleteConversation(id);
         dispatch({ type: 'DELETE_CONVERSATION', payload: id });
       } catch (error) {
-        console.error('删除会话失败:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('删除会话失败:', error);
+        }
         dispatch({ type: 'SET_ERROR', payload: '删除会话失败' });
       }
     }, []),
@@ -292,7 +318,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         const messages = await api.message.getMessages(conversationId);
         dispatch({ type: 'SET_MESSAGES', payload: messages });
       } catch (error) {
-        console.error('加载消息失败:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('加载消息失败:', error);
+        }
         dispatch({ type: 'SET_ERROR', payload: '加载消息失败' });
       }
     }, []),
@@ -361,15 +389,13 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           chatRequest,
           // onChunk: 处理流式内容
           (chunk: string) => {
-            // 收到chunk
-            dispatch({ type: 'APPEND_STREAMING_CONTENT', payload: chunk });
-            // 实时更新临时消息
+            // 收到chunk，同时更新流式内容和消息内容
             dispatch({ 
-              type: 'UPDATE_MESSAGE', 
+              type: 'APPEND_STREAMING_CONTENT_AND_UPDATE_MESSAGE', 
               payload: { 
-                id: tempAssistantMessageId, 
-                updates: { content: state.streamingContent + chunk } 
-              }
+                chunk, 
+                messageId: tempAssistantMessageId 
+              } 
             });
           },
           // onComplete: 处理完成的消息
@@ -388,7 +414,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           },
           // onError: 处理错误
           (error: Error) => {
-            console.error('聊天请求失败:', error);
+            if (process.env.NODE_ENV === 'development') {
+              console.error('聊天请求失败:', error);
+            }
             dispatch({ type: 'SET_ERROR', payload: error.message });
             dispatch({ type: 'SET_STREAMING', payload: false });
             dispatch({ type: 'CLEAR_STREAMING_CONTENT' });
@@ -401,7 +429,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         abortControllerRef.current = controller;
         
       } catch (error) {
-        console.error('发送消息失败:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('发送消息失败:', error);
+        }
         dispatch({ type: 'SET_ERROR', payload: '发送消息失败' });
         dispatch({ type: 'SET_STREAMING', payload: false });
       }
@@ -413,7 +443,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         const knowledgeBases = await api.knowledgeBase.getKnowledgeBases();
         dispatch({ type: 'SET_KNOWLEDGE_BASES', payload: knowledgeBases });
       } catch (error) {
-        console.error('加载知识库失败:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('加载知识库失败:', error);
+        }
         dispatch({ type: 'SET_ERROR', payload: '加载知识库失败' });
       }
     }, []),
@@ -470,7 +502,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: 'SET_CONVERSATIONS', payload: conversations });
         dispatch({ type: 'SET_KNOWLEDGE_BASES', payload: knowledgeBases });
       } catch (error) {
-        console.error('初始化数据失败:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('初始化数据失败:', error);
+        }
         dispatch({ type: 'SET_ERROR', payload: '加载数据失败' });
       }
     };

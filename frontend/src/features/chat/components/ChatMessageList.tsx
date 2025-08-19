@@ -12,6 +12,7 @@ import {
   FileSearchOutlined
 } from '@ant-design/icons';
 import MarkdownIt from 'markdown-it';
+import DOMPurify from 'dompurify';
 import 'github-markdown-css/github-markdown.css';
 import './ChatMessage.css';
 import { CitationList } from '../../knowledge-base/components/CitationList';
@@ -28,13 +29,18 @@ const md = new MarkdownIt({
 });
 
 // Markdown 渲染函数
-const renderMarkdown = (content: string, isUser = false) => (
-  <div 
-    className={`markdown-body chat-markdown-body ${isUser ? 'user-message' : ''}`}
-    style={{ backgroundColor: 'transparent' }}
-    dangerouslySetInnerHTML={{ __html: md.render(content || '') }}
-  />
-);
+const renderMarkdown = (content: string, isUser = false) => {
+  const renderedHTML = md.render(content || '');
+  const sanitizedHTML = DOMPurify.sanitize(renderedHTML);
+  
+  return (
+    <div 
+      className={`markdown-body chat-markdown-body ${isUser ? 'user-message' : ''}`}
+      style={{ backgroundColor: 'transparent' }}
+      dangerouslySetInnerHTML={{ __html: sanitizedHTML }}
+    />
+  );
+};
 
 // 热门话题配置
 const HOT_TOPICS = {

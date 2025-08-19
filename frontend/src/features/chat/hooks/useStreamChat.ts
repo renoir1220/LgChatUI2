@@ -136,13 +136,20 @@ export function useStreamChat() {
           }
           
           try {
-            const jsonData = JSON.parse(rawData) as StreamResponse;
+            const jsonData = JSON.parse(rawData);
+            
+            // 类型检查，确保数据结构正确
+            if (!jsonData || typeof jsonData !== 'object') {
+              throw new Error('无效的JSON数据结构');
+            }
+            
+            const streamResponse = jsonData as StreamResponse;
             
             // 处理文本增量
-            if (jsonData.event === 'agent_message' || jsonData.event === 'message') {
+            if (streamResponse.event === 'agent_message' || streamResponse.event === 'message') {
               setMessages(prev => prev.map((msg, index) => {
                 if (index === botMessageIndex && msg.role === 'assistant') {
-                  return { ...msg, content: msg.content + (jsonData.answer || '') };
+                  return { ...msg, content: msg.content + (streamResponse.answer || '') };
                 }
                 return msg;
               }));
@@ -179,7 +186,10 @@ export function useStreamChat() {
               }));
             }
           } catch (e) {
-            console.error('流式数据JSON解析失败:', e);
+            if (process.env.NODE_ENV === 'development') {
+              console.error('流式数据JSON解析失败:', e);
+            }
+            // 可以添加用户提示逼辑，但不阻断整个流程
           }
         }
       }
