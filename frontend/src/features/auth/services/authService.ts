@@ -1,4 +1,6 @@
 // 认证服务
+import { configService } from '../../shared/services/configService';
+
 export interface LoginRequest {
   username: string;
 }
@@ -13,13 +15,18 @@ export interface LoginResponse {
 }
 
 class AuthService {
-  private baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+  private async getBaseUrl(): Promise<string> {
+    const apiBase = await configService.getApiBase();
+    // 确保API基础URL包含/api路径
+    return apiBase.endsWith('/api') ? apiBase : `${apiBase}/api`;
+  }
   private tokenKey = 'auth_token';
   private userKey = 'auth_user';
 
   // 登录
   async login(username: string): Promise<LoginResponse> {
-    const response = await fetch(`${this.baseUrl}/auth/login`, {
+    const baseUrl = await this.getBaseUrl();
+    const response = await fetch(`${baseUrl}/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

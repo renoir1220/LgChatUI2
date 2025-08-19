@@ -5,7 +5,6 @@ import { Button as AntdButton } from 'antd';
 import type { UploadFile } from 'antd';
 import { 
   CloudUploadOutlined,
-  PaperClipOutlined,
   DownOutlined,
   CheckOutlined,
   DatabaseOutlined,
@@ -115,19 +114,14 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             backgroundColor: 'transparent'
           }}
           styles={{
-            content: { 
+            input: { 
               border: 'none',
               backgroundColor: 'transparent',
               minHeight: 20,
-              padding: 0
-            },
-            textarea: { 
-              border: 'none',
-              backgroundColor: 'transparent',
+              padding: 0,
               fontSize: 16,
               lineHeight: 1.4,
               resize: 'none',
-              padding: 0,
               fontFamily: 'inherit'
             }
           }}

@@ -1,5 +1,7 @@
 // 前端认证工具函数
 
+import { configService } from '../../shared/services/configService';
+
 // 存储键名常量
 export const TOKEN_KEY = 'access_token';
 export const USERNAME_KEY = 'username';
@@ -53,8 +55,10 @@ export async function validateToken(): Promise<boolean> {
   }
 
   try {
-    const API_BASE = (import.meta.env?.VITE_API_BASE as string) || '';
-    const response = await fetch(`${API_BASE}/api/auth/me`, {
+    const apiBase = await configService.getApiBase();
+    // 确保API基础URL包含/api路径
+    const fullApiBase = apiBase.endsWith('/api') ? apiBase : `${apiBase}/api`;
+    const response = await fetch(`${fullApiBase}/auth/me`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,

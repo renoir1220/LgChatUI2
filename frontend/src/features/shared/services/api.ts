@@ -1,9 +1,25 @@
 import { getToken } from '../../auth/utils/auth'
+import { configService } from './configService'
 
+// 动态获取API基础URL
+let cachedApiBase: string | null = null;
+
+export async function getApiBase(): Promise<string> {
+  if (cachedApiBase) {
+    return cachedApiBase;
+  }
+  
+  cachedApiBase = await configService.getApiBase();
+  return cachedApiBase;
+}
+
+// 为了向后兼容，保留同步版本（使用环境变量作为后备）
 export const API_BASE = (import.meta.env?.VITE_API_BASE as string) || ''
 
 export async function apiFetch(path: string, options: RequestInit = {}) {
   const token = getToken();
+  const apiBase = await getApiBase();
+  
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string> || {}),
@@ -14,7 +30,7 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const resp = await fetch(`${API_BASE}${path}`, { 
+  const resp = await fetch(`${apiBase}${path}`, { 
     ...options, 
     headers 
   });

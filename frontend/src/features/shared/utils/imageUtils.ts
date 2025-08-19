@@ -2,6 +2,8 @@
  * 图片处理工具函数
  */
 
+import { configService } from '../services/configService';
+
 // 解析 URL 的 origin 辅助
 function getOrigin(u?: string): string | undefined {
   try {
@@ -13,15 +15,68 @@ function getOrigin(u?: string): string | undefined {
   }
 }
 
-// 图片基础URL：优先显式配置，其次取 Dify API 的 origin，再次取后端 API，再退回当前站点
-const IMAGE_BASE_URL: string =
+// 缓存的图片基础URL
+let cachedImageBaseUrl: string | null = null;
+
+// 异步获取图片基础URL
+async function getImageBaseUrl(): Promise<string> {
+  if (cachedImageBaseUrl) {
+    return cachedImageBaseUrl;
+  }
+
+  try {
+    const config = await configService.getConfig();
+    
+    // 优先显式配置，其次取 Dify API 的 origin，再次取后端 API，再退回当前站点
+    cachedImageBaseUrl = 
+      config.IMAGE_BASE_URL ||
+      getOrigin(config.DEFAULT_DIFY_API_URL) ||
+      config.API_BASE ||
+      window.location.origin;
+      
+    return cachedImageBaseUrl;
+  } catch (error) {
+    console.warn('获取图片基础URL失败，使用默认值:', error);
+    
+    // 后备方案：使用环境变量
+    cachedImageBaseUrl = 
+      (import.meta.env.VITE_IMAGE_BASE_URL as string) ||
+      getOrigin(import.meta.env.VITE_DEFAULT_DIFY_API_URL as string) ||
+      (import.meta.env.VITE_API_BASE as string) ||
+      window.location.origin;
+      
+    return cachedImageBaseUrl;
+  }
+}
+
+// 同步版本（用于向后兼容，但不推荐）
+const FALLBACK_IMAGE_BASE_URL: string =
   (import.meta.env.VITE_IMAGE_BASE_URL as string) ||
   getOrigin(import.meta.env.VITE_DEFAULT_DIFY_API_URL as string) ||
   (import.meta.env.VITE_API_BASE as string) ||
   window.location.origin;
 
 /**
- * 将相对路径转换为完整的图片URL
+ * 将相对路径转换为完整的图片URL（异步版本，推荐使用）
+ */
+export async function resolveImageUrlAsync(url: string): Promise<string> {
+  // 内部API路径直接返回，避免改写
+  if (url.startsWith('/api/')) {
+    return url;
+  }
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url; // 已经是完整URL
+  }
+  
+  // 处理相对路径，补全为完整URL
+  const baseUrl = await getImageBaseUrl();
+  const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+  const cleanUrl = url.startsWith('/') ? url.slice(1) : url;
+  return `${cleanBaseUrl}/${cleanUrl}`;
+}
+
+/**
+ * 将相对路径转换为完整的图片URL（同步版本，仅用于向后兼容）
  */
 export function resolveImageUrl(url: string): string {
   // 内部API路径直接返回，避免改写
@@ -33,7 +88,7 @@ export function resolveImageUrl(url: string): string {
   }
   
   // 处理相对路径，补全为完整URL
-  const baseUrl = IMAGE_BASE_URL.endsWith('/') ? IMAGE_BASE_URL.slice(0, -1) : IMAGE_BASE_URL;
+  const baseUrl = FALLBACK_IMAGE_BASE_URL.endsWith('/') ? FALLBACK_IMAGE_BASE_URL.slice(0, -1) : FALLBACK_IMAGE_BASE_URL;
   const cleanUrl = url.startsWith('/') ? url.slice(1) : url;
   return `${baseUrl}/${cleanUrl}`;
 }
