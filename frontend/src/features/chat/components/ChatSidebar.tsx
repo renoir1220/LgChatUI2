@@ -146,9 +146,6 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
     const conversation = conversations.find(c => c.key === conversationKey);
     const conversationTitle = conversation?.label || '此会话';
     
-    console.log('找到会话:', conversation);
-    console.log('会话标题:', conversationTitle);
-
     // 设置要重命名的会话信息并打开对话框
     setConversationToRename({
       key: conversationKey,
@@ -377,10 +374,6 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
                                       conversation.key !== 'new' && 
                                       !conversation.key.startsWith('default-') &&
                                       /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/i.test(conversation.key);
-            
-            console.log('=== 菜单调试信息 ===');
-            console.log('会话key:', conversation.key);
-            console.log('是否为真实会话:', isRealConversation);
             
             const menuItems = [
               {
