@@ -1,16 +1,8 @@
 import React from 'react';
-import { Bubble, Welcome, Prompts } from '@ant-design/x';
-import { Flex, Space, Spin, message, Divider } from 'antd';
-import { Button as AntdButton } from 'antd';
+import { Bubble } from '@ant-design/x';
+import { Space, Spin, message, Divider } from 'antd';
 import { Button } from '../../../components/ui/button';
 import { Copy, RotateCcw } from 'lucide-react';
-import {
-  ShareAltOutlined,
-  EllipsisOutlined,
-  HeartOutlined,
-  CommentOutlined,
-  FileSearchOutlined
-} from '@ant-design/icons';
 import MarkdownIt from 'markdown-it';
 import DOMPurify from 'dompurify';
 import 'github-markdown-css/github-markdown.css';
@@ -20,6 +12,7 @@ import { VoicePlayer } from './VoicePlayer';
 import { RequirementMessage } from './RequirementMessage';
 import { detectMessageType, MessageType } from '../../shared/utils/messageTypeDetector';
 import logoTree from '../../../assets/logoTree.png';
+import { getUsername } from '../../auth/utils/auth';
 import type { BubbleDataType } from '../hooks/useChatState';
 
 // 初始化 markdown-it 渲染器
@@ -44,54 +37,7 @@ const renderMarkdown = (content: string, isUser = false) => {
   );
 };
 
-// 热门话题配置
-const HOT_TOPICS = {
-  key: '1',
-  label: '热门话题',
-  children: [
-    {
-      key: '1-1',
-      description: '如何使用 ChatUI？',
-      icon: <span style={{ color: '#f93a4a', fontWeight: 700 }}>1</span>,
-    },
-    {
-      key: '1-2',
-      description: '探索 AI 对话功能',
-      icon: <span style={{ color: '#ff6565', fontWeight: 700 }}>2</span>,
-    },
-    {
-      key: '1-3',
-      description: '开始使用知识库问答',
-      icon: <span style={{ color: '#ff8f1f', fontWeight: 700 }}>3</span>,
-    },
-  ],
-};
-
-// 功能指南配置
-const DESIGN_GUIDE = {
-  key: '2',
-  label: '功能指南',
-  children: [
-    {
-      key: '2-1',
-      icon: <HeartOutlined />,
-      label: '智能对话',
-      description: '与 AI 进行自然语言交流',
-    },
-    {
-      key: '2-2',
-      icon: <CommentOutlined />,
-      label: '知识问答',
-      description: '基于知识库提供专业回答',
-    },
-    {
-      key: '2-3',
-      icon: <FileSearchOutlined />,
-      label: '文档理解',
-      description: '上传文档进行智能分析',
-    },
-  ],
-};
+// 采用登录页一致的渐变风格欢迎界面
 
 interface ChatMessageListProps {
   messages: BubbleDataType[];
@@ -162,64 +108,27 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
         </div>
       );
     }
+    const username = getUsername() || '用户';
     return (
-      <div style={{ flex: 1, height: '100%', overflow: 'auto' }}>
-        <Space
-          direction="vertical"
-          size={16}
-          style={{ 
-            paddingInline: 'max(16px, calc((100% - 700px) / 2))', 
-            height: '100%', 
-            justifyContent: 'center' 
-          }}
-        >
-          <Welcome
-            variant="borderless"
-            icon={logoTree}
-            title="欢迎使用朗珈GPT"
-            description="基于 AI 平台的智能对话系统，为您提供专业的问答服务"
-            extra={
-              <Space>
-                <AntdButton icon={<ShareAltOutlined />} />
-                <AntdButton icon={<EllipsisOutlined />} />
-              </Space>
-            }
-          />
-          <Flex gap={16}>
-            <Prompts
-              items={[HOT_TOPICS]}
-              styles={{
-                list: { height: '100%' },
-                item: {
-                  flex: 1,
-                  backgroundImage: 'linear-gradient(123deg, #DBEAFE 0%, #efe7ff 100%)',
-                  borderRadius: 12,
-                  border: 'none',
-                },
-                subItem: { padding: 0, background: 'transparent' },
-              }}
-              onItemClick={(info) => {
-                onSubmit(info.data.description as string);
-              }}
-            />
+      <div className="relative flex-1 h-full overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-50 via-white to-indigo-100">
+        {/* 装饰性渐变圆斑 */}
+        <div className="pointer-events-none absolute -top-24 -left-24 size-[38rem] rounded-full bg-gradient-to-tr from-indigo-300/40 to-blue-200/30 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -right-24 size-[38rem] rounded-full bg-gradient-to-tr from-cyan-200/40 to-violet-200/30 blur-3xl" />
 
-            <Prompts
-              items={[DESIGN_GUIDE]}
-              styles={{
-                item: {
-                  flex: 1,
-                  backgroundImage: 'linear-gradient(123deg, #DBEAFE 0%, #efe7ff 100%)',
-                  borderRadius: 12,
-                  border: 'none',
-                },
-                subItem: { background: '#ffffffa6' },
-              }}
-              onItemClick={(info) => {
-                onSubmit(info.data.description as string);
-              }}
-            />
-          </Flex>
-        </Space>
+        {/* 欢迎文字 */}
+        <div className="relative z-10 flex h-full w-full items-center justify-center p-6">
+          <div className="text-center select-none">
+            <div className="mx-auto mb-4 size-12 rounded-md shadow-md overflow-hidden bg-white/70 ring-1 ring-black/5 backdrop-blur-md flex items-center justify-center">
+              <img src={logoTree} alt="logo" className="size-8" />
+            </div>
+            <h1 className="text-4xl font-bold leading-tight tracking-tight md:text-5xl">
+              <span className="bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(to right, #0EA5E9, #1E40AF)' }}>
+                你好：{username}
+              </span>
+            </h1>
+            <p className="mt-4 text-lg leading-relaxed text-gray-600">开始你的 AI 聊天之旅</p>
+          </div>
+        </div>
       </div>
     );
   }
