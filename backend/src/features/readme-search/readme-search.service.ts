@@ -124,6 +124,18 @@ export class ReadmeSearchService {
         recordCount: result.length,
       });
 
+      // 添加详细调试日志
+      console.log('📊 README搜索详细结果:', {
+        查询到的记录数: result.length,
+        每条记录长度: result.map((row: any, index: number) => ({
+          index: index + 1,
+          length: row.formatted_result.length,
+          preview: row.formatted_result.substring(0, 100) + '...'
+        })),
+        合并后总长度: combinedResult.length,
+        分隔符数量: (combinedResult.match(/={50}/g) || []).length
+      });
+
       return combinedResult;
 
     } catch (error) {

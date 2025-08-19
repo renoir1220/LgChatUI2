@@ -62,12 +62,18 @@ export class ReadmeSearchController {
         resultLength: result.length,
       });
 
+      // 使用正确的分隔符计算实际记录数量
+      const separator = '='.repeat(50);
+      const actualRecordCount = result.includes(separator) 
+        ? result.split(separator).filter(item => item.trim()).length
+        : (result.trim() ? 1 : 0);
+
       return {
         success: true,
         data: result,
         message: result === '查询结果过大，请缩小查询范围' ? 
           '查询结果过大，请缩小查询范围' : 
-          `找到 ${result.split('\n\n').filter(item => item.trim()).length} 条相关配置信息`,
+          `找到 ${actualRecordCount} 条相关配置信息`,
       };
     } catch (error) {
       this.logger.error('README搜索失败', error, {
