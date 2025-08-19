@@ -13,6 +13,7 @@ import { KnowledgeBaseModule } from './features/knowledge-base/knowledge-base.mo
 import { FilesModule } from './features/files/files.module';
 import { ReadmeSearchModule } from './features/readme-search/readme-search.module';
 import { CustomerDictModule } from './features/customer-dict/customer-dict.module';
+import { RequirementsModule } from './features/requirements/requirements.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { CustomerDictModule } from './features/customer-dict/customer-dict.modul
     FilesModule,
     ReadmeSearchModule,
     CustomerDictModule,
+    RequirementsModule,
   ],
   controllers: [AppController, HealthController],
   providers: [AppService],
