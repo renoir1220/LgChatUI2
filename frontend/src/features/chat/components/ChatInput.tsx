@@ -11,7 +11,8 @@ import {
   PlusOutlined,
   FileSearchOutlined,
   ProjectOutlined,
-  SearchOutlined
+  SearchOutlined,
+  BulbOutlined
 } from '@ant-design/icons';
 import type { KnowledgeBase } from '../../knowledge-base/hooks/useKnowledgeBases';
 
@@ -274,6 +275,23 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                       }}>
                         <SearchOutlined style={{ fontSize: 16, color: '#666' }} />
                         <span>相似需求</span>
+                      </div>
+                    ),
+                  },
+                  {
+                    type: 'divider',
+                  },
+                  {
+                    key: 'suggestion',
+                    label: (
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: 8,
+                        padding: '4px 0'
+                      }}>
+                        <BulbOutlined style={{ fontSize: 16, color: '#f5a623' }} />
+                        <span style={{ color: '#f5a623', fontWeight: 500 }}>提建议</span>
                       </div>
                     ),
                   },

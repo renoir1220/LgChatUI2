@@ -13,6 +13,7 @@ import { showApiError } from '../../shared/services/api';
 import { DictionarySelector } from '../../shared/components/DictionarySelector';
 import { useCustomerDict } from '../../shared/hooks/useCustomerDict';
 import type { DictionaryItem } from '../../shared/components/DictionarySelector';
+import { SuggestionModal } from '../../suggestions/components/SuggestionModal';
 
 /**
  * 重构后的聊天界面组件
@@ -33,6 +34,9 @@ const ChatScreenRefactored: React.FC = () => {
   // 客户字典状态
   const [isDictionarySelectorOpen, setIsDictionarySelectorOpen] = useState(false);
   const { dictionaries } = useCustomerDict();
+  
+  // 建议模态框状态
+  const [isSuggestionModalOpen, setIsSuggestionModalOpen] = useState(false);
 
   // 监听屏幕尺寸变化
   useEffect(() => {
@@ -260,6 +264,9 @@ const ChatScreenRefactored: React.FC = () => {
         quickMessage = '查询相似需求';
         setTimeout(() => setFocusAtEndSignal((s) => s + 1), 0);
         break;
+      case 'suggestion':
+        setIsSuggestionModalOpen(true);
+        return;
       default:
         return;
     }
@@ -454,6 +461,16 @@ const ChatScreenRefactored: React.FC = () => {
         onSelect={handleDictionarySelect}
         onClose={() => setIsDictionarySelectorOpen(false)}
         title="选择客户"
+      />
+      
+      {/* 建议模态框 */}
+      <SuggestionModal
+        isOpen={isSuggestionModalOpen}
+        onClose={() => setIsSuggestionModalOpen(false)}
+        onSuccess={() => {
+          // 建议提交成功后的处理
+          message.success('感谢您的建议！我们会认真考虑并及时回复');
+        }}
       />
     </div>
   );

@@ -14,6 +14,7 @@ import { FilesModule } from './features/files/files.module';
 import { ReadmeSearchModule } from './features/readme-search/readme-search.module';
 import { CustomerDictModule } from './features/customer-dict/customer-dict.module';
 import { RequirementsModule } from './features/requirements/requirements.module';
+import { SuggestionsModule } from './features/suggestions/suggestions.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { RequirementsModule } from './features/requirements/requirements.module'
     ReadmeSearchModule,
     CustomerDictModule,
     RequirementsModule,
+    SuggestionsModule,
   ],
   controllers: [AppController, HealthController],
   providers: [AppService],

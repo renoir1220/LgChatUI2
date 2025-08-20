@@ -13,7 +13,7 @@ import { VoicePlayer } from './VoicePlayer';
 import { RequirementMessage } from './RequirementMessage';
 import { detectMessageType, MessageType } from '../../shared/utils/messageTypeDetector';
 import { getUsername } from '../../auth/utils/auth';
-import { FileSearchOutlined, ProjectOutlined, SearchOutlined } from '@ant-design/icons';
+import { FileSearchOutlined, ProjectOutlined, SearchOutlined, BulbOutlined } from '@ant-design/icons';
 import type { BubbleDataType } from '../hooks/useChatState';
 
 // 初始化 markdown-it 渲染器
@@ -197,6 +197,33 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
               }}
             >
               相似需求
+            </AntdButton>
+            <AntdButton
+              size="large"
+              type="text"
+              icon={<BulbOutlined />}
+              onClick={() => onQuickAction?.('suggestion')}
+              style={{
+                borderRadius: 12,
+                border: '2px solid #f5a623',
+                background: 'linear-gradient(135deg, #f5a623 0%, #f7b731 100%)',
+                color: '#ffffff',
+                padding: '8px 18px',
+                height: 44,
+                fontWeight: 600,
+                boxShadow: '0 4px 12px rgba(245, 166, 35, 0.3)',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.boxShadow = '0 6px 20px rgba(245, 166, 35, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(245, 166, 35, 0.3)';
+              }}
+            >
+              提建议
             </AntdButton>
           </div>
         </div>
