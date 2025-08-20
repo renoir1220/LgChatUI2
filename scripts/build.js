@@ -122,13 +122,14 @@ class BuildManager {
       process.exit(1);
     }
 
-    // 代码检查
+    // 代码检查（非阻塞）
     console.log('🔍 执行代码检查...');
     try {
       this.exec('npm run lint', { stdio: 'pipe' });
       console.log('  ✓ 代码检查通过');
     } catch (error) {
-      console.warn('⚠️ 代码检查有警告，但继续构建');
+      console.warn('⚠️ 代码检查发现问题，但继续构建（建议稍后修复）');
+      console.warn('   可使用 npm run lint:fix 自动修复部分问题');
     }
   }
 
