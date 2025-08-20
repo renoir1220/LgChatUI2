@@ -48,7 +48,11 @@ export class ReadmeSearchService {
       const params = keywords.map((keyword) => `%${keyword.trim()}%`);
 
       // 执行第一次查询
-      const result = await this.databaseService.query(basicSql, ...params);
+      const result = await this.databaseService.queryWithErrorHandling(
+        basicSql,
+        params,
+        'README配置信息查询'
+      );
 
       if (!result || result.length === 0) {
         return '未找到匹配的配置信息，请尝试其他关键词。';
@@ -89,9 +93,10 @@ export class ReadmeSearchService {
         `;
 
         // 执行过滤后的查询
-        const filteredResult = await this.databaseService.query(
+        const filteredResult = await this.databaseService.queryWithErrorHandling(
           filteredSql,
-          ...params,
+          params,
+          'README过滤查询'
         );
 
         if (!filteredResult || filteredResult.length === 0) {
@@ -185,7 +190,11 @@ export class ReadmeSearchService {
     `;
 
     try {
-      const result = await this.databaseService.query(sql);
+      const result = await this.databaseService.queryWithErrorHandling(
+        sql,
+        [],
+        '获取搜索建议关键词'
+      );
 
       const suggestions = result.map((row: any) => row.keyword);
 
@@ -231,7 +240,11 @@ export class ReadmeSearchService {
     `;
 
     try {
-      const result = await this.databaseService.query(sql);
+      const result = await this.databaseService.queryWithErrorHandling(
+        sql,
+        [],
+        '获取搜索统计信息'
+      );
       return result[0];
     } catch (error) {
       this.logger.error('获取搜索统计失败', error);

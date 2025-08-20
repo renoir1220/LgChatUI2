@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { DatabaseErrorHandler } from './database-error.handler';
 // 兼容占位：避免未安装 mssql 类型时报错（TS2304）
 // 后续如已安装 mssql，可删除此别名或改为 type-only import
 type ConnectionPool = any;
@@ -92,6 +93,23 @@ export class DatabaseService {
     });
     const result: any = await request.query(sqlText);
     return (result?.recordset ?? []) as T[];
+  }
+
+  /**
+   * 带错误处理的查询方法
+   * 统一处理数据库错误，转换为合适的HTTP异常
+   */
+  async queryWithErrorHandling<T = any>(
+    strings: TemplateStringsArray | string,
+    params: any[] = [],
+    context: string = '数据库查询'
+  ): Promise<T[]> {
+    try {
+      return await this.query<T>(strings, ...params);
+    } catch (error) {
+      this.logger.error(`${context}失败`, error);
+      DatabaseErrorHandler.handleError(error, context);
+    }
   }
 
   async withTransaction<T>(fn: (tx: any) => Promise<T>): Promise<T> {

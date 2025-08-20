@@ -19,29 +19,25 @@ export class UsersRepository {
   }
 
   async findByUsername(username: string): Promise<User | null> {
-    try {
-      const rows = await this.db.query<any>(
-        `SELECT TOP 1 员工姓名 as username
-         FROM VIEW_EMPLOYEE 
-         WHERE 员工姓名 = @p0`,
-        username,
-      );
+    const rows = await this.db.queryWithErrorHandling<any>(
+      `SELECT TOP 1 员工姓名 as username
+       FROM VIEW_EMPLOYEE 
+       WHERE 员工姓名 = @p0`,
+      [username],
+      '查询用户信息'
+    );
 
-      if (rows.length === 0) {
-        return null;
-      }
-
-      const r = rows[0];
-      return {
-        id: `user_${r.username}`, // 使用用户名生成ID
-        username: r.username,
-        displayName: r.username,
-        createdAt: new Date().toISOString(),
-      };
-    } catch (error) {
-      console.error('查询用户时出错:', error);
+    if (rows.length === 0) {
       return null;
     }
+
+    const r = rows[0];
+    return {
+      id: `user_${r.username}`, // 使用用户名生成ID
+      username: r.username,
+      displayName: r.username,
+      createdAt: new Date().toISOString(),
+    };
   }
 
   async create(userData: {

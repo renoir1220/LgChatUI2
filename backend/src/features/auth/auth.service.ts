@@ -41,21 +41,10 @@ export class AuthService {
   }
 
   async validateUser(username: string) {
-    try {
-      // 只查找用户，不创建新用户
-      const user = await this.usersRepository.findByUsername(username);
-      return user; // 如果找不到用户，直接返回null
-    } catch (error) {
-      this.logger.error(
-        '验证用户时出错',
-        error instanceof Error ? error.stack : undefined,
-        {
-          username,
-          errorMessage: error instanceof Error ? error.message : '未知错误',
-        },
-      );
-      return null;
-    }
+    // 数据库错误会被DatabaseService统一处理并抛出DatabaseException
+    // 该异常会直接传播到Controller层，无需在此处捕获
+    const user = await this.usersRepository.findByUsername(username);
+    return user; // 如果找不到用户，直接返回null
   }
 
   async getUserByUsername(username: string) {

@@ -57,11 +57,10 @@ export class RequirementsRepository {
         offset,
       });
 
-      const result = await this.databaseService.query(
+      const result = await this.databaseService.queryWithErrorHandling(
         query,
-        customerName,
-        offset,
-        pageSize,
+        [customerName, offset, pageSize],
+        '查询客户需求列表'
       );
 
       this.logger.log('客户需求列表查询成功', {
@@ -108,7 +107,11 @@ export class RequirementsRepository {
     try {
       this.logger.log('查询客户需求总数', { customerName });
 
-      const result = await this.databaseService.query(query, customerName);
+      const result = await this.databaseService.queryWithErrorHandling(
+        query,
+        [customerName],
+        '查询客户需求总数'
+      );
 
       const total = result[0]?.total || 0;
 

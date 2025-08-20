@@ -10,7 +10,7 @@ export class ConversationsRepository {
   async list(page = 1, pageSize = 20): Promise<Conversation[]> {
     const offset = (page - 1) * pageSize + 1;
     const end = page * pageSize;
-    const rows = await this.db.query<Conversation>(
+    const rows = await this.db.queryWithErrorHandling<Conversation>(
       `WITH C AS (
         SELECT CONVERSATION_ID, TITLE, CREATED_AT,
                ROW_NUMBER() OVER (ORDER BY CREATED_AT DESC) AS rn
@@ -20,20 +20,21 @@ export class ConversationsRepository {
              TITLE as title,
              CONVERT(varchar(33), CREATED_AT, 126) AS createdAt
       FROM C WHERE rn BETWEEN @p0 AND @p1`,
-      offset,
-      end,
+      [offset, end],
+      '获取会话列表'
     );
     return rows;
   }
 
   async create(title: string): Promise<Conversation> {
-    const rows = await this.db.query<Conversation>(
+    const rows = await this.db.queryWithErrorHandling<Conversation>(
       `DECLARE @id uniqueidentifier = NEWID();
        INSERT INTO T_AI_CONVERSATIONS (CONVERSATION_ID, TITLE, CREATED_AT)
        VALUES (@id, @p0, GETUTCDATE());
        SELECT CONVERT(varchar(36), @id) AS id, @p0 AS title,
               CONVERT(varchar(33), GETUTCDATE(), 126) AS createdAt;`,
-      title,
+      [title],
+      '创建新会话'
     );
     return rows[0];
   }
@@ -46,7 +47,7 @@ export class ConversationsRepository {
   ): Promise<Conversation[]> {
     // 使用OFFSET/FETCH语法替代窗口函数，性能更好
     const offset = (page - 1) * pageSize;
-    const rows = await this.db.query<any>(
+    const rows = await this.db.queryWithErrorHandling<any>(
       `SELECT CONVERT(varchar(36), CONVERSATION_ID) AS id,
              TITLE as title,
              KNOWLEDGE_BASE_ID as knowledgeBaseId,
@@ -56,9 +57,8 @@ export class ConversationsRepository {
       ORDER BY CREATED_AT DESC
       OFFSET @p1 ROWS
       FETCH NEXT @p2 ROWS ONLY`,
-      userId,
-      offset,
-      pageSize,
+      [userId, offset, pageSize],
+      '获取用户会话列表'
     );
     return rows as Conversation[];
   }
@@ -69,7 +69,7 @@ export class ConversationsRepository {
     title: string,
     knowledgeBaseId?: string,
   ): Promise<Conversation> {
-    const rows = await this.db.query<any>(
+    const rows = await this.db.queryWithErrorHandling<any>(
       `DECLARE @id uniqueidentifier = NEWID();
        INSERT INTO T_AI_CONVERSATIONS (CONVERSATION_ID, USER_ID, TITLE, KNOWLEDGE_BASE_ID, CREATED_AT)
        VALUES (@id, @p0, @p1, @p2, GETUTCDATE());
@@ -78,9 +78,8 @@ export class ConversationsRepository {
               @p0 AS userId,
               @p2 AS knowledgeBaseId,
               CONVERT(varchar(33), GETUTCDATE(), 126) AS createdAt;`,
-      userId,
-      title,
-      knowledgeBaseId,
+      [userId, title, knowledgeBaseId],
+      '创建用户会话'
     );
     return rows[0] as Conversation;
   }
@@ -113,17 +112,18 @@ export class ConversationsRepository {
     params.push(conversationId);
     const query = `UPDATE T_AI_CONVERSATIONS SET ${setParts.join(', ')} WHERE CONVERSATION_ID = @p${paramIndex}`;
 
-    await this.db.query(query, ...params);
+    await this.db.queryWithErrorHandling(query, params, '更新会话信息');
   }
 
   // 删除会话及其所有消息
   async deleteConversation(conversationId: string): Promise<void> {
-    await this.db.query(
+    await this.db.queryWithErrorHandling(
       `BEGIN TRANSACTION;
        DELETE FROM T_AI_MESSAGES WHERE CONVERSATION_ID = @p0;
        DELETE FROM T_AI_CONVERSATIONS WHERE CONVERSATION_ID = @p0;
        COMMIT;`,
-      conversationId,
+      [conversationId],
+      '删除会话及相关消息'
     );
   }
 }

@@ -2,7 +2,7 @@
 // 运维可以在部署后直接修改此文件，无需重新构建前端
 window.APP_CONFIG = {
   // API 基础配置
-  API_BASE: 'http://localhost:8080',
+  API_BASE: 'http://localhost:3000',
   
   // 默认 Dify 知识库配置
   DEFAULT_DIFY_API_URL: 'http://localhost/v1/chat-messages',
