@@ -122,7 +122,7 @@ export const RequirementItem: React.FC<RequirementItemProps> = ({
         marginBottom: index < 2 ? 8 : 0,
         border: 'none'
       }}
-      expandIconPosition="end"
+      expandIconPosition="start"
       // 自定义样式确保充分利用宽度
       className="requirement-collapse"
     />
