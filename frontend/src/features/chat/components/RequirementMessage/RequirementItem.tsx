@@ -1,11 +1,12 @@
 import React from 'react';
-import { Collapse, Tag, Typography } from 'antd';
+import { Collapse, Typography } from 'antd';
 import { 
   UserOutlined, 
   TagOutlined, 
   ClockCircleOutlined 
 } from '@ant-design/icons';
 import { RequirementDetail } from './RequirementDetail';
+import ModernTag from '../../../../components/ModernTag';
 import type { RequirementItem as RequirementItemType } from '@lg/shared';
 
 const { Text } = Typography;
@@ -16,20 +17,20 @@ interface RequirementItemProps {
 }
 
 /**
- * 获取状态对应的颜色
+ * 获取状态对应的现代标签变体
  */
-function getStageColor(stage: string): string {
-  const stageColorMap: Record<string, string> = {
+function getStageVariant(stage: string): 'primary' | 'success' | 'warning' | 'danger' | 'info' | 'neutral' {
+  const stageVariantMap: Record<string, 'primary' | 'success' | 'warning' | 'danger' | 'info' | 'neutral'> = {
     '需求评审': 'warning',
-    '需求设计': 'blue',
-    '研发分配': 'purple',
-    '研发验证': 'cyan',
-    '功能测试': 'orange',
-    '现场更新': 'green',
+    '需求设计': 'info',
+    '研发分配': 'primary',
+    '研发验证': 'info',
+    '功能测试': 'warning',
+    '现场更新': 'success',
     '产品发布': 'success',
   };
   
-  return stageColorMap[stage] || 'default';
+  return stageVariantMap[stage] || 'neutral';
 }
 
 /**
@@ -61,17 +62,17 @@ export const RequirementItem: React.FC<RequirementItemProps> = ({
         </div>
         
         {/* 标签行 */}
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 6, flexWrap: 'wrap' }}>
-          <Text code style={{ color: '#1890ff', fontWeight: 500, marginRight: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 6, flexWrap: 'wrap', gap: 8 }}>
+          <ModernTag variant="neutral" size="small" style={{ backgroundColor: '#f0f8ff', color: '#1890ff', fontWeight: 600 }}>
             {requirement.requirementCode}
-          </Text>
-          <Tag color={getStageColor(requirement.currentStage)} style={{ marginRight: 8 }}>
+          </ModernTag>
+          <ModernTag variant={getStageVariant(requirement.currentStage)} size="medium">
             {requirement.currentStage}
-          </Tag>
+          </ModernTag>
           {requirement.versionName && (
-            <Tag color="blue" style={{ fontSize: 11, marginRight: 8 }}>
+            <ModernTag variant="primary" size="small" icon={<TagOutlined />}>
               {requirement.versionName}
-            </Tag>
+            </ModernTag>
           )}
         </div>
         
