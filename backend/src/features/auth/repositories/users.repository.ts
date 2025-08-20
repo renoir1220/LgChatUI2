@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { DatabaseService } from '../../../shared/database/database.service';
+import { CrmDatabaseService } from '../../../shared/database/database.service';
 import { User } from '@lg/shared';
 
 @Injectable()
 export class UsersRepository {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(private readonly db: CrmDatabaseService) {}
 
   async findOrCreate(username: string): Promise<User> {
     // 只查找用户，如果不存在则返回null（不创建新用户）
@@ -24,7 +24,7 @@ export class UsersRepository {
        FROM VIEW_EMPLOYEE 
        WHERE 员工姓名 = @p0`,
       [username],
-      '查询用户信息'
+      '查询用户信息',
     );
 
     if (rows.length === 0) {

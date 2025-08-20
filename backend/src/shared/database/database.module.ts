@@ -1,9 +1,21 @@
 import { Global, Module } from '@nestjs/common';
-import { DatabaseService } from './database.service';
+import {
+  DatabaseService,
+  CrmDatabaseService,
+  LgChatUIDatabaseService,
+} from './database.service';
 
 @Global()
 @Module({
-  providers: [DatabaseService],
-  exports: [DatabaseService],
+  providers: [
+    CrmDatabaseService,
+    LgChatUIDatabaseService,
+    DatabaseService, // 保持向后兼容性
+  ],
+  exports: [
+    CrmDatabaseService,
+    LgChatUIDatabaseService,
+    DatabaseService, // 保持向后兼容性
+  ],
 })
 export class DatabaseModule {}

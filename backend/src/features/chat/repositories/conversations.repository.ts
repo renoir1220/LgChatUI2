@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { DatabaseService } from '../../../shared/database/database.service';
+import { CrmDatabaseService } from '../../../shared/database/database.service';
 import { PAGINATION_CONSTANTS } from '../../../shared/constants/pagination.constants';
 import { Conversation } from '@lg/shared';
 
 @Injectable()
 export class ConversationsRepository {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(private readonly db: CrmDatabaseService) {}
 
   async list(page = 1, pageSize = 20): Promise<Conversation[]> {
     const offset = (page - 1) * pageSize + 1;
@@ -21,7 +21,7 @@ export class ConversationsRepository {
              CONVERT(varchar(33), CREATED_AT, 126) AS createdAt
       FROM C WHERE rn BETWEEN @p0 AND @p1`,
       [offset, end],
-      '获取会话列表'
+      '获取会话列表',
     );
     return rows;
   }
@@ -34,7 +34,7 @@ export class ConversationsRepository {
        SELECT CONVERT(varchar(36), @id) AS id, @p0 AS title,
               CONVERT(varchar(33), GETUTCDATE(), 126) AS createdAt;`,
       [title],
-      '创建新会话'
+      '创建新会话',
     );
     return rows[0];
   }
@@ -58,7 +58,7 @@ export class ConversationsRepository {
       OFFSET @p1 ROWS
       FETCH NEXT @p2 ROWS ONLY`,
       [userId, offset, pageSize],
-      '获取用户会话列表'
+      '获取用户会话列表',
     );
     return rows as Conversation[];
   }
@@ -79,7 +79,7 @@ export class ConversationsRepository {
               @p2 AS knowledgeBaseId,
               CONVERT(varchar(33), GETUTCDATE(), 126) AS createdAt;`,
       [userId, title, knowledgeBaseId],
-      '创建用户会话'
+      '创建用户会话',
     );
     return rows[0] as Conversation;
   }
@@ -123,7 +123,7 @@ export class ConversationsRepository {
        DELETE FROM T_AI_CONVERSATIONS WHERE CONVERSATION_ID = @p0;
        COMMIT;`,
       [conversationId],
-      '删除会话及相关消息'
+      '删除会话及相关消息',
     );
   }
 }

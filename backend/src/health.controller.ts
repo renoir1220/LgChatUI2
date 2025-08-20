@@ -1,9 +1,9 @@
 import { Controller, Get } from '@nestjs/common';
-import { DatabaseService } from './shared/database/database.service';
+import { CrmDatabaseService } from './shared/database/database.service';
 
 @Controller('health')
 export class HealthController {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(private readonly db: CrmDatabaseService) {}
 
   @Get()
   health() {

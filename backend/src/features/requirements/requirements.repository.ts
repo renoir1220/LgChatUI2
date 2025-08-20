@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DatabaseService } from '../../shared/database/database.service';
+import { CrmDatabaseService } from '../../shared/database/database.service';
 import { AppLoggerService } from '../../shared/services/logger.service';
 import { convertArrayPaths } from '../../shared/utils/path-converter';
 import type { RequirementItem } from '@lg/shared';
@@ -7,7 +7,7 @@ import type { RequirementItem } from '@lg/shared';
 @Injectable()
 export class RequirementsRepository {
   constructor(
-    private readonly databaseService: DatabaseService,
+    private readonly databaseService: CrmDatabaseService,
     private readonly logger: AppLoggerService,
   ) {}
 
@@ -60,7 +60,7 @@ export class RequirementsRepository {
       const result = await this.databaseService.queryWithErrorHandling(
         query,
         [customerName, offset, pageSize],
-        '查询客户需求列表'
+        '查询客户需求列表',
       );
 
       this.logger.log('客户需求列表查询成功', {
@@ -110,7 +110,7 @@ export class RequirementsRepository {
       const result = await this.databaseService.queryWithErrorHandling(
         query,
         [customerName],
-        '查询客户需求总数'
+        '查询客户需求总数',
       );
 
       const total = result[0]?.total || 0;

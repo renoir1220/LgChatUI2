@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DatabaseService } from '../../shared/database/database.service';
+import { CrmDatabaseService } from '../../shared/database/database.service';
 import { AppLoggerService } from '../../shared/services/logger.service';
 
 /**
@@ -11,7 +11,7 @@ export class ReadmeSearchService {
   private readonly MAX_RESULT_LENGTH = 10000; // 最大返回结果长度限制
 
   constructor(
-    private readonly databaseService: DatabaseService,
+    private readonly databaseService: CrmDatabaseService,
     private readonly logger: AppLoggerService,
   ) {}
 
@@ -51,7 +51,7 @@ export class ReadmeSearchService {
       const result = await this.databaseService.queryWithErrorHandling(
         basicSql,
         params,
-        'README配置信息查询'
+        'README配置信息查询',
       );
 
       if (!result || result.length === 0) {
@@ -93,11 +93,12 @@ export class ReadmeSearchService {
         `;
 
         // 执行过滤后的查询
-        const filteredResult = await this.databaseService.queryWithErrorHandling(
-          filteredSql,
-          params,
-          'README过滤查询'
-        );
+        const filteredResult =
+          await this.databaseService.queryWithErrorHandling(
+            filteredSql,
+            params,
+            'README过滤查询',
+          );
 
         if (!filteredResult || filteredResult.length === 0) {
           return '查询结果过大且没有找到带开关配置的项目，请使用更具体的关键词。';
@@ -193,7 +194,7 @@ export class ReadmeSearchService {
       const result = await this.databaseService.queryWithErrorHandling(
         sql,
         [],
-        '获取搜索建议关键词'
+        '获取搜索建议关键词',
       );
 
       const suggestions = result.map((row: any) => row.keyword);
@@ -243,7 +244,7 @@ export class ReadmeSearchService {
       const result = await this.databaseService.queryWithErrorHandling(
         sql,
         [],
-        '获取搜索统计信息'
+        '获取搜索统计信息',
       );
       return result[0];
     } catch (error) {

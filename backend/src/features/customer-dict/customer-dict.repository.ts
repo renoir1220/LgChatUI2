@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { CustomerDictItem } from '@lg/shared';
-import { DatabaseService } from '../../shared/database/database.service';
+import { CrmDatabaseService } from '../../shared/database/database.service';
 
 @Injectable()
 export class CustomerDictRepository {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(private readonly db: CrmDatabaseService) {}
 
   /**
    * 查询客户字典列表

@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { DatabaseService } from '../../../shared/database/database.service';
+import { CrmDatabaseService } from '../../../shared/database/database.service';
 import { PAGINATION_CONSTANTS } from '../../../shared/constants/pagination.constants';
 import { ChatMessage, ChatRole } from '@lg/shared';
 
 @Injectable()
 export class MessagesRepository {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(private readonly db: CrmDatabaseService) {}
 
   async listByConversation(
     conversationId: string,
