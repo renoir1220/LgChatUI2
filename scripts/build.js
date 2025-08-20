@@ -125,7 +125,10 @@ class BuildManager {
     // 代码检查（非阻塞）
     console.log('🔍 执行代码检查...');
     try {
-      this.exec('npm run lint', { stdio: 'pipe' });
+      execSync('npm run lint', { 
+        encoding: 'utf8', 
+        stdio: 'pipe'
+      });
       console.log('  ✓ 代码检查通过');
     } catch (error) {
       console.warn('⚠️ 代码检查发现问题，但继续构建（建议稍后修复）');
@@ -168,7 +171,7 @@ class BuildManager {
     const requiredFiles = [
       'backend/dist/main.js',
       'frontend/dist/index.html',
-      'packages/shared/dist/index.js'
+      'packages/shared/dist/cjs/index.js'
     ];
 
     let isValid = true;
@@ -190,50 +193,51 @@ class BuildManager {
   }
 
   /**
-   * 创建发布包
+   * 验证构建完整性
    */
-  createReleasePackage() {
-    console.log('\n📦 创建发布包...');
+  verifyBuildIntegrity() {
+    console.log('\n📦 验证构建完整性...');
 
-    // 创建发布目录
-    if (fs.existsSync(this.buildDir)) {
-      fs.rmSync(this.buildDir, { recursive: true });
-    }
-    fs.mkdirSync(this.buildDir, { recursive: true });
-
-    // 复制后端构建产物
-    const backendDist = path.join(this.rootDir, 'backend/dist');
-    const backendTarget = path.join(this.buildDir, 'backend');
-    if (fs.existsSync(backendDist)) {
-      fs.cpSync(backendDist, backendTarget, { recursive: true });
-      console.log('  ✓ 复制后端构建产物');
-    }
-
-    // 复制前端构建产物
-    const frontendDist = path.join(this.rootDir, 'frontend/dist');
-    const frontendTarget = path.join(this.buildDir, 'frontend');
-    if (fs.existsSync(frontendDist)) {
-      fs.cpSync(frontendDist, frontendTarget, { recursive: true });
-      console.log('  ✓ 复制前端构建产物');
-    }
-
-    // 复制必要的配置文件
-    const configFiles = [
-      'package.json',
-      'backend/package.json'
+    const checks = [
+      {
+        name: '后端构建产物',
+        path: 'backend/dist/main.js',
+        required: true
+      },
+      {
+        name: '前端构建产物',
+        path: 'frontend/dist/index.html',
+        required: true
+      },
+      {
+        name: '共享包CJS构建',
+        path: 'packages/shared/dist/cjs/index.js',
+        required: true
+      },
+      {
+        name: '共享包ESM构建',
+        path: 'packages/shared/dist/esm/index.js',
+        required: true
+      }
     ];
 
-    configFiles.forEach(file => {
-      const source = path.join(this.rootDir, file);
-      const target = path.join(this.buildDir, file);
-      
-      if (fs.existsSync(source)) {
-        // 确保目标目录存在
-        fs.mkdirSync(path.dirname(target), { recursive: true });
-        fs.copyFileSync(source, target);
-        console.log(`  ✓ 复制 ${file}`);
+    let allValid = true;
+    checks.forEach(check => {
+      const fullPath = path.join(this.rootDir, check.path);
+      if (fs.existsSync(fullPath)) {
+        const stats = fs.statSync(fullPath);
+        console.log(`  ✅ ${check.name} (${this.formatSize(stats.size)})`);
+      } else if (check.required) {
+        console.log(`  ❌ ${check.name} - 缺失`);
+        allValid = false;
+      } else {
+        console.log(`  ⚠️ ${check.name} - 可选文件缺失`);
       }
     });
+
+    if (!allValid) {
+      throw new Error('构建完整性验证失败');
+    }
   }
 
   /**
@@ -247,18 +251,15 @@ class BuildManager {
       version,
       buildTime: Math.round(buildTime / 1000),
       timestamp: new Date().toISOString(),
-      artifacts: this.getArtifactInfo()
+      status: 'success',
+      environment: process.env.NODE_ENV || 'development'
     };
-
-    // 保存构建报告
-    const reportPath = path.join(this.buildDir, 'build-report.json');
-    fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
 
     console.log('\n📊 构建报告:');
     console.log(`  版本: v${report.version}`);
     console.log(`  耗时: ${report.buildTime}s`);
-    console.log(`  产物: ${Object.keys(report.artifacts).length} 个文件`);
-    console.log(`  报告: ${reportPath}`);
+    console.log(`  环境: ${report.environment}`);
+    console.log(`  状态: ✅ 构建成功`);
   }
 
   /**
@@ -316,8 +317,7 @@ class BuildManager {
       this.clean();
       this.preflightCheck();
       await this.build();
-      this.validateBuild();
-      this.createReleasePackage();
+      this.verifyBuildIntegrity();
       this.generateBuildReport();
 
       console.log('\n✅ 构建完成！');

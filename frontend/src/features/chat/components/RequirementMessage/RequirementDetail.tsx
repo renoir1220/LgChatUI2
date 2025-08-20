@@ -64,7 +64,7 @@ export const RequirementDetail: React.FC<RequirementDetailProps> = ({
       key: 'versionName',
       label: '版本号',
       span: 2,
-      children: <Tag color="blue">{versionName}</Tag>,
+      children: versionName,
     });
   }
 

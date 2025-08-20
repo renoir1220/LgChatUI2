@@ -38,7 +38,9 @@
     "release:full": "npm run version release && npm run release:build && npm run release:deploy",
     "health:check": "node scripts/health-check.js once",
     "health:monitor": "node scripts/health-check.js monitor",
-    "postinstall": "npm run build:shared"
+    "postinstall": "npm run build:shared",
+    "release:create": "node release/create-release.js",
+    "release:package": "npm run build && npm run release:create"
   },
   "engines": {
     "node": ">=18"
