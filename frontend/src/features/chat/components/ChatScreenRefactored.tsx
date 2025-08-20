@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { message } from 'antd';
+import { message, Button } from 'antd';
+import { BulbOutlined } from '@ant-design/icons';
 import { useChatState } from '../hooks/useChatState';
 import { useStreamChat } from '../hooks/useStreamChat';
 import { useConversations } from '../hooks/useConversations';
@@ -14,6 +15,7 @@ import { DictionarySelector } from '../../shared/components/DictionarySelector';
 import { useCustomerDict } from '../../shared/hooks/useCustomerDict';
 import type { DictionaryItem } from '../../shared/components/DictionarySelector';
 import { SuggestionModal } from '../../suggestions/components/SuggestionModal';
+import { SuggestionListModal } from '../../suggestions/components/SuggestionListModal';
 
 /**
  * 重构后的聊天界面组件
@@ -37,6 +39,9 @@ const ChatScreenRefactored: React.FC = () => {
   
   // 建议模态框状态
   const [isSuggestionModalOpen, setIsSuggestionModalOpen] = useState(false);
+  
+  // 建议列表模态框状态
+  const [isSuggestionListModalOpen, setIsSuggestionListModalOpen] = useState(false);
 
   // 监听屏幕尺寸变化
   useEffect(() => {
@@ -372,6 +377,7 @@ const ChatScreenRefactored: React.FC = () => {
   const isWelcomeMode = (!/^[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$/i.test(curConversation))
     && (!messages || messages.length === 0);
   const isNewConversation = curConversation === 'new';
+  
 
   return (
     <div style={{ display: 'flex', height: '100vh', width: '100vw', position: 'relative' }}>
@@ -392,11 +398,27 @@ const ChatScreenRefactored: React.FC = () => {
         display: 'flex', 
         flexDirection: 'column',
         minWidth: 0, // 防止flex溢出
+        position: 'relative', // 为绝对定位的灯泡图标提供相对定位上下文
         backgroundImage: isWelcomeMode 
           ? 'radial-gradient(ellipse at top, #eff6ff 0%, #ffffff 50%, #e0e7ff 100%)'
           : undefined,
         backgroundAttachment: isWelcomeMode ? 'fixed' : undefined,
       }}>
+        {/* 欢迎页面时的灯泡图标 */}
+        {isNewConversation && (
+          <Button
+            type="text"
+            icon={<BulbOutlined />}
+            onClick={() => setIsSuggestionListModalOpen(true)}
+            title="查看建议列表"
+            style={{
+              position: 'absolute',
+              top: 16,
+              right: 24,
+              zIndex: 9999,
+            }}
+          />
+        )}
         {/* 聊天标题栏（新对话时不显示） */}
         {!isNewConversation && (
           <div style={{ 
@@ -418,6 +440,14 @@ const ChatScreenRefactored: React.FC = () => {
           }}>
             <span style={{ fontWeight: 500 }}>{renderChatTitle()}</span>
             {!isMobile && <span style={{ flex: 1 }} />}
+            
+            {/* 标题栏内的灯泡图标 */}
+            <Button
+              type="text"
+              icon={<BulbOutlined />}
+              onClick={() => setIsSuggestionListModalOpen(true)}
+              title="查看建议列表"
+            />
           </div>
         )}
 
@@ -470,6 +500,16 @@ const ChatScreenRefactored: React.FC = () => {
         onSuccess={() => {
           // 建议提交成功后的处理
           message.success('感谢您的建议！我们会认真考虑并及时回复');
+        }}
+      />
+      
+      {/* 建议列表模态框 */}
+      <SuggestionListModal
+        isOpen={isSuggestionListModalOpen}
+        onClose={() => setIsSuggestionListModalOpen(false)}
+        onCreateSuggestion={() => {
+          setIsSuggestionListModalOpen(false); // 关闭建议列表
+          setIsSuggestionModalOpen(true);      // 打开提建议模态框
         }}
       />
     </div>
