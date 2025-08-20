@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Modal, List, Tag, Empty, Spin, message, Typography, Button } from 'antd';
-import { BulbOutlined, LoadingOutlined, BulbFilled, PlusOutlined } from '@ant-design/icons';
+import { Modal, List, Empty, Spin, message, Typography, Button } from 'antd';
+import { BulbOutlined, LoadingOutlined } from '@ant-design/icons';
 import { suggestionsApi } from '../api/suggestions-api';
-import type { Suggestion, SuggestionStatus } from '@lg/shared';
+import type { Suggestion } from '@lg/shared';
+import ModernTag from '../../../components/ModernTag';
 
 const { Text, Paragraph } = Typography;
 
@@ -14,9 +15,9 @@ export interface SuggestionListModalProps {
 
 // 状态颜色和文本映射
 const STATUS_CONFIG = {
-  0: { color: 'blue', text: '新提交' },      // NEW
-  1: { color: 'green', text: '已解决' },     // RESOLVED  
-  9: { color: 'red', text: '不做' },         // REJECTED
+  0: { variant: 'primary' as const, text: '新提交' },      // NEW
+  1: { variant: 'success' as const, text: '已解决' },      // RESOLVED
+  9: { variant: 'danger'  as const, text: '不做' },        // REJECTED
 } as const;
 
 export const SuggestionListModal: React.FC<SuggestionListModalProps> = ({
@@ -202,9 +203,12 @@ export const SuggestionListModal: React.FC<SuggestionListModalProps> = ({
                     padding: '16px 0'
                   }}
                   extra={
-                    <Tag color={STATUS_CONFIG[item.status as keyof typeof STATUS_CONFIG]?.color || 'default'}>
+                    <ModernTag 
+                      variant={STATUS_CONFIG[item.status as keyof typeof STATUS_CONFIG]?.variant ?? 'neutral'}
+                      size="medium"
+                    >
                       {STATUS_CONFIG[item.status as keyof typeof STATUS_CONFIG]?.text || '未知状态'}
-                    </Tag>
+                    </ModernTag>
                   }
                 >
                   <List.Item.Meta
