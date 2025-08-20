@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  lgchatui2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NODE_ENV: production
+    image: lgchatui2:latest
+    container_name: lgchatui2-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DB_HOST=host.docker.internal
+      - DB_PORT=7433
+      - DB_DATABASE=LogeneCrm
+      - DB_USER=logeneoutside
+      - DB_PASSWORD=LogeneOutSide@2025
+      - DB_ENCRYPT=false
+    volumes:
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads
+    networks:
+      - lgchatui2-network
+    depends_on:
+      - nginx
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  nginx:
+    image: nginx:alpine
+    container_name: lgchatui2-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./logs/nginx:/var/log/nginx
+    networks:
+      - lgchatui2-network
+    depends_on:
+      - lgchatui2
+
+networks:
+  lgchatui2-network:
+    driver: bridge

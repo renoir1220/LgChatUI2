@@ -32,6 +32,12 @@
     "ports": "lsof -i :3000,:5173 | grep LISTEN || echo 'No services running on default ports'",
     "security:check": "node scripts/check-security.js",
     "security:scan": "npm run security:check",
+    "version": "node scripts/version.js",
+    "release:build": "node scripts/build.js",
+    "release:deploy": "node scripts/deploy.js",
+    "release:full": "npm run version release && npm run release:build && npm run release:deploy",
+    "health:check": "node scripts/health-check.js once",
+    "health:monitor": "node scripts/health-check.js monitor",
     "postinstall": "npm run build:shared"
   },
   "engines": {
