@@ -31,7 +31,9 @@ export function convertRelativePathsToUrls(
         return `${baseUrl}/Files/${filePath}`;
       } else {
         // 如果没有前缀，添加默认的 Tinymce/20250813/ 路径
-        const cleanPath = filePath.startsWith('/') ? filePath.substring(1) : filePath;
+        const cleanPath = filePath.startsWith('/')
+          ? filePath.substring(1)
+          : filePath;
         return `${baseUrl}/Files/Tinymce/20250813/${cleanPath}`;
       }
     });

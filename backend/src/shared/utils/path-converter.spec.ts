@@ -56,17 +56,21 @@ describe('PathConverter', () => {
     });
 
     it('应该正确处理已包含Tinymce/20250813/前缀的路径', () => {
-      const input = '图片: ../../files/Tinymce/20250813/23305990-18ac-400c-bb58-8540434de545.png';
-      const expected = '图片: https://crm.logene.com/Files/Tinymce/20250813/23305990-18ac-400c-bb58-8540434de545.png';
-      
+      const input =
+        '图片: ../../files/Tinymce/20250813/23305990-18ac-400c-bb58-8540434de545.png';
+      const expected =
+        '图片: https://crm.logene.com/Files/Tinymce/20250813/23305990-18ac-400c-bb58-8540434de545.png';
+
       const result = convertRelativePathsToUrls(input);
       expect(result).toBe(expected);
     });
 
     it('应该正确处理混合路径（有前缀和无前缀）', () => {
-      const input = '图片1: ../../files/Tinymce/20250813/pic1.jpg 图片2: ../../files/simple.png';
-      const expected = '图片1: https://crm.logene.com/Files/Tinymce/20250813/pic1.jpg 图片2: https://crm.logene.com/Files/Tinymce/20250813/simple.png';
-      
+      const input =
+        '图片1: ../../files/Tinymce/20250813/pic1.jpg 图片2: ../../files/simple.png';
+      const expected =
+        '图片1: https://crm.logene.com/Files/Tinymce/20250813/pic1.jpg 图片2: https://crm.logene.com/Files/Tinymce/20250813/simple.png';
+
       const result = convertRelativePathsToUrls(input);
       expect(result).toBe(expected);
     });
