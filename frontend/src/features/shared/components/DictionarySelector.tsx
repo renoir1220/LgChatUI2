@@ -84,7 +84,7 @@ export const DictionarySelector: React.FC<DictionarySelectorProps> = ({
       onCancel={handleClose}
       footer={null}
       width={400}
-      destroyOnClose
+      destroyOnHidden
       centered
     >
       <div style={{ marginBottom: 16 }}>
