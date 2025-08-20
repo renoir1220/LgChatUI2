@@ -1,3 +1,12 @@
+# Release v0.4.0
+
+**发布时间**: 2025-08-20
+
+## 变更内容
+
+- 667c062 style: 代码格式化
+- 1e5813b feat(release): 实现完整的Docker部署和release功能
+
 # Release v0.3.0
 
 **发布时间**: 2025-08-20
