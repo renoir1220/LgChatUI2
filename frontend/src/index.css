@@ -40,31 +40,54 @@ body {
   background: rgba(156, 163, 175, 0.5);
 }
 
-/* PWA iOS安全区域适配 */
-@supports (padding: max(0px)) {
-  html, body {
-    /* iOS安全区域内边距，避免内容被状态栏和底部指示器遮挡 */
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
+/* iOS PWA全屏模式样式调整 - 优化版本 */
+@media (display-mode: standalone) {
+  /* iOS PWA独立模式下的根容器适配 */
+  html {
+    height: 100%;
+    height: 100vh;
+    /* 使用CSS环境变量适配安全区域 */
+    height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  }
+  
+  body {
+    height: 100%;
+    /* 防止过度滚动导致的橡皮筋效果 */
+    overscroll-behavior-y: none;
+    /* 移除默认的body边距，使用安全区域内边距 */
+    margin: 0;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  
+  /* 根容器填满可用高度 */
+  #root {
+    height: 100%;
+    min-height: 100%;
+    /* 确保在安全区域内显示内容 */
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
   }
 }
 
-/* iOS PWA全屏模式样式调整 */
-@media (display-mode: standalone) {
-  /* 在PWA独立模式下的特殊样式 */
-  body {
-    /* 防止过度滚动导致的橡皮筋效果 */
-    overscroll-behavior: none;
-    /* iOS Safari状态栏适配 */
-    padding-top: env(safe-area-inset-top);
+/* 非PWA模式下的备用样式 */
+@media (display-mode: browser) {
+  html, body, #root {
+    height: 100%;
   }
-  
-  /* 确保根容器使用安全区域 */
-  #root {
-    min-height: 100vh;
-    min-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+}
+
+/* 通用iOS设备安全区域支持 */
+@supports (padding: max(0px)) {
+  /* 仅在支持安全区域的设备上应用 */
+  @media (display-mode: standalone) {
+    /* 状态栏区域适配 */
+    body {
+      padding-top: max(env(safe-area-inset-top), 0px);
+      padding-bottom: max(env(safe-area-inset-bottom), 0px);
+      padding-left: max(env(safe-area-inset-left), 0px);
+      padding-right: max(env(safe-area-inset-right), 0px);
+    }
   }
 }
 
