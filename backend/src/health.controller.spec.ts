@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { HealthController } from './health.controller';
-import { DatabaseService } from './shared/database/database.service';
+import { CrmDatabaseService } from './shared/database/database.service';
 
 describe('HealthController (unit)', () => {
   it('returns ok: true when DB query succeeds', async () => {
@@ -8,7 +8,7 @@ describe('HealthController (unit)', () => {
       controllers: [HealthController],
       providers: [
         {
-          provide: DatabaseService,
+          provide: CrmDatabaseService,
           useValue: { query: jest.fn().mockResolvedValue([{ ok: 1 }]) },
         },
       ],
@@ -23,7 +23,7 @@ describe('HealthController (unit)', () => {
       controllers: [HealthController],
       providers: [
         {
-          provide: DatabaseService,
+          provide: CrmDatabaseService,
           useValue: { query: jest.fn().mockRejectedValue(new Error('boom')) },
         },
       ],

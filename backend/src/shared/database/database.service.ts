@@ -123,10 +123,6 @@ export class LgChatUIDatabaseService extends BaseDatabaseService {
   }
 }
 
-// 保持向后兼容性的别名
-@Injectable()
-export class DatabaseService extends CrmDatabaseService {}
-
 /**
  * 从环境变量加载CRM数据库配置
  */

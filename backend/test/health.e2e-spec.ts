@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
-import { DatabaseService } from '../src/database/database.service';
+import { CrmDatabaseService } from '../src/shared/database/database.service';
 
 describe('HealthController (e2e)', () => {
   let app: INestApplication;
@@ -11,7 +11,7 @@ describe('HealthController (e2e)', () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     })
-      .overrideProvider(DatabaseService)
+      .overrideProvider(CrmDatabaseService)
       .useValue({
         query: jest.fn().mockResolvedValue([{ ok: 1 }]),
       })
