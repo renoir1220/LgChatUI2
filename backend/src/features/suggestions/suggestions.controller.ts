@@ -1,19 +1,19 @@
-import { 
-  Controller, 
-  Post, 
-  Get, 
-  Put, 
+import {
+  Controller,
+  Post,
+  Get,
+  Put,
   Delete,
-  Body, 
-  Param, 
-  Query, 
+  Body,
+  Param,
+  Query,
   UseGuards,
-  Request 
+  Request,
 } from '@nestjs/common';
 import { SuggestionsService } from './suggestions.service';
 import { ZodValidationPipe } from '../../shared/pipes/zod-validation.pipe';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { 
+import {
   CreateSuggestionRequestSchema,
   UpdateSuggestionRequestSchema,
   SuggestionQuerySchema,
@@ -21,7 +21,7 @@ import {
   type UpdateSuggestionRequest,
   type SuggestionQuery,
   type Suggestion,
-  type SuggestionListResponse
+  type SuggestionListResponse,
 } from '@lg/shared';
 
 @Controller('api/suggestions')
@@ -34,7 +34,7 @@ export class SuggestionsController {
    */
   @Post()
   async createSuggestion(
-    @Body(new ZodValidationPipe(CreateSuggestionRequestSchema)) 
+    @Body(new ZodValidationPipe(CreateSuggestionRequestSchema))
     data: CreateSuggestionRequest,
     @Request() req: any,
   ): Promise<Suggestion> {
@@ -47,7 +47,7 @@ export class SuggestionsController {
    */
   @Get()
   async getSuggestions(
-    @Query(new ZodValidationPipe(SuggestionQuerySchema)) 
+    @Query(new ZodValidationPipe(SuggestionQuerySchema))
     query: SuggestionQuery,
   ): Promise<SuggestionListResponse> {
     return this.suggestionsService.getSuggestions(query);
@@ -57,9 +57,7 @@ export class SuggestionsController {
    * 获取建议详情
    */
   @Get(':id')
-  async getSuggestion(
-    @Param('id') suggestionId: string,
-  ): Promise<Suggestion> {
+  async getSuggestion(@Param('id') suggestionId: string): Promise<Suggestion> {
     return this.suggestionsService.getSuggestionById(suggestionId);
   }
 
@@ -69,7 +67,7 @@ export class SuggestionsController {
   @Put(':id')
   async updateSuggestion(
     @Param('id') suggestionId: string,
-    @Body(new ZodValidationPipe(UpdateSuggestionRequestSchema)) 
+    @Body(new ZodValidationPipe(UpdateSuggestionRequestSchema))
     data: UpdateSuggestionRequest,
   ): Promise<void> {
     await this.suggestionsService.updateSuggestion(suggestionId, data);
@@ -79,9 +77,7 @@ export class SuggestionsController {
    * 删除建议
    */
   @Delete(':id')
-  async deleteSuggestion(
-    @Param('id') suggestionId: string,
-  ): Promise<void> {
+  async deleteSuggestion(@Param('id') suggestionId: string): Promise<void> {
     await this.suggestionsService.deleteSuggestion(suggestionId);
   }
 }

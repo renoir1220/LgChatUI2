@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { LgChatUIDatabaseService } from '../../shared/database/database.service';
 import { AppLoggerService } from '../../shared/services/logger.service';
-import type { 
-  Suggestion, 
-  CreateSuggestionRequest, 
-  UpdateSuggestionRequest, 
+import type {
+  Suggestion,
+  CreateSuggestionRequest,
+  UpdateSuggestionRequest,
   SuggestionQuery,
-  SuggestionStatus 
+  SuggestionStatus,
 } from '@lg/shared';
 
 @Injectable()
@@ -100,9 +100,10 @@ export class SuggestionsRepository {
       paramIndex++;
     }
 
-    const whereClause = whereConditions.length > 0 
-      ? `WHERE ${whereConditions.join(' AND ')}` 
-      : '';
+    const whereClause =
+      whereConditions.length > 0
+        ? `WHERE ${whereConditions.join(' AND ')}`
+        : '';
 
     // 查询总数
     const countSql = `
@@ -240,11 +241,7 @@ export class SuggestionsRepository {
         updates: Object.keys(data),
       });
 
-      await this.db.queryWithErrorHandling(
-        sql,
-        params,
-        '更新建议',
-      );
+      await this.db.queryWithErrorHandling(sql, params, '更新建议');
 
       this.logger.log('建议更新成功', { suggestionId });
     } catch (error) {
@@ -265,11 +262,7 @@ export class SuggestionsRepository {
     try {
       this.logger.log('删除建议', { suggestionId });
 
-      await this.db.queryWithErrorHandling(
-        sql,
-        [suggestionId],
-        '删除建议',
-      );
+      await this.db.queryWithErrorHandling(sql, [suggestionId], '删除建议');
 
       this.logger.log('建议删除成功', { suggestionId });
     } catch (error) {

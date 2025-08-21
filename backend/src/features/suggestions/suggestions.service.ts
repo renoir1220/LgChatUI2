@@ -1,12 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { SuggestionsRepository } from './suggestions.repository';
 import { AppLoggerService } from '../../shared/services/logger.service';
-import type { 
-  Suggestion, 
-  CreateSuggestionRequest, 
-  UpdateSuggestionRequest, 
+import type {
+  Suggestion,
+  CreateSuggestionRequest,
+  UpdateSuggestionRequest,
   SuggestionQuery,
-  SuggestionListResponse 
+  SuggestionListResponse,
 } from '@lg/shared';
 
 @Injectable()
@@ -30,8 +30,11 @@ export class SuggestionsService {
     });
 
     try {
-      const suggestion = await this.suggestionsRepository.create(submitterName, data);
-      
+      const suggestion = await this.suggestionsRepository.create(
+        submitterName,
+        data,
+      );
+
       this.logger.log('建议提交成功', {
         suggestionId: suggestion.id,
         submitterName,
@@ -51,11 +54,14 @@ export class SuggestionsService {
   /**
    * 查询建议列表
    */
-  async getSuggestions(query: SuggestionQuery): Promise<SuggestionListResponse> {
+  async getSuggestions(
+    query: SuggestionQuery,
+  ): Promise<SuggestionListResponse> {
     this.logger.log('查询建议列表', query);
 
     try {
-      const { suggestions, total } = await this.suggestionsRepository.findMany(query);
+      const { suggestions, total } =
+        await this.suggestionsRepository.findMany(query);
 
       this.logger.log('建议列表查询成功', {
         total,
@@ -82,8 +88,9 @@ export class SuggestionsService {
     this.logger.log('查询建议详情', { suggestionId });
 
     try {
-      const suggestion = await this.suggestionsRepository.findById(suggestionId);
-      
+      const suggestion =
+        await this.suggestionsRepository.findById(suggestionId);
+
       if (!suggestion) {
         throw new NotFoundException('建议不存在');
       }
@@ -109,7 +116,8 @@ export class SuggestionsService {
 
     try {
       // 先检查建议是否存在
-      const existingSuggestion = await this.suggestionsRepository.findById(suggestionId);
+      const existingSuggestion =
+        await this.suggestionsRepository.findById(suggestionId);
       if (!existingSuggestion) {
         throw new NotFoundException('建议不存在');
       }
@@ -137,7 +145,8 @@ export class SuggestionsService {
 
     try {
       // 先检查建议是否存在
-      const existingSuggestion = await this.suggestionsRepository.findById(suggestionId);
+      const existingSuggestion =
+        await this.suggestionsRepository.findById(suggestionId);
       if (!existingSuggestion) {
         throw new NotFoundException('建议不存在');
       }
