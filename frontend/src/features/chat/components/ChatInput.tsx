@@ -152,7 +152,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     <div ref={containerRef} style={{ 
       paddingInline: 'max(16px, calc((100% - 800px) / 2))', 
       paddingTop: 8, 
-      paddingBottom: 16 
+      paddingBottom: 'max(16px, env(safe-area-inset-bottom, 16px))'
     }}>
       {/* 现代Chat UI布局 */}
       <div style={{

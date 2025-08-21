@@ -3,8 +3,12 @@
 /* Reset template constraints and set sensible defaults */
 html, body, #root {
   height: 100%;
+  /* 使用动态视口高度单位，避免iOS地址栏导致的高度计算问题 */
+  height: 100dvh;
   margin: 0;
   padding: 0;
+  /* 防止iOS滚动弹性效果 */
+  overscroll-behavior: none;
 }
 
 body {
@@ -87,6 +91,40 @@ body {
       padding-bottom: max(env(safe-area-inset-bottom), 0px);
       padding-left: max(env(safe-area-inset-left), 0px);
       padding-right: max(env(safe-area-inset-right), 0px);
+    }
+  }
+}
+
+/* iOS特定的视口高度修复 */
+@supports (-webkit-touch-callout: none) {
+  /* 修复iOS中100vh包含地址栏的问题 */
+  html {
+    height: -webkit-fill-available;
+  }
+  
+  body {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+  
+  /* 为聊天界面提供额外的iOS适配 */
+  .chat-container {
+    height: 100vh;
+    height: -webkit-fill-available;
+    height: 100dvh;
+  }
+}
+
+/* 动态视口单位支持检测和备用方案 */
+@supports not (height: 100dvh) {
+  /* 对于不支持动态视口单位的旧版本iOS */
+  html, body, #root {
+    height: 100vh;
+  }
+  
+  @media (display-mode: standalone) {
+    html, body {
+      height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
     }
   }
 }

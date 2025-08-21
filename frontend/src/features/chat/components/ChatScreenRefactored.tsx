@@ -399,7 +399,7 @@ const ChatScreenRefactored: React.FC = () => {
   
 
   return (
-    <div style={{ display: 'flex', height: '100vh', width: '100vw', position: 'relative' }}>
+    <div className="chat-container" style={{ display: 'flex', height: '100vh', width: '100vw', position: 'relative' }}>
       {/* 侧边栏 */}
       <ChatSidebar
         conversations={conversations}
