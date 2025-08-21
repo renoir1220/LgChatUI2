@@ -3,12 +3,32 @@ import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import * as dotenv from 'dotenv';
+import * as fs from 'fs';
 
 // 加载环境变量
 dotenv.config();
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  // HTTPS配置
+  let httpsOptions: any = undefined;
+  if (process.env.ENABLE_HTTPS === 'true') {
+    const certPath = join(__dirname, '../cert.pem');
+    const keyPath = join(__dirname, '../key.pem');
+    
+    if (fs.existsSync(certPath) && fs.existsSync(keyPath)) {
+      httpsOptions = {
+        key: fs.readFileSync(keyPath),
+        cert: fs.readFileSync(certPath),
+      };
+      console.log('HTTPS证书加载成功');
+    } else {
+      console.warn('HTTPS证书文件不存在，使用HTTP模式');
+    }
+  }
+
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, 
+    httpsOptions ? { httpsOptions } : {}
+  );
 
   // CORS配置
   app.enableCors({
@@ -33,9 +53,12 @@ async function bootstrap() {
   });
 
   // 监听所有网络接口，允许Docker容器访问
-  await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
+  const port = process.env.PORT ?? 3000;
+  await app.listen(port, '0.0.0.0');
 
-  console.log(`应用已启动，监听端口: ${process.env.PORT ?? 3000}`);
+  const protocol = httpsOptions ? 'https' : 'http';
+  console.log(`应用已启动，监听端口: ${port}`);
+  console.log(`访问地址: ${protocol}://172.20.10.3:${port}`);
   console.log(`静态文件服务路径: ${staticPath}`);
 }
 bootstrap();
