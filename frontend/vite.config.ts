@@ -41,16 +41,18 @@ export default defineConfig({
     },
   },
   server: {
-    // 支持HTTPS用于PWA测试，使用mkcert生成的证书
-    // 优先使用localhost证书，如果不存在则不启用HTTPS
-    https: process.env.VITE_HTTPS === 'true' && fs.existsSync(certPath) ? {
+    // 默认启用HTTPS用于PWA和Service Worker支持
+    // 优先使用localhost证书，如果不存在则禁用HTTPS并给出提示
+    https: fs.existsSync(certPath) ? {
       key: fs.readFileSync(keyPath),
       cert: fs.readFileSync(certPath)
-    } : process.env.VITE_HTTPS === 'true' ? (() => {
-      console.warn('HTTPS模式已启用但证书文件不存在，将使用HTTP模式');
-      console.warn('如需HTTPS开发，请运行: mkcert -install && mkcert localhost 127.0.0.1 ::1');
+    } : (() => {
+      console.warn('⚠️  HTTPS证书文件不存在，正在使用HTTP模式');
+      console.warn('💡 要启用HTTPS开发模式，请运行:');
+      console.warn('   mkcert -install');
+      console.warn('   mkcert -key-file .cert/key.pem -cert-file .cert/cert.pem localhost 127.0.0.1 ::1');
       return undefined;
-    })() : undefined,
+    })(),
     host: '0.0.0.0', // 允许外部访问
     port: 5173,
     // 添加响应头支持Mixed Content

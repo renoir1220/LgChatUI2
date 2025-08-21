@@ -315,6 +315,25 @@ const ChatScreenRefactored: React.FC = () => {
     setLoading(false);
   };
 
+  // 处理相机拍照
+  const handleCameraCapture = async (imageDataUrl: string) => {
+    // 创建用户消息，包含图片
+    const userMessage = {
+      id: Date.now().toString(),
+      role: 'user' as const,
+      content: '[拍照上传]',
+      timestamp: new Date().toISOString(),
+      image: imageDataUrl,
+    };
+
+    // 添加用户消息到聊天记录
+    setMessages(prev => [...prev, userMessage]);
+
+    // 发送消息到后端（暂时发送文本消息说明，后续可以扩展为真正的图片处理）
+    const message = `我刚才拍了一张照片，请查看。`;
+    await handleSubmit(message);
+  };
+
   // 监听知识库变化，自动更新当前会话的知识库ID
   useEffect(() => {
     const updateConversationKnowledgeBase = async () => {
@@ -479,6 +498,7 @@ const ChatScreenRefactored: React.FC = () => {
           onFilesChange={setAttachedFiles}
           onKnowledgeBaseChange={setCurrentKnowledgeBase}
           onQuickAction={handleQuickAction}
+          onCameraCapture={handleCameraCapture}
           glass={isWelcomeMode}
           focusAtEndSignal={focusAtEndSignal}
         />

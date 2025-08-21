@@ -32,6 +32,7 @@ export interface BubbleDataType {
   role: ClientRole;
   content: string;
   citations?: Citation[];
+  image?: string; // 图片数据的Base64编码或URL
 }
 
 export interface StreamResponse {

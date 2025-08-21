@@ -47,8 +47,11 @@ self.addEventListener('fetch', (event) => {
       url.pathname === '/favicon.ico') {
     event.respondWith(
       fetch(event.request).catch(() => {
-        // 如果网络失败，返回一个空响应而不是错误
-        return new Response('', { status: 204 });
+        // 如果网络失败，返回一个空响应而不是错误（status 204不能有body）
+        return new Response(null, { 
+          status: 204,
+          statusText: 'No Content'
+        });
       })
     );
     return;

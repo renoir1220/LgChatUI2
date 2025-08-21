@@ -12,7 +12,8 @@ import {
   FileSearchOutlined,
   ProjectOutlined,
   SearchOutlined,
-  BulbOutlined
+  BulbOutlined,
+  CameraOutlined
 } from '@ant-design/icons';
 import type { KnowledgeBase } from '../../knowledge-base/hooks/useKnowledgeBases';
 
@@ -31,6 +32,7 @@ interface ChatInputProps {
   onFilesChange: (files: UploadFile[]) => void;
   onKnowledgeBaseChange: (kbId: string) => void;
   onQuickAction?: (action: string) => void;
+  onCameraCapture?: (imageDataUrl: string) => void;
   // 在欢迎页模式下使用玻璃质感，增强渐入过渡
   glass?: boolean;
   // 跳转焦点到输入框末尾的信号（每次变更时触发）
@@ -56,15 +58,42 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   onFilesChange,
   onKnowledgeBaseChange,
   onQuickAction,
+  onCameraCapture,
   glass = false,
   focusAtEndSignal,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const handleSubmit = () => {
     if (inputValue.trim()) {
       onSubmit(inputValue);
       onInputChange('');
     }
+  };
+
+  // 处理相机拍照
+  const handleCameraClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  // 处理文件选择（拍照或从相册选择）
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const imageDataUrl = e.target?.result as string;
+        if (onCameraCapture) {
+          onCameraCapture(imageDataUrl);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+    // 清空input值，允许重复选择同一文件
+    event.target.value = '';
   };
 
   // 当收到外部聚焦信号时，将光标移动到输入框末尾
@@ -146,6 +175,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           onCancel={onCancel}
           loading={loading}
           placeholder="询问任何问题"
+          submitType="shiftEnter"
           style={{ 
             border: 'none',
             boxShadow: 'none',
@@ -212,6 +242,16 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         }}>
           {/* 左侧功能按钮 */}
           <Flex gap={4} align="center">
+            {/* 隐藏的文件输入元素 */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              style={{ display: 'none' }}
+              onChange={handleFileSelect}
+            />
+            
             {/* 功能菜单按钮 */}
             <Dropdown
               trigger={['click']}
@@ -323,6 +363,24 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                 title="功能菜单"
               />
             </Dropdown>
+
+            {/* 照相机按钮 */}
+            <AntdButton
+              type="text"
+              icon={<CameraOutlined style={{ fontSize: 16 }} />}
+              onClick={handleCameraClick}
+              style={{
+                borderRadius: 16,
+                width: 28,
+                height: 28,
+                padding: 0,
+                color: '#666',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+              title="拍照"
+            />
             
             {/* 知识库选择器 */}
             {kbLoading ? (
@@ -378,7 +436,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             color: '#999',
             marginRight: 4
           }}>
-            按 Enter 发送
+            Shift+Enter 换行
           </span>
         </div>
       </div>

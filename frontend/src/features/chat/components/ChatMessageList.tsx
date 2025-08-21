@@ -268,7 +268,26 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
             }
           } else {
             // 用户消息或流式消息
-            contentNode = msg.content;
+            if (msg.image) {
+              // 用户消息包含图片
+              contentNode = (
+                <div>
+                  <img 
+                    src={msg.image} 
+                    alt="用户上传的图片" 
+                    style={{ 
+                      maxWidth: '200px', 
+                      maxHeight: '200px', 
+                      borderRadius: '8px',
+                      marginBottom: msg.content === '[拍照上传]' ? 0 : '8px'
+                    }} 
+                  />
+                  {msg.content !== '[拍照上传]' && <div>{msg.content}</div>}
+                </div>
+              );
+            } else {
+              contentNode = msg.content;
+            }
           }
 
           return {
@@ -346,7 +365,12 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
           user: {
             placement: 'end',
             // 不显示头像，减少两侧留白
-            messageRender: (content) => renderMarkdown(content as string, true),
+            messageRender: (content: React.ReactNode) => {
+              if (typeof content === 'string') {
+                return renderMarkdown(content, true);
+              }
+              return content;
+            },
             styles: {
               content: {
                 background: '#2563eb',
