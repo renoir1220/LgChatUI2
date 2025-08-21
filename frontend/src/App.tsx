@@ -4,6 +4,7 @@ import ChatScreenRefactored from './features/chat/components/ChatScreenRefactore
 import RequireAuth from './features/auth/components/RequireAuth'
 import { NotificationProvider } from './features/shared/contexts/NotificationContext'
 import { SettingsProvider } from './features/shared/contexts/SettingsContext'
+import UpdatePrompt from './components/UpdatePrompt'
 
 function App() {
   return (
@@ -36,6 +37,8 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Router>
+        {/* PWA更新提示组件，在所有页面全局显示 */}
+        <UpdatePrompt />
       </NotificationProvider>
     </SettingsProvider>
   )

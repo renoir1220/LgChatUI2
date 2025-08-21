@@ -121,12 +121,22 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const resp = await fetch(`${apiBase}${path}`, { 
-    ...options, 
-    headers 
-  });
-  
-  return resp;
+  try {
+    const resp = await fetch(`${apiBase}${path}`, { 
+      ...options, 
+      headers 
+    });
+    
+    return resp;
+  } catch (error) {
+    // 在开发环境下，如果是SSL证书错误，提供友好的错误信息
+    if (import.meta.env.DEV && error instanceof TypeError && error.message.includes('fetch')) {
+      console.warn('SSL证书验证失败，可能需要信任mkcert根证书');
+      console.warn('请在浏览器中访问 https://172.20.10.3:3000/health 并选择"继续前往网站"');
+      throw new Error('SSL证书未被信任，请在浏览器中手动信任证书后重试');
+    }
+    throw error;
+  }
 }
 
 export async function apiGet<T = unknown>(path: string): Promise<T> {

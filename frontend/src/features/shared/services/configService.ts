@@ -102,7 +102,7 @@ class ConfigService {
    */
   private getDefaultConfig(): AppConfig {
     return {
-      API_BASE: import.meta.env.VITE_API_BASE || 'http://localhost:3000',
+      API_BASE: import.meta.env.VITE_API_BASE || 'http://172.20.10.3:3000',
       DEFAULT_DIFY_API_URL: import.meta.env.VITE_DEFAULT_DIFY_API_URL || 'http://localhost/v1/chat-messages',
       IMAGE_BASE_URL: import.meta.env.VITE_IMAGE_BASE_URL || '',
       KNOWLEDGE_BASES: [

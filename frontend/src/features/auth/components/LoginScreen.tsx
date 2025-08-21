@@ -81,7 +81,7 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
             <span className="bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(to right, #0EA5E9, #1E40AF)' }}>朗珈GPT</span>
           </h1>
           <p className="mt-4 text-lg leading-relaxed text-gray-600">
-            开始你的AI聊天之旅
+            开始你的朗珈智能化之旅
           </p>
         </div>
 
