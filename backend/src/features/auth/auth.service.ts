@@ -4,10 +4,14 @@ import { UsersRepository } from './repositories/users.repository';
 import { AppLoggerService } from '../../shared/services/logger.service';
 import { LoginResponse } from '@lg/shared';
 import type { LoginRequest } from '@lg/shared';
+import type { User } from '@lg/shared';
 
 @Injectable()
 export class AuthService {
   private readonly logger = new AppLoggerService();
+  // 简单的内存缓存：用户名 -> 用户信息（30分钟TTL）
+  private userCache: Map<string, { user: User; expiresAt: number }> = new Map();
+  private static readonly USER_CACHE_TTL_MS = 30 * 60 * 1000; // 30分钟
 
   constructor(
     private usersRepository: UsersRepository,
@@ -41,9 +45,28 @@ export class AuthService {
   }
 
   async validateUser(username: string) {
+    // 优先读取缓存
+    const cached = this.userCache.get(username);
+    const now = Date.now();
+    if (cached && cached.expiresAt > now) {
+      return cached.user;
+    }
+
     // 数据库错误会被DatabaseService统一处理并抛出DatabaseException
     // 该异常会直接传播到Controller层，无需在此处捕获
     const user = await this.usersRepository.findByUsername(username);
+
+    // 仅缓存存在的用户，避免将不存在用户长期缓存
+    if (user) {
+      this.userCache.set(username, {
+        user,
+        expiresAt: now + AuthService.USER_CACHE_TTL_MS,
+      });
+    } else {
+      // 不缓存不存在的用户，以便用户被新增后能够及时生效
+      this.userCache.delete(username);
+    }
+
     return user; // 如果找不到用户，直接返回null
   }
 

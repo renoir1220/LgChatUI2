@@ -5,6 +5,9 @@ import { NavigationRoute, registerRoute } from 'workbox-routing';
 import { NetworkFirst } from 'workbox-strategies';
 
 declare const self: ServiceWorkerGlobalScope;
+// 关闭 Workbox 开发日志，避免控制台反复提示
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(self as any).__WB_DISABLE_DEV_LOGS = true;
 
 // 清理过时的缓存
 cleanupOutdatedCaches();
@@ -29,33 +32,3 @@ self.addEventListener('message', (event) => {
     self.skipWaiting();
   }
 });
-
-// 不拦截API请求，让它们正常通过
-self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
-  
-  // 如果是API请求或跨域请求，不拦截
-  if (url.pathname.startsWith('/api/') || 
-      url.pathname.startsWith('/health') || 
-      url.origin !== location.origin) {
-    return;
-  }
-  
-  // 对于favicon和manifest等静态资源，如果预缓存中没有，直接请求网络
-  if (url.pathname === '/favicon.png' || 
-      url.pathname === '/manifest.webmanifest' ||
-      url.pathname === '/favicon.ico') {
-    event.respondWith(
-      fetch(event.request).catch(() => {
-        // 如果网络失败，返回一个空响应而不是错误（status 204不能有body）
-        return new Response(null, { 
-          status: 204,
-          statusText: 'No Content'
-        });
-      })
-    );
-    return;
-  }
-});
-
-console.log('🎯 优化PWA Service Worker已激活');

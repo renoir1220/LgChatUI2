@@ -22,8 +22,10 @@ export default defineConfig({
       strategies: 'injectManifest',
       srcDir: 'src',
       filename: 'sw.ts',
+      // 由应用内 useRegisterSW 统一注册与更新提示，这里关闭自动注入
+      injectRegister: null,
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.png', 'favicon.ico', 'robots.txt', 'icons/*.png'],
+      // includeAssets 由 globPatterns 覆盖，避免重复与不存在的文件
       manifest: false, // 使用public/manifest.webmanifest
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,png,jpg,jpeg,svg,woff,woff2}'],

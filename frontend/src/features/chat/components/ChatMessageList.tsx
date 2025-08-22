@@ -108,9 +108,12 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
     if (!showWelcome) {
       return (
         <div style={{ flex: 1, height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Spin spinning={messagesLoading} size="large" tip="加载会话中...">
-            <div style={{ width: 100, height: 100 }} />
-          </Spin>
+          {messagesLoading ? (
+            <Space direction="vertical" align="center">
+              <Spin size="large" />
+              <div style={{ color: 'rgba(0,0,0,0.45)' }}>加载会话中...</div>
+            </Space>
+          ) : null}
         </div>
       );
     }

@@ -60,8 +60,19 @@ export abstract class BaseDatabaseService {
     params.forEach((val, i) => {
       request.input(`p${i}`, val);
     });
-    const result: any = await request.query(sqlText);
-    return (result?.recordset ?? []) as T[];
+    const start = Date.now();
+    try {
+      const result: any = await request.query(sqlText);
+      return (result?.recordset ?? []) as T[];
+    } finally {
+      const ms = Date.now() - start;
+      const slowMs = Number(process.env.DB_SLOW_MS || 300);
+      const logAll = (process.env.DB_LOG_QUERIES || '').toLowerCase() === 'true';
+      if (logAll || ms >= slowMs) {
+        const snippet = sqlText.replace(/\s+/g, ' ').trim().slice(0, 200);
+        this.logger.log(`[${this.dbName}] SQL ${ms}ms: ${snippet} params=${JSON.stringify(params)}`);
+      }
+    }
   }
 
   /**

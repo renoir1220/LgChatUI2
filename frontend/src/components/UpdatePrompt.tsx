@@ -22,36 +22,17 @@ export const UpdatePrompt: React.FC = () => {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
   } = useRegisterSW({
-    onRegistered(r: any) {
-      console.log('SW注册成功:', r);
+    onRegistered() {
+      // 静默处理，避免重复日志
     },
-    onRegisterError(error: any) {
-      console.error('SW注册失败:', error);
-      // 在开发环境下，SSL证书错误时提供友好提示和解决方案
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('开发环境下忽略SW注册失败，可能是SSL证书问题');
-        
-        // 如果是SSL证书错误，提供用户友好的解决指导
-        if (error.message && error.message.includes('SSL certificate error')) {
-          console.warn('解决方案:');
-          console.warn('1. 请手动访问 https://172.20.10.3:5173/dev-sw.js?dev-sw 并信任证书');
-          console.warn('2. 或者在终端运行: sudo mkcert -install');
-          console.warn('3. 然后刷新页面');
-          
-          // 可以选择在3秒后自动重试注册
-          setTimeout(() => {
-            console.log('自动重试SW注册...');
-            window.location.reload();
-          }, 5000);
-        }
-      }
+    onRegisterError() {
+      // 静默处理，避免重复日志
     },
     onNeedRefresh() {
-      // 检测到新版本时显示更新对话框
       setShowDialog(true);
     },
     onOfflineReady() {
-      console.log('应用已准备好离线使用');
+      // 静默处理
     },
   });
 
