@@ -13,7 +13,8 @@ import {
   ProjectOutlined,
   SearchOutlined,
   BulbOutlined,
-  CameraOutlined
+  CameraOutlined,
+  BugOutlined
 } from '@ant-design/icons';
 import type { KnowledgeBase } from '../../knowledge-base/hooks/useKnowledgeBases';
 
@@ -332,6 +333,20 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                       }}>
                         <BulbOutlined style={{ fontSize: 16, color: '#f5a623' }} />
                         <span style={{ color: '#f5a623', fontWeight: 500 }}>提建议</span>
+                      </div>
+                    ),
+                  },
+                  {
+                    key: 'bug-report',
+                    label: (
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: 8,
+                        padding: '4px 0'
+                      }}>
+                        <BugOutlined style={{ fontSize: 16, color: '#ff4d4f' }} />
+                        <span style={{ color: '#ff4d4f', fontWeight: 500 }}>提BUG</span>
                       </div>
                     ),
                   },

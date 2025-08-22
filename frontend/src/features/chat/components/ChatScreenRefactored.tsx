@@ -16,6 +16,7 @@ import { useCustomerDict } from '../../shared/hooks/useCustomerDict';
 import type { DictionaryItem } from '../../shared/components/DictionarySelector';
 import { SuggestionModal } from '../../suggestions/components/SuggestionModal';
 import { SuggestionListModal } from '../../suggestions/components/SuggestionListModal';
+import { BugReportModal } from '../../bugs/components/BugReportModal';
 
 /**
  * 重构后的聊天界面组件
@@ -42,6 +43,9 @@ const ChatScreenRefactored: React.FC = () => {
   
   // 建议列表模态框状态
   const [isSuggestionListModalOpen, setIsSuggestionListModalOpen] = useState(false);
+  
+  // BUG提交模态框状态
+  const [isBugReportModalOpen, setIsBugReportModalOpen] = useState(false);
 
   // 监听屏幕尺寸变化
   useEffect(() => {
@@ -271,6 +275,9 @@ const ChatScreenRefactored: React.FC = () => {
         break;
       case 'suggestion':
         setIsSuggestionModalOpen(true);
+        return;
+      case 'bug-report':
+        setIsBugReportModalOpen(true);
         return;
       default:
         return;
@@ -530,6 +537,16 @@ const ChatScreenRefactored: React.FC = () => {
         onCreateSuggestion={() => {
           setIsSuggestionListModalOpen(false); // 关闭建议列表
           setIsSuggestionModalOpen(true);      // 打开提建议模态框
+        }}
+      />
+      
+      {/* BUG提交模态框 */}
+      <BugReportModal
+        open={isBugReportModalOpen}
+        onClose={() => setIsBugReportModalOpen(false)}
+        onSuccess={() => {
+          // BUG提交成功后的处理
+          message.success('BUG反馈已提交成功！我们会尽快处理并回复您');
         }}
       />
     </div>

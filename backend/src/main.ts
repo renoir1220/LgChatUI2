@@ -52,6 +52,18 @@ async function bootstrap() {
     },
   });
 
+  // 配置uploads文件服务
+  const uploadsPath = join(__dirname, '../../uploads');
+  app.useStaticAssets(uploadsPath, {
+    prefix: '/uploads/',
+    setHeaders: (res, path) => {
+      // 图片文件缓存策略
+      if (path.match(/\.(png|jpg|jpeg|gif|webp)$/)) {
+        res.setHeader('Cache-Control', 'public, max-age=86400'); // 1天缓存
+      }
+    },
+  });
+
   // 监听所有网络接口，允许Docker容器访问
   const port = process.env.PORT ?? 3000;
   await app.listen(port, '0.0.0.0');
