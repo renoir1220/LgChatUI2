@@ -55,6 +55,8 @@ src/
 │   ├── chat/                  # 聊天功能模块
 │   ├── tts/                   # 语音合成模块
 │   ├── knowledge-base/        # 知识库模块
+│   ├── bugs/                  # BUG管理模块
+│   ├── suggestions/           # 建议管理模块
 │   └── files/                 # 文件处理模块
 │
 └── shared/                    # 共享基础设施
@@ -84,6 +86,17 @@ src/
 - 音频缓存提高响应速度
 - 多音色支持
 
+### BUG管理模块 (bugs/)
+- 完整的BUG生命周期管理（创建、查询、更新、删除、分配）
+- 图片上传支持（最多5张截图）
+- 优先级和状态管理
+- Feature模块化架构（Controller、Service、Repository）
+
+### 建议管理模块 (suggestions/)
+- 用户建议收集和反馈系统
+- 开发者回复和状态跟踪
+- 分页查询和筛选功能
+
 ### 共享服务 (shared/)
 - 结构化日志系统（AppLoggerService）
 - 全局异常过滤器统一错误响应
@@ -101,8 +114,10 @@ src/
 - **T_AI_CONVERSATION**: 会话信息
 - **T_AI_MESSAGE**: 消息记录
 - **T_AI_USER**: 用户信息
+- **T_AI_BUGS**: BUG管理信息（编号、标题、内容、状态、优先级、图片等）
+- **T_AI_SUGGESTIONS**: 建议管理信息（标题、内容、状态、开发回复等）
 
-所有AI相关表以`T_AI_`开头，便于识别和管理。
+所有AI相关表以`T_AI_`开头，便于识别和管理。BUG和建议功能连接到LgChatUI数据库。
 
 ## API设计
 
@@ -125,6 +140,22 @@ PUT  /api/conversations/:id      # 重命名会话
 DELETE /api/conversations/:id    # 删除会话
 GET  /api/conversations/:id/messages  # 获取消息历史
 POST /api/tts                    # 语音合成
+
+# BUG管理API
+POST /api/bugs                   # 创建BUG
+GET  /api/bugs                   # 查询BUG列表
+GET  /api/bugs/:id               # 获取BUG详情
+PUT  /api/bugs/:id               # 更新BUG
+DELETE /api/bugs/:id             # 删除BUG
+PUT  /api/bugs/:id/assign        # 分配BUG给开发者
+POST /api/bugs/upload            # 上传BUG相关图片
+
+# 建议管理API
+POST /api/suggestions            # 创建建议
+GET  /api/suggestions            # 查询建议列表
+GET  /api/suggestions/:id        # 获取建议详情
+PUT  /api/suggestions/:id        # 更新建议
+DELETE /api/suggestions/:id      # 删除建议
 ```
 
 ## 开发规范

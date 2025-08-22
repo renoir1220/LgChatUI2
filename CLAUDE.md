@@ -12,9 +12,10 @@ LgChatUI2 是一个现代化的全栈聊天应用，基于 npm workspaces 的 mo
 - **共享包**：@lg/shared（Zod 类型定义和校验）
 - **语音服务**：集成火山引擎 TTS API（WebSocket 实时语音合成）
 
-### 项目状态（更新于 2025-01-17）
-- **代码规模**：约 8,000+ 行核心代码
+### 项目状态（更新于 2025-08-22）
+- **代码规模**：约 9,500+ 行核心代码
 - **架构状态**：已完成Feature模块化重构，结构化日志系统
+- **新增功能**：BUG管理系统，支持完整的问题反馈和跟踪流程
 - **质量状态**：已优化核心维护性问题，类型安全持续改进中
 
 ## Monorepo 结构
@@ -74,12 +75,12 @@ npm run dev:fe        # 启动前端服务 (localhost:5173)
 - **后端开发**: 查看 [`backend/CLAUDE.md`](./backend/CLAUDE.md)
   - NestJS架构、API设计、数据库操作
   - Feature模块开发、错误处理、日志系统
-  - 聊天流式API、语音合成、认证系统
+  - 聊天流式API、语音合成、认证系统、BUG管理
 
 - **前端开发**: 查看 [`frontend/CLAUDE.md`](./frontend/CLAUDE.md)
   - React架构、状态管理、组件设计
   - TailwindCSS样式系统、shadcn/ui组件
-  - SSE流式处理、语音播放、用户交互
+  - SSE流式处理、语音播放、用户交互、BUG提交
 
 ### 📚 代码示例库
 
