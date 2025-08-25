@@ -129,8 +129,11 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   }, [fileList, onChange]);
 
   // 自定义上传处理  
-  const customUpload = useCallback((options: { file: RcFile | File }) => {
-    handleFileSelect(options.file as RcFile);
+  const customUpload = useCallback((options: any) => {
+    const file = options.file;
+    if (file) {
+      handleFileSelect(file as RcFile);
+    }
   }, [handleFileSelect]);
 
   return (
