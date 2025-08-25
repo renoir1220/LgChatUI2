@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { RequirementsRepository } from './requirements.repository';
 import { AppLoggerService } from '../../shared/services/logger.service';
-import type { RequirementItem, RequirementListResponse } from '@lg/shared';
+import type { RequirementItem, RequirementListResponse } from '../../types';
 
 @Injectable()
 export class RequirementsService {

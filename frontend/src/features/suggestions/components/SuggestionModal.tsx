@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Input, Button, message, Form } from 'antd';
 import { BulbOutlined, LoadingOutlined } from '@ant-design/icons';
 import { suggestionsApi } from '../api/suggestions-api';
-import type { CreateSuggestionRequest } from '@lg/shared';
+import type { CreateSuggestionRequest } from "@types";
 
 const { TextArea } = Input;
 

@@ -6,7 +6,7 @@ import type {
   BugQuery,
   BugListResponse,
   FileUploadResponse,
-} from '@lg/shared';
+} from "@types";
 
 /**
  * BUG管理API服务

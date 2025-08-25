@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Modal, List, Empty, Spin, message, Typography, Button } from 'antd';
 import { BulbOutlined, LoadingOutlined } from '@ant-design/icons';
 import { suggestionsApi } from '../api/suggestions-api';
-import type { Suggestion } from '@lg/shared';
+import type { Suggestion } from "@types";
 import ModernTag from '../../../components/ModernTag';
 
 const { Text, Paragraph } = Typography;

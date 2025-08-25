@@ -3,7 +3,7 @@
  * 将消息的引用信息保存到Cookie中，用于历史记录恢复
  */
 
-import type { Citation } from '@lg/shared';
+import type { Citation } from "@types";
 
 interface MessageCitations {
   [messageKey: string]: Citation[]; // messageKey -> citations数组（如 a:1 或 旧的 index）

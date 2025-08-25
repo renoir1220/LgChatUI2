@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CrmDatabaseService } from '../../../shared/database/database.service';
 import { PAGINATION_CONSTANTS } from '../../../shared/constants/pagination.constants';
-import { ChatMessage, ChatRole } from '@lg/shared';
+import { ChatMessage, ChatRole } from '../../../types';
 
 @Injectable()
 export class MessagesRepository {

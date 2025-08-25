@@ -2,7 +2,7 @@ import React from 'react';
 import { Typography } from 'antd';
 import { MedicineBoxOutlined } from '@ant-design/icons';
 import { RequirementItem } from './RequirementItem';
-import type { RequirementListResponse } from '@lg/shared';
+import type { RequirementListResponse } from "@types";
 
 const { Title, Text } = Typography;
 

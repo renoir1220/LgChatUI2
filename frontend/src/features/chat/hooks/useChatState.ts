@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import type { UploadFile } from 'antd';
-import type { Citation, ChatRole, ClientRole } from '@lg/shared';
-import { toClientRole } from '@lg/shared';
+import type { Citation, ChatRole, ClientRole } from "@types";
+import { toClientRole } from "@types";
 
 // 重新导出共享类型以便组件使用
 export type { Citation, ChatRole, ClientRole };

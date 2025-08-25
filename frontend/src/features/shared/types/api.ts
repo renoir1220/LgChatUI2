@@ -7,12 +7,12 @@ export type {
   ChatRequest,
   KnowledgeBase,
   ChatStreamEvent
-} from '@lg/shared';
+} from "@types";
 
 export {
   toClientRole,
   fromClientRole
-} from '@lg/shared';
+} from "@types";
 
 // 对话相关类型
 export interface Conversation {
@@ -101,9 +101,9 @@ export type AuthErrorCode = typeof AuthErrorCode[keyof typeof AuthErrorCode];
 
 // UI相关类型 - 从共享包导入ClientRole和Citation类型
 export interface BubbleDataType {
-  role: import('@lg/shared').ClientRole;
+  role: import('@types').ClientRole;
   content: string;
-  citations?: import('@lg/shared').Citation[];
+  citations?: import('@types').Citation[];
 }
 
 export interface ConversationItem {

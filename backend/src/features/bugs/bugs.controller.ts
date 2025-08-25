@@ -26,7 +26,7 @@ import {
   type Bug,
   type BugListResponse,
   type FileUploadResponse,
-} from '@lg/shared';
+} from '../../types';
 
 @Controller('api/bugs')
 @UseGuards(JwtAuthGuard)

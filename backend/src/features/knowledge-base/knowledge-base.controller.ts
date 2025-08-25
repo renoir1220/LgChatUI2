@@ -1,7 +1,7 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import type { KnowledgeBase } from '@lg/shared';
+import type { KnowledgeBase } from '../../types';
 
 @UseGuards(JwtAuthGuard)
 @Controller('api')

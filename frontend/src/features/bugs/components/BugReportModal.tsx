@@ -9,8 +9,8 @@ import {
   Divider,
 } from 'antd';
 import { BugOutlined } from '@ant-design/icons';
-import type { CreateBugRequest, BugPriority } from '@lg/shared';
-import { BugPriority as BugPriorityEnum, BugPriorityLabels } from '@lg/shared';
+import type { CreateBugRequest, BugPriority } from "@types";
+import { BugPriority as BugPriorityEnum, BugPriorityLabels } from "@types";
 import { ImageUpload } from './ImageUpload';
 import { bugService } from '../services/bugService';
 

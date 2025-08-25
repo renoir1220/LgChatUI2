@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing'
 import { BugsController } from './bugs.controller'
 import { BugsService } from './bugs.service'
-import type { Bug, BugListResponse, BugPriority, BugStatus, CreateBugRequest, BugQuery } from '@lg/shared'
+import type { Bug, BugListResponse, BugPriority, BugStatus, CreateBugRequest, BugQuery } from '../../types'
 
 describe('BugsController (unit)', () => {
   let controller: BugsController

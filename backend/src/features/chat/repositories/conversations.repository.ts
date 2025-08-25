@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CrmDatabaseService } from '../../../shared/database/database.service';
 import { PAGINATION_CONSTANTS } from '../../../shared/constants/pagination.constants';
-import { Conversation } from '@lg/shared';
+import { Conversation } from '../../../types';
 
 @Injectable()
 export class ConversationsRepository {

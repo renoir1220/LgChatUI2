@@ -17,13 +17,13 @@ import { ZodValidationPipe } from '../../shared/pipes/zod-validation.pipe';
 import { extractUserIdFromRequest } from '../../shared/utils/user.utils';
 import { StreamingCitationParser } from '../../shared/utils/citation-parser.util';
 import { ErrorHandlerUtil } from '../../shared/utils/error-handler.util';
-import { ChatRequestSchema, ChatRole } from '@lg/shared';
+import { ChatRequestSchema, ChatRole } from '../../types';
 import type {
   ChatRequest,
   Conversation,
   AuthenticatedRequest,
   Citation,
-} from '@lg/shared';
+} from '../../types';
 
 @UseGuards(JwtAuthGuard)
 @Controller('api')

@@ -9,8 +9,8 @@ import {
   Request,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginRequestSchema, LoginResponse } from '@lg/shared';
-import type { LoginRequest } from '@lg/shared';
+import { LoginRequestSchema, LoginResponse } from '../../types';
+import type { LoginRequest } from '../../types';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { ZodValidationPipe } from '../../shared/pipes/zod-validation.pipe';
 

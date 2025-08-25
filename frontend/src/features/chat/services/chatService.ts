@@ -6,7 +6,7 @@ import type {
   KnowledgeBase, 
   ChatRequest,
   UpdateConversationRequest
-} from '@lg/shared';
+} from "@types";
 import type { CreateConversationRequest } from '../../shared/types/api';
 
 // 会话相关API

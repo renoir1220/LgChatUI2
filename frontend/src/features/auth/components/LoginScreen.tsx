@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { apiPost } from '../../shared/services/api'
 import { setAuth } from '../utils/auth'
 import logoTree from '../../../assets/logoTree.png'
-import type { LoginRequest, LoginResponse } from '@lg/shared'
+import type { LoginRequest, LoginResponse } from '../../../types';
 
 interface LoginScreenProps {
   onLogin?: () => void

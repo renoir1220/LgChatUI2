@@ -5,7 +5,7 @@ import { Button } from '../../../components/ui/button';
 import { ScrollArea } from '../../../components/ui/scroll-area';
 import { cn } from '../../shared/utils/utils';
 import { Copy, FileText, Sparkles } from 'lucide-react';
-import type { Citation } from '@lg/shared';
+import type { Citation } from "@types";
 
 interface CitationProps {
   citation: Citation;

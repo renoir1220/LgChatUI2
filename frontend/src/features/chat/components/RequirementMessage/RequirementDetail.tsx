@@ -1,7 +1,7 @@
 import React from 'react';
 import { Descriptions, Tag, Typography, Space, Divider } from 'antd';
 import { RichTextRenderer } from './RichTextRenderer';
-import type { RequirementItem } from '@lg/shared';
+import type { RequirementItem } from "@types";
 
 const { Title, Paragraph } = Typography;
 

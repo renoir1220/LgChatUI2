@@ -8,7 +8,7 @@ import type {
   BugQuery,
   BugStatus,
   BugPriority,
-} from '@lg/shared';
+} from '../../types';
 
 @Injectable()
 export class BugsRepository {

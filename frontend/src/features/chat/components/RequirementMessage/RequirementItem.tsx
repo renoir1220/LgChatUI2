@@ -7,7 +7,7 @@ import {
 } from '@ant-design/icons';
 import { RequirementDetail } from './RequirementDetail';
 import ModernTag from '../../../../components/ModernTag';
-import type { RequirementItem as RequirementItemType } from '@lg/shared';
+import type { RequirementItem as RequirementItemType } from "@types";
 
 const { Text } = Typography;
 

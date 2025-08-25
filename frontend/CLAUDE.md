@@ -4,10 +4,11 @@
 
 ## 项目概览
 
-**项目名称**：LgChatUI2 前端应用  
+**项目名称**：LgChatUI2 前端应用（独立项目）  
 **技术栈**：React 18 + TypeScript + Vite + TailwindCSS + shadcn/ui  
-**架构模式**：Feature-Based + Context + Hooks  
+**架构模式**：Feature-Based + Context + Hooks + 独立类型系统  
 **开发端口**：5173  
+**PWA支持**：离线缓存和桌面安装  
 
 ## 开发命令
 
@@ -33,9 +34,10 @@ npm run lint
 ### 设计理念
 - **Feature-First**: 按业务功能组织代码结构
 - **组件复用**: 基于shadcn/ui的设计系统
-- **类型安全**: 严格的TypeScript类型检查
+- **类型安全**: 严格的TypeScript类型检查和独立类型系统
 - **状态管理**: Context + useReducer模式
 - **样式系统**: TailwindCSS + CSS模块化
+- **PWA功能**: Service Worker + 离线缓存 + Manifest配置
 
 ### 目录结构
 
@@ -44,6 +46,7 @@ src/
 ├── main.tsx                   # 应用入口
 ├── App.tsx                    # 根组件
 ├── index.css                  # 全局样式
+├── sw.ts                      # Service Worker配置
 │
 ├── components/                # 通用UI组件
 │   └── ui/                    # shadcn/ui组件库
@@ -56,6 +59,13 @@ src/
 │   ├── suggestions/           # 建议提交功能模块
 │   └── shared/               # 共享功能模块
 │
+├── types/                     # 前端类型定义
+│   ├── api.ts                 # API接口类型
+│   ├── chat.ts                # 聊天相关类型
+│   ├── user.ts                # 用户相关类型
+│   └── ...                    # 其他业务类型
+│
+└── utils/                     # 通用工具函数
 ```
 
 ## 核心功能模块
@@ -92,6 +102,12 @@ src/
 - 智能图片展示和预览
 - 全局消息提示系统
 - 统一的HTTP请求处理
+- PWA相关功能（Service Worker、更新提示等）
+
+### 类型系统 (types/)
+- 前端独立的TypeScript类型定义
+- 与后端API接口约定保持一致
+- 完整的类型安全保障
 
 ## 状态管理
 

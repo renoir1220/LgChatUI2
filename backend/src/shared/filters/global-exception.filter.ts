@@ -7,7 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { StandardErrorResponse } from '@lg/shared';
+import { StandardErrorResponse } from '../../types';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {

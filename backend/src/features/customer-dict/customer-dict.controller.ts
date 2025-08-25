@@ -10,8 +10,8 @@ import {
   CustomerDictResponse,
   CustomerDictQuerySchema,
   CustomerDictItem,
-} from '@lg/shared';
-import type { CustomerDictQuery } from '@lg/shared';
+} from '../../types';
+import type { CustomerDictQuery } from '../../types';
 import { CustomerDictService } from './customer-dict.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ZodValidationPipe } from '../../shared/pipes/zod-validation.pipe';

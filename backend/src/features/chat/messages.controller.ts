@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import { ChatRole, ChatRequest } from '@lg/shared';
+import { ChatRole, ChatRequest } from '../../types';
 
 @Controller('messages')
 export class MessagesController {
@@ -10,7 +10,7 @@ export class MessagesController {
       id: randomUUID(),
       userId: 'demo-user',
       role: ChatRole.User,
-      content: 'Hello from backend (@lg/shared)!',
+      content: 'Hello from backend (../../types)!',
       createdAt: new Date().toISOString(),
     };
   }

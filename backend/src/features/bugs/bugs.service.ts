@@ -7,7 +7,7 @@ import type {
   UpdateBugRequest,
   BugQuery,
   BugListResponse,
-} from '@lg/shared';
+} from '../../types';
 
 @Injectable()
 export class BugsService {

@@ -4,7 +4,7 @@ import type {
   Suggestion,
   SuggestionListResponse,
   SuggestionQuery 
-} from '@lg/shared';
+} from "@types";
 
 export const suggestionsApi = {
   /**

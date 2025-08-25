@@ -4,37 +4,41 @@
 
 ## 项目概览
 
-LgChatUI2 是一个现代化的全栈聊天应用，基于 npm workspaces 的 monorepo 架构：
+LgChatUI2 是一个现代化的全栈聊天应用，采用独立项目架构：
 
 ### 核心技术栈
 - **后端**：NestJS API 服务器（TypeScript + Express + MSSQL + Feature模块化）
 - **前端**：React 18+ + Vite + TypeScript + TailwindCSS + shadcn/ui
-- **共享包**：@lg/shared（Zod 类型定义和校验）
+- **类型系统**：前后端各自维护独立的TypeScript类型定义
 - **语音服务**：集成火山引擎 TTS API（WebSocket 实时语音合成）
 
-### 项目状态（更新于 2025-08-22）
-- **代码规模**：约 9,500+ 行核心代码
-- **架构状态**：已完成Feature模块化重构，结构化日志系统
-- **新增功能**：BUG管理系统，支持完整的问题反馈和跟踪流程
-- **质量状态**：已优化核心维护性问题，类型安全持续改进中
+### 项目状态（更新于 2025-08-25）
+- **代码规模**：约 10,000+ 行核心代码
+- **架构状态**：已从monorepo迁移到独立项目架构，Feature模块化完成
+- **新增功能**：BUG管理系统、建议管理系统、PWA离线支持
+- **质量状态**：完成monorepo迁移，类型安全和开发效率持续改进
 
-## Monorepo 结构
+## 项目结构
 
 ```
 LgChatUI2/
-├── package.json              # 根工作区配置
+├── package.json              # 根项目配置（开发脚本）
 ├── CLAUDE.md                 # 本文件：项目总览和指导
 │
-├── backend/                  # NestJS 后端服务
+├── backend/                  # NestJS 后端服务（独立项目）
 │   ├── CLAUDE.md            # 后端开发指导
+│   ├── package.json         # 后端依赖配置
 │   ├── src/features/        # Feature模块化架构
 │   ├── src/shared/          # 共享基础设施
+│   ├── src/types/           # 后端类型定义
 │   └── dist/               # TypeScript编译输出
 │
-├── frontend/                # React 前端应用
+├── frontend/                # React 前端应用（独立项目）
 │   ├── CLAUDE.md           # 前端开发指导
+│   ├── package.json        # 前端依赖配置
 │   ├── src/features/       # Feature模块化架构
 │   ├── src/components/     # shadcn/ui组件
+│   ├── src/types/          # 前端类型定义
 │   └── dist/              # Vite构建输出
 │
 ├── examples/               # 代码示例和最佳实践
@@ -47,8 +51,9 @@ LgChatUI2/
 │       ├── styling-patterns.tsx     # TailwindCSS样式模式
 │       └── api-integration.ts       # API集成和SSE处理
 │
-└── packages/               # 共享包
-    └── shared/            # @lg/shared 类型定义包
+└── release/                # 发布和部署配置
+    ├── scripts/           # 打包和发布脚本
+    └── config-templates/  # Docker和nginx配置模板
 ```
 
 ## 开发指南
@@ -56,14 +61,13 @@ LgChatUI2/
 ### 🚀 快速启动
 
 ```bash
-# 安装所有依赖
-npm install
+# 安装前后端依赖
+cd backend && npm install && cd ../frontend && npm install
 
 # 并行启动所有服务（推荐）
 npm run dev
 
 # 或分别启动服务
-npm run dev:shared    # 启动共享包监听
 npm run dev:be        # 启动后端服务 (localhost:3000)
 npm run dev:fe        # 启动前端服务 (localhost:5173)
 ```
@@ -101,16 +105,10 @@ npm run dev:fe        # 启动前端服务 (localhost:5173)
 ### 🔧 常用命令
 
 ```bash
-# 代码质量
-npm run lint          # 检查所有子项目
-npm run lint:fix      # 自动修复lint问题
-npm run format        # 格式化代码
-npm run typecheck     # TypeScript类型检查
-
-# 构建和测试
+# 构建项目
+npm run build:be      # 构建后端项目
+npm run build:fe      # 构建前端项目
 npm run build         # 构建所有项目
-npm run test          # 运行所有测试
-npm run clean         # 清理构建产物
 
 # 工具命令
 npm run health        # 检查服务健康状态
@@ -121,15 +119,15 @@ npm run ports         # 查看端口占用情况
 
 ### 🎯 设计理念
 1. **Feature-First**: 按业务功能组织代码，而非技术层次
-2. **单体仓库**: 统一版本管理，简化依赖关系
-3. **类型安全**: 严格的TypeScript + Zod校验
+2. **独立项目**: 前后端独立开发和部署，简化复杂性
+3. **类型安全**: 严格的TypeScript类型系统
 4. **开发效率**: 适合1-2人小团队的架构复杂度
 
-### 📦 Workspace 管理
-- **@lg/shared**: 前后端共享的类型定义和校验规则
-- **backend**: 独立的NestJS API服务
-- **frontend**: 独立的React单页应用
-- **自动链接**: npm workspaces自动处理内部依赖
+### 📦 项目管理
+- **backend/**: 独立的NestJS API服务，包含完整的类型定义
+- **frontend/**: 独立的React单页应用，包含完整的类型定义
+- **类型同步**: 通过API接口约定保持前后端类型一致性
+- **独立部署**: 各项目可独立构建、测试和部署
 
 ### 🔄 数据流
 ```
@@ -215,9 +213,10 @@ DIFY_API_URL=https://your-dify-instance
 
 ### 常见问题
 1. **服务启动失败**: 检查端口占用 `npm run ports`
-2. **类型错误**: 确保 @lg/shared 已构建 `npm run build:shared`
+2. **依赖安装问题**: 分别在frontend和backend目录执行`npm install`
 3. **数据库连接**: 验证网络和凭据配置
 4. **SSE连接中断**: 检查代理配置和网络稳定性
+5. **类型错误**: 确保前后端类型定义保持同步
 
 ### 调试工具
 ```bash
@@ -229,15 +228,15 @@ npm run dev:be        # 后端结构化日志
 npm run dev:fe        # 前端开发服务器日志
 
 # 构建验证
-npm run build:shared  # 验证共享类型
-npm run typecheck     # 验证类型完整性
+npm run build:be      # 验证后端构建
+npm run build:fe      # 验证前端构建
 ```
 
 ## 扩展开发
 
 ### 添加新功能
 1. **规划阶段**: 确定是前端、后端还是全栈功能
-2. **类型定义**: 在 `packages/shared` 中添加类型
+2. **类型定义**: 在对应项目的 `src/types/` 中添加类型
 3. **后端开发**: 在 `backend/src/features` 中创建新模块
 4. **前端开发**: 在 `frontend/src/features` 中创建对应功能
 5. **集成测试**: 验证前后端协作正常
@@ -259,11 +258,11 @@ npm run typecheck     # 验证类型完整性
 
 - **架构平衡**: 本项目面向小团队，优先功能实现和代码质量，避免过度设计
 - **文档更新**: 修改架构或添加功能时，及时更新相关 CLAUDE.md 文档
-- **类型优先**: 所有新功能都应从 @lg/shared 的类型定义开始
+- **类型一致**: 确保前后端类型定义通过API接口约定保持一致
 - **测试覆盖**: 核心业务逻辑必须有对应的单元或集成测试
 
 **当前版本**: 维护性重构完成版本  
-**最后更新**: 2025-01-17  
+**最后更新**: 2025-08-25  
 **维护者**: 开发团队
 - 本项目中的release是发布的文件，平时开发时不需要读，只有处理发布相关才需要
 - 不要尝试测试需要前端交互的功能，除非我要求

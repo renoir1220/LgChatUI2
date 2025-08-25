@@ -21,7 +21,7 @@ import type {
   CreateConversationRequest,
   UpdateConversationRequest,
   AuthenticatedRequest,
-} from '@lg/shared';
+} from '../../types';
 
 @UseGuards(JwtAuthGuard)
 @Controller('api')

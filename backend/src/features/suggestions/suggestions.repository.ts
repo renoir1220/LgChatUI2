@@ -7,7 +7,7 @@ import type {
   UpdateSuggestionRequest,
   SuggestionQuery,
   SuggestionStatus,
-} from '@lg/shared';
+} from '../../types';
 
 @Injectable()
 export class SuggestionsRepository {

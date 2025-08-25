@@ -1,5 +1,5 @@
 import { Injectable, LoggerService, Scope } from '@nestjs/common';
-import { LogContext } from '@lg/shared';
+import { LogContext } from '../../types';
 
 @Injectable({ scope: Scope.TRANSIENT })
 export class AppLoggerService implements LoggerService {

@@ -4,10 +4,11 @@
 
 ## 项目概览
 
-**项目名称**：LgChatUI2 后端服务  
+**项目名称**：LgChatUI2 后端服务（独立项目）  
 **技术栈**：NestJS + TypeScript + MSSQL + Express  
-**架构模式**：Feature模块化 + 仓储模式  
+**架构模式**：Feature模块化 + 仓储模式 + 独立类型系统  
 **部署端口**：3000  
+**API架构**：RESTful + Server-Sent Events (SSE)  
 
 ## 开发命令
 
@@ -40,7 +41,9 @@ npm run format      # Prettier格式化
 - **Feature-First**: 按业务功能组织代码，而非技术层次
 - **模块化**: 每个feature独立成NestJS模块
 - **共享服务**: 通用功能集中在shared模块
-- **类型安全**: 严格的TypeScript类型检查
+- **类型安全**: 严格的TypeScript类型检查和独立类型系统
+- **API设计**: RESTful风格 + SSE流式数据传输
+- **错误处理**: 全局异常过滤器 + 结构化日志
 
 ### 目录结构
 
@@ -57,15 +60,22 @@ src/
 │   ├── knowledge-base/        # 知识库模块
 │   ├── bugs/                  # BUG管理模块
 │   ├── suggestions/           # 建议管理模块
+│   ├── requirements/          # 需求管理模块
 │   └── files/                 # 文件处理模块
 │
-└── shared/                    # 共享基础设施
-    ├── database/              # 数据库连接和配置
-    ├── services/              # 公共服务
-    ├── filters/               # 全局异常过滤器
-    ├── interceptors/          # 请求拦截器
-    ├── pipes/                 # 数据验证管道
-    └── utils/                 # 工具函数
+├── shared/                    # 共享基础设施
+│   ├── database/              # 数据库连接和配置
+│   ├── services/              # 公共服务（Logger、Dify等）
+│   ├── filters/               # 全局异常过滤器
+│   ├── interceptors/          # 请求拦截器（日志、请求ID）
+│   ├── pipes/                 # 数据验证管道
+│   └── utils/                 # 工具函数
+│
+└── types/                     # 后端类型定义
+    ├── api.ts                 # API响应类型
+    ├── chat.ts                # 聊天相关类型
+    ├── user.ts                # 用户相关类型
+    └── ...                    # 其他业务类型
 ```
 
 ## 核心功能模块

@@ -10,8 +10,8 @@ import {
 import * as express from 'express';
 import { TtsService } from './tts.service';
 import { ZodValidationPipe } from '../../shared/pipes/zod-validation.pipe';
-import { TtsRequestSchema } from '@lg/shared';
-import type { TtsRequest } from '@lg/shared';
+import { TtsRequestSchema } from '../../types';
+import type { TtsRequest } from '../../types';
 
 @Controller('api/tts')
 export class TtsController {

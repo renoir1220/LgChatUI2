@@ -1,4 +1,4 @@
-import type { RequirementListResponse } from '@lg/shared';
+import type { RequirementListResponse } from "@types";
 
 /**
  * 消息类型枚举

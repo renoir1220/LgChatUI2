@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CrmDatabaseService } from '../../../shared/database/database.service';
-import { User } from '@lg/shared';
+import { User } from '../../../types';
 
 @Injectable()
 export class UsersRepository {

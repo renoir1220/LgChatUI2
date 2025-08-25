@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react';
 import { api } from '../services/chatService';
-import { ChatRole } from '@lg/shared';
+import { ChatRole } from '../../../types';
 import type { 
   ChatMessage, 
   Conversation, 
   KnowledgeBase,
   ChatRequest
-} from '@lg/shared';
+} from '../../../types';
 
 // 聊天状态接口
 interface ChatState {

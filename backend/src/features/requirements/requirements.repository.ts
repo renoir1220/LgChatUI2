@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CrmDatabaseService } from '../../shared/database/database.service';
 import { AppLoggerService } from '../../shared/services/logger.service';
 import { convertArrayPaths } from '../../shared/utils/path-converter';
-import type { RequirementItem } from '@lg/shared';
+import type { RequirementItem } from '../../types';
 
 @Injectable()
 export class RequirementsRepository {

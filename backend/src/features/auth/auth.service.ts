@@ -2,9 +2,9 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersRepository } from './repositories/users.repository';
 import { AppLoggerService } from '../../shared/services/logger.service';
-import { LoginResponse } from '@lg/shared';
-import type { LoginRequest } from '@lg/shared';
-import type { User } from '@lg/shared';
+import { LoginResponse } from '../../types';
+import type { LoginRequest } from '../../types';
+import type { User } from '../../types';
 
 @Injectable()
 export class AuthService {

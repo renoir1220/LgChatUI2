@@ -10,7 +10,7 @@ import { RequirementsService } from './requirements.service';
 import { AppLoggerService } from '../../shared/services/logger.service';
 import { ZodValidationPipe } from '../../shared/pipes/zod-validation.pipe';
 import { z } from 'zod';
-import type { RequirementListResponse } from '@lg/shared';
+import type { RequirementListResponse } from '../../types';
 
 // 定义查询参数的验证模式
 const GetRequirementsByCustomerQuerySchema = z.object({

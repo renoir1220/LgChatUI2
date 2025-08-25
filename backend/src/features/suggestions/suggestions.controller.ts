@@ -22,7 +22,7 @@ import {
   type SuggestionQuery,
   type Suggestion,
   type SuggestionListResponse,
-} from '@lg/shared';
+} from '../../types';
 
 @Controller('api/suggestions')
 @UseGuards(JwtAuthGuard)

@@ -3,7 +3,7 @@ import {
   CustomerDictResponse,
   CustomerDictQuery,
   CustomerDictItem,
-} from '@lg/shared';
+} from '../../types';
 import { CustomerDictRepository } from './customer-dict.repository';
 import { AppLoggerService } from '../../shared/services/logger.service';
 

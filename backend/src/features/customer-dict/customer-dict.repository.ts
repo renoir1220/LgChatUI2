@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { CustomerDictItem } from '@lg/shared';
+import { CustomerDictItem } from '../../types';
 import { CrmDatabaseService } from '../../shared/database/database.service';
 
 @Injectable()

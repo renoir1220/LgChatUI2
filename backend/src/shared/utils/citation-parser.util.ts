@@ -1,4 +1,4 @@
-import type { Citation } from '@lg/shared';
+import type { Citation } from '../../types';
 
 /**
  * Citations标签解析结果
