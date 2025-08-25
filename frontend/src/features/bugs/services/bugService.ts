@@ -71,7 +71,7 @@ export const bugService = {
   async uploadImages(files: File[]): Promise<FileUploadResponse[]> {
     const formData = new FormData();
     
-    files.forEach((file, index) => {
+    files.forEach((file) => {
       formData.append('images', file);
     });
 

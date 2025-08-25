@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { Upload, Button, Image, message } from 'antd';
-import { PlusOutlined, DeleteOutlined, UploadOutlined } from '@ant-design/icons';
-import type { UploadFile, RcFile } from 'antd/es/upload/interface';
+import { DeleteOutlined, UploadOutlined } from '@ant-design/icons';
+import type { RcFile } from 'antd/es/upload/interface';
 import { bugService } from '../services/bugService';
 
 interface ImageUploadProps {
@@ -128,9 +128,9 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     onChange?.(urls);
   }, [fileList, onChange]);
 
-  // 自定义上传处理
-  const customUpload = useCallback(({ file }: { file: RcFile }) => {
-    handleFileSelect(file);
+  // 自定义上传处理  
+  const customUpload = useCallback((options: { file: RcFile | File }) => {
+    handleFileSelect(options.file as RcFile);
   }, [handleFileSelect]);
 
   return (
