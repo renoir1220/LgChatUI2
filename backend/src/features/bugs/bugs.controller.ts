@@ -27,6 +27,7 @@ import {
   type BugListResponse,
   type FileUploadResponse,
 } from '../../types';
+import type { Request as ExpressRequest, Express } from 'express';
 
 @Controller('api/bugs')
 @UseGuards(JwtAuthGuard)
@@ -40,9 +41,12 @@ export class BugsController {
   async createBug(
     @Body(new ZodValidationPipe(CreateBugRequestSchema))
     data: CreateBugRequest,
-    @Request() req: any,
+    @Request() req: ExpressRequest & { user?: { username?: string } },
   ): Promise<Bug> {
-    const submitterName = req.user?.username || '未知用户';
+    const submitterName =
+      typeof req.user?.username === 'string' && req.user.username.length > 0
+        ? req.user.username
+        : '未知用户';
     return this.bugsService.createBug(submitterName, data);
   }
 
@@ -100,29 +104,34 @@ export class BugsController {
    * 上传BUG相关图片（最多5张）
    */
   @Post('upload')
-  @UseInterceptors(FilesInterceptor('images', 5, {
-    limits: {
-      fileSize: 5 * 1024 * 1024, // 5MB per file
-    },
-    fileFilter: (req, file, callback) => {
-      const allowedMimes = [
-        'image/jpeg',
-        'image/jpg',  
-        'image/png',
-        'image/gif',
-        'image/webp',
-      ];
-      
-      if (allowedMimes.includes(file.mimetype)) {
-        callback(null, true);
-      } else {
-        callback(new Error('只支持图片文件格式: jpg, jpeg, png, gif, webp'), false);
-      }
-    },
-  }))
-  async uploadImages(
+  @UseInterceptors(
+    FilesInterceptor('images', 5, {
+      limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB per file
+      },
+      fileFilter: (req, file, callback) => {
+        const allowedMimes = [
+          'image/jpeg',
+          'image/jpg',
+          'image/png',
+          'image/gif',
+          'image/webp',
+        ];
+
+        if (allowedMimes.includes(file.mimetype)) {
+          callback(null, true);
+        } else {
+          callback(
+            new Error('只支持图片文件格式: jpg, jpeg, png, gif, webp'),
+            false,
+          );
+        }
+      },
+    }),
+  )
+  uploadImages(
     @UploadedFiles() files: any[],
-  ): Promise<FileUploadResponse[]> {
+  ): FileUploadResponse[] {
     if (!files || files.length === 0) {
       return [{ success: false, message: '没有上传文件' }];
     }
@@ -132,7 +141,7 @@ export class BugsController {
     }
 
     const results: FileUploadResponse[] = [];
-    
+
     for (const file of files) {
       try {
         // 这里实现文件存储逻辑
@@ -142,14 +151,14 @@ export class BugsController {
         const randomStr = Math.random().toString(36).substring(2, 15);
         const fileExtension = file.originalname.split('.').pop();
         const fileName = `bug_${timestamp}_${randomStr}.${fileExtension}`;
-        
+
         // 这里应该实现实际的文件保存逻辑
         // const filePath = path.join('uploads', 'bugs', fileName);
         // await fs.writeFile(filePath, file.buffer);
-        
+
         // 返回文件URL（这里使用示例URL）
         const fileUrl = `/uploads/bugs/${fileName}`;
-        
+
         results.push({
           success: true,
           url: fileUrl,

@@ -60,6 +60,7 @@ src/
 │   ├── knowledge-base/        # 知识库模块
 │   ├── bugs/                  # BUG管理模块
 │   ├── suggestions/           # 建议管理模块
+│   ├── infofeed/              # 信息流模块
 │   ├── requirements/          # 需求管理模块
 │   └── files/                 # 文件处理模块
 │
@@ -106,6 +107,14 @@ src/
 - 用户建议收集和反馈系统
 - 开发者回复和状态跟踪
 - 分页查询和筛选功能
+
+### 信息流模块 (infofeed/)
+- 类似社交媒体的信息流功能（新闻、功能更新、知识分享等）
+- 支持分类浏览（所有、与我有关、新闻、新功能、新知识）
+- 完整的评论和点赞互动系统
+- 富文本内容展示，支持图片和链接
+- **重要：使用LgChatUI数据库服务**
+- 响应式设计，适配PC和移动端
 
 ### 共享服务 (shared/)
 - 结构化日志系统（AppLoggerService）
@@ -166,6 +175,18 @@ GET  /api/suggestions            # 查询建议列表
 GET  /api/suggestions/:id        # 获取建议详情
 PUT  /api/suggestions/:id        # 更新建议
 DELETE /api/suggestions/:id      # 删除建议
+
+# 信息流API（使用LgChatUI数据库）
+GET  /api/infofeed               # 获取信息流列表
+GET  /api/infofeed/:id           # 获取信息流详情
+POST /api/infofeed               # 创建信息流（需要登录）
+PUT  /api/infofeed/:id           # 更新信息流（需要登录）
+DELETE /api/infofeed/:id         # 删除信息流（需要登录）
+POST /api/infofeed/:id/like      # 信息流点赞/取消点赞（需要登录）
+GET  /api/infofeed/:id/comments  # 获取评论列表
+POST /api/infofeed/:id/comments  # 添加评论（需要登录）
+POST /api/infofeed/comments/:comment_id/like   # 评论点赞/取消点赞（需要登录）
+POST /api/infofeed/comments/:comment_id/reply  # 回复评论（需要登录）
 ```
 
 ## 开发规范

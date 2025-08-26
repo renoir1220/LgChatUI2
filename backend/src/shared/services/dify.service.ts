@@ -209,7 +209,7 @@ export class DifyService {
 
     try {
       let rows;
-      
+
       if (!knowledgeBaseId) {
         // 如果没有指定知识库，获取第一个启用的知识库
         rows = await this.db.queryWithErrorHandling<{

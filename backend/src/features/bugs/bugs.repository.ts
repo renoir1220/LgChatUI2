@@ -6,8 +6,6 @@ import type {
   CreateBugRequest,
   UpdateBugRequest,
   BugQuery,
-  BugStatus,
-  BugPriority,
 } from '../../types';
 
 @Injectable()
@@ -20,10 +18,7 @@ export class BugsRepository {
   /**
    * 创建BUG
    */
-  async create(
-    submitterName: string,
-    data: CreateBugRequest,
-  ): Promise<Bug> {
+  async create(submitterName: string, data: CreateBugRequest): Promise<Bug> {
     const sql = `
       DECLARE @id uniqueidentifier = NEWID();
       INSERT INTO T_AI_BUGS (
@@ -60,7 +55,20 @@ export class BugsRepository {
       });
 
       const imagesJson = JSON.stringify(data.images);
-      const result = await this.db.queryWithErrorHandling<any>(
+      const result = await this.db.queryWithErrorHandling<{
+        id: string;
+        title: string;
+        content: string;
+        submitterName: string;
+        assigneeId: string | null;
+        assigneeName: string | null;
+        priority: number;
+        status: number;
+        images: string | null;
+        developerReply: string | null;
+        createdAt: string;
+        updatedAt: string;
+      }>(
         sql,
         [data.title, data.content, submitterName, data.priority, imagesJson],
         '创建BUG',
@@ -68,7 +76,7 @@ export class BugsRepository {
 
       const bug = result[0];
       // 将JSON字符串转换为数组
-      bug.images = JSON.parse(bug.images || '[]');
+      const images = JSON.parse(bug.images || '[]');
 
       this.logger.log('BUG创建成功', {
         bugId: bug.id,
@@ -76,7 +84,7 @@ export class BugsRepository {
         title: data.title,
       });
 
-      return bug as Bug;
+      return { ...bug, images } as Bug;
     } catch (error) {
       this.logger.error('创建BUG失败', error, {
         submitterName,
@@ -93,12 +101,20 @@ export class BugsRepository {
     bugs: Bug[];
     total: number;
   }> {
-    const { page, pageSize, status, priority, submitterName, assigneeId, title } = query;
+    const {
+      page,
+      pageSize,
+      status,
+      priority,
+      submitterName,
+      assigneeId,
+      title,
+    } = query;
     const offset = (page - 1) * pageSize;
 
     // 构建WHERE条件
     const whereConditions: string[] = [];
-    const params: any[] = [];
+    const params: (string | number)[] = [];
     let paramIndex = 0;
 
     if (status !== undefined) {
@@ -182,15 +198,24 @@ export class BugsRepository {
           params,
           '查询BUG总数',
         ),
-        this.db.queryWithErrorHandling<any>(
-          dataSql,
-          [...params, offset, pageSize],
-          '查询BUG列表',
-        ),
+        this.db.queryWithErrorHandling<{
+          id: string;
+          title: string;
+          content: string;
+          submitterName: string;
+          assigneeId: string | null;
+          assigneeName: string | null;
+          priority: number;
+          status: number;
+          images: string | null;
+          developerReply: string | null;
+          createdAt: string;
+          updatedAt: string;
+        }>(dataSql, [...params, offset, pageSize], '查询BUG列表'),
       ]);
 
       const total = countResult[0]?.total || 0;
-      const bugs = dataResult.map((bug: any) => ({
+      const bugs = dataResult.map((bug) => ({
         ...bug,
         images: JSON.parse(bug.images || '[]'),
       })) as Bug[];
@@ -231,20 +256,29 @@ export class BugsRepository {
     `;
 
     try {
-      const result = await this.db.queryWithErrorHandling<any>(
-        sql,
-        [bugId],
-        '查询BUG详情',
-      );
+      const result = await this.db.queryWithErrorHandling<{
+        id: string;
+        title: string;
+        content: string;
+        submitterName: string;
+        assigneeId: string | null;
+        assigneeName: string | null;
+        priority: number;
+        status: number;
+        images: string | null;
+        developerReply: string | null;
+        createdAt: string;
+        updatedAt: string;
+      }>(sql, [bugId], '查询BUG详情');
 
       if (result.length === 0) {
         return null;
       }
 
       const bug = result[0];
-      bug.images = JSON.parse(bug.images || '[]');
+      const images = JSON.parse(bug.images || '[]');
 
-      return bug as Bug;
+      return { ...bug, images } as Bug;
     } catch (error) {
       this.logger.error('查询BUG详情失败', error, { bugId });
       throw error;
@@ -254,10 +288,7 @@ export class BugsRepository {
   /**
    * 更新BUG
    */
-  async update(
-    bugId: string,
-    data: UpdateBugRequest,
-  ): Promise<void> {
+  async update(bugId: string, data: UpdateBugRequest): Promise<void> {
     const setParts: string[] = [];
     const params: any[] = [];
     let paramIndex = 0;

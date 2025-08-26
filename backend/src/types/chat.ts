@@ -122,4 +122,3 @@ export const KnowledgeBaseSchema = z.object({
 
 export type KnowledgeBase = z.infer<typeof KnowledgeBaseSchema>;
 export type MessageCreateRequest = z.infer<typeof MessageCreateSchema>;
-

@@ -88,7 +88,11 @@ export class ConversationsRepository {
   // 更新会话信息
   async updateConversation(
     conversationId: string,
-    updates: { title?: string; knowledgeBaseId?: string; difyConversationId?: string },
+    updates: {
+      title?: string;
+      knowledgeBaseId?: string;
+      difyConversationId?: string;
+    },
   ): Promise<void> {
     const setParts: string[] = [];
     const params: any[] = [];
@@ -124,7 +128,9 @@ export class ConversationsRepository {
 
   // 获取会话的Dify对话ID
   async getDifyConversationId(conversationId: string): Promise<string | null> {
-    const rows = await this.db.queryWithErrorHandling<{ difyConversationId: string | null }>(
+    const rows = await this.db.queryWithErrorHandling<{
+      difyConversationId: string | null;
+    }>(
       `SELECT DIFY_CONVERSATION_ID as difyConversationId
        FROM AI_CONVERSATIONS
        WHERE CONVERSATION_ID = @p0`,

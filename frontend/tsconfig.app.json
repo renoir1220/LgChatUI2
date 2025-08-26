@@ -13,7 +13,8 @@
       "@/*": [
         "./src/*"
       ],
-      "@types": ["./src/types"]
+      "@types": ["./src/types"],
+      "@types/*": ["./src/types/*"]
     },
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,

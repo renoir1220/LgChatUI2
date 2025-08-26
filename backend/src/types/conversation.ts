@@ -37,6 +37,9 @@ export const UpdateConversationRequestSchema = z.object({
   knowledgeBaseId: z.string().optional(),
 });
 
-export type CreateConversationRequest = z.infer<typeof CreateConversationRequestSchema>;
-export type UpdateConversationRequest = z.infer<typeof UpdateConversationRequestSchema>;
-
+export type CreateConversationRequest = z.infer<
+  typeof CreateConversationRequestSchema
+>;
+export type UpdateConversationRequest = z.infer<
+  typeof UpdateConversationRequestSchema
+>;

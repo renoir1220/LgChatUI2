@@ -165,7 +165,8 @@ export class ChatController {
       this.logger.debug('调用Dify API', { conversationId });
 
       // 获取已存在的Dify对话ID，用于维持连续对话记忆
-      const existingDifyConversationId = await this.conversations.getDifyConversationId(conversationId);
+      const existingDifyConversationId =
+        await this.conversations.getDifyConversationId(conversationId);
       this.logger.debug('获取已存在的Dify对话ID', {
         conversationId,
         existingDifyConversationId,
@@ -342,7 +343,10 @@ export class ChatController {
       );
 
       // 如果捕获到新的Dify对话ID，且与数据库中的不同，则更新数据库
-      if (difyConversationIdFromResponse && difyConversationIdFromResponse !== existingDifyConversationId) {
+      if (
+        difyConversationIdFromResponse &&
+        difyConversationIdFromResponse !== existingDifyConversationId
+      ) {
         await this.conversations.updateDifyConversationId(
           conversationId,
           difyConversationIdFromResponse,

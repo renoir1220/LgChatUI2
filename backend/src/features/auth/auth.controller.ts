@@ -13,6 +13,8 @@ import { LoginRequestSchema, LoginResponse } from '../../types';
 import type { LoginRequest } from '../../types';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { ZodValidationPipe } from '../../shared/pipes/zod-validation.pipe';
+import { UnauthorizedException } from '@nestjs/common';
+import type { Request as ExpressRequest } from 'express';
 
 @Controller('api/auth')
 export class AuthController {
@@ -28,8 +30,14 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  async getProfile(@Request() req) {
-    const user = await this.authService.getUserByUsername(req.user.username);
+  async getProfile(
+    @Request() req: ExpressRequest & { user?: { username?: string } },
+  ) {
+    const username = req.user?.username;
+    if (typeof username !== 'string' || username.length === 0) {
+      throw new UnauthorizedException('未检测到用户身份');
+    }
+    const user = await this.authService.getUserByUsername(username);
     return {
       id: user?.id,
       username: user?.username,

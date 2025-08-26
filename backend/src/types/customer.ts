@@ -60,15 +60,19 @@ export const CustomerDictQuerySchema = z.object({
   page: z
     .string()
     .optional()
-    .transform(val => val ? parseInt(val, 10) : undefined)
-    .refine(val => val === undefined || (val >= 1 && Number.isInteger(val)), {
+    .transform((val) => (val ? parseInt(val, 10) : undefined))
+    .refine((val) => val === undefined || (val >= 1 && Number.isInteger(val)), {
       message: '页码必须是大于等于1的整数',
     }),
   pageSize: z
     .string()
     .optional()
-    .transform(val => val ? parseInt(val, 10) : undefined)
-    .refine(val => val === undefined || (val >= 1 && val <= 200 && Number.isInteger(val)), {
-      message: '每页数量必须是1-200之间的整数',
-    }),
+    .transform((val) => (val ? parseInt(val, 10) : undefined))
+    .refine(
+      (val) =>
+        val === undefined || (val >= 1 && val <= 200 && Number.isInteger(val)),
+      {
+        message: '每页数量必须是1-200之间的整数',
+      },
+    ),
 });

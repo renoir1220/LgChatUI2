@@ -58,7 +58,27 @@ export abstract class BaseDatabaseService {
       sqlText = strings as string;
     }
     params.forEach((val, i) => {
-      request.input(`p${i}`, val);
+      // 为MSSQL参数推断合适的类型
+      const sql = require('mssql');
+      let paramType;
+
+      if (typeof val === 'number') {
+        if (Number.isInteger(val)) {
+          paramType = sql.Int;
+        } else {
+          paramType = sql.Float;
+        }
+      } else if (typeof val === 'string') {
+        paramType = sql.NVarChar(sql.MAX); // 指定最大长度避免截断
+      } else if (typeof val === 'boolean') {
+        paramType = sql.Bit;
+      } else if (val instanceof Date) {
+        paramType = sql.DateTime;
+      } else {
+        paramType = sql.NVarChar(sql.MAX); // 默认为字符串
+      }
+
+      request.input(`p${i}`, paramType, val);
     });
     const start = Date.now();
     try {
@@ -67,10 +87,13 @@ export abstract class BaseDatabaseService {
     } finally {
       const ms = Date.now() - start;
       const slowMs = Number(process.env.DB_SLOW_MS || 300);
-      const logAll = (process.env.DB_LOG_QUERIES || '').toLowerCase() === 'true';
+      const logAll =
+        (process.env.DB_LOG_QUERIES || '').toLowerCase() === 'true';
       if (logAll || ms >= slowMs) {
         const snippet = sqlText.replace(/\s+/g, ' ').trim().slice(0, 200);
-        this.logger.log(`[${this.dbName}] SQL ${ms}ms: ${snippet} params=${JSON.stringify(params)}`);
+        this.logger.log(
+          `[${this.dbName}] SQL ${ms}ms: ${snippet} params=${JSON.stringify(params)}`,
+        );
       }
     }
   }

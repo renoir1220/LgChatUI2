@@ -87,7 +87,13 @@ export interface RequirementQuery {
  */
 export interface RequirementDetail extends RequirementItem {
   /** 需求状态（基于当前环节计算） */
-  status?: 'planning' | 'designing' | 'developing' | 'testing' | 'released' | 'closed';
+  status?:
+    | 'planning'
+    | 'designing'
+    | 'developing'
+    | 'testing'
+    | 'released'
+    | 'closed';
   /** 优先级（可能基于产品类型和客户重要性计算） */
   priority?: 'low' | 'medium' | 'high' | 'urgent';
   /** 进度百分比（基于当前环节计算） */
@@ -151,8 +157,12 @@ export const RequirementItemSchema = z.object({
   creator: z.string().default(''),
   customerName: z.string().default(''),
   versionName: z.string().default(''),
-  createDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, '日期格式必须为 YYYY-MM-DD'),
-  lastUpdateDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, '日期格式必须为 YYYY-MM-DD'),
+  createDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, '日期格式必须为 YYYY-MM-DD'),
+  lastUpdateDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, '日期格式必须为 YYYY-MM-DD'),
 });
 
 /**
@@ -179,52 +189,61 @@ export const RequirementQuerySchema = z.object({
   createDateStart: z
     .string()
     .optional()
-    .refine(
-      val => !val || /^\d{4}-\d{2}-\d{2}$/.test(val),
-      { message: '开始日期格式必须为 YYYY-MM-DD' }
-    ),
+    .refine((val) => !val || /^\d{4}-\d{2}-\d{2}$/.test(val), {
+      message: '开始日期格式必须为 YYYY-MM-DD',
+    }),
   createDateEnd: z
     .string()
     .optional()
-    .refine(
-      val => !val || /^\d{4}-\d{2}-\d{2}$/.test(val),
-      { message: '结束日期格式必须为 YYYY-MM-DD' }
-    ),
+    .refine((val) => !val || /^\d{4}-\d{2}-\d{2}$/.test(val), {
+      message: '结束日期格式必须为 YYYY-MM-DD',
+    }),
   lastUpdateDateStart: z
     .string()
     .optional()
-    .refine(
-      val => !val || /^\d{4}-\d{2}-\d{2}$/.test(val),
-      { message: '最后更新开始日期格式必须为 YYYY-MM-DD' }
-    ),
+    .refine((val) => !val || /^\d{4}-\d{2}-\d{2}$/.test(val), {
+      message: '最后更新开始日期格式必须为 YYYY-MM-DD',
+    }),
   lastUpdateDateEnd: z
     .string()
     .optional()
-    .refine(
-      val => !val || /^\d{4}-\d{2}-\d{2}$/.test(val),
-      { message: '最后更新结束日期格式必须为 YYYY-MM-DD' }
-    ),
+    .refine((val) => !val || /^\d{4}-\d{2}-\d{2}$/.test(val), {
+      message: '最后更新结束日期格式必须为 YYYY-MM-DD',
+    }),
   page: z
     .string()
     .optional()
-    .transform(val => val ? parseInt(val, 10) : undefined)
-    .refine(val => val === undefined || (val >= 1 && Number.isInteger(val)), {
+    .transform((val) => (val ? parseInt(val, 10) : undefined))
+    .refine((val) => val === undefined || (val >= 1 && Number.isInteger(val)), {
       message: '页码必须是大于等于1的整数',
     }),
   pageSize: z
     .string()
     .optional()
-    .transform(val => val ? parseInt(val, 10) : undefined)
-    .refine(val => val === undefined || (val >= 1 && val <= 200 && Number.isInteger(val)), {
-      message: '每页数量必须是1-200之间的整数',
-    }),
+    .transform((val) => (val ? parseInt(val, 10) : undefined))
+    .refine(
+      (val) =>
+        val === undefined || (val >= 1 && val <= 200 && Number.isInteger(val)),
+      {
+        message: '每页数量必须是1-200之间的整数',
+      },
+    ),
 });
 
 /**
  * 需求单详情的 Zod Schema
  */
 export const RequirementDetailSchema = RequirementItemSchema.extend({
-  status: z.enum(['planning', 'designing', 'developing', 'testing', 'released', 'closed']).optional(),
+  status: z
+    .enum([
+      'planning',
+      'designing',
+      'developing',
+      'testing',
+      'released',
+      'closed',
+    ])
+    .optional(),
   priority: z.enum(['low', 'medium', 'high', 'urgent']).optional(),
   progress: z.number().min(0).max(100).optional(),
 });
@@ -244,16 +263,20 @@ export const RequirementOptionSchema = z.object({
  */
 export const RequirementStatsSchema = z.object({
   total: z.number().min(0),
-  stageStats: z.array(z.object({
-    stageName: z.string().min(1),
-    count: z.number().min(0),
-    percentage: z.number().min(0).max(100),
-  })),
-  productStats: z.array(z.object({
-    productName: z.string().min(1),
-    count: z.number().min(0),
-    percentage: z.number().min(0).max(100),
-  })),
+  stageStats: z.array(
+    z.object({
+      stageName: z.string().min(1),
+      count: z.number().min(0),
+      percentage: z.number().min(0).max(100),
+    }),
+  ),
+  productStats: z.array(
+    z.object({
+      productName: z.string().min(1),
+      count: z.number().min(0),
+      percentage: z.number().min(0).max(100),
+    }),
+  ),
   monthlyNew: z.number().min(0),
   monthlyCompleted: z.number().min(0),
 });

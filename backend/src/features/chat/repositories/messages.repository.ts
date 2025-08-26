@@ -14,7 +14,13 @@ export class MessagesRepository {
   ): Promise<ChatMessage[]> {
     // 使用OFFSET/FETCH并在SQL层直接处理类型转换，减少应用层开销
     const offset = (page - 1) * pageSize;
-    const rows = await this.db.query<any>(
+    const rows = await this.db.query<{
+      id: string;
+      conversationId: string;
+      role: string;
+      content: string;
+      createdAt: string;
+    }>(
       `SELECT CONVERT(varchar(36), MESSAGE_ID) AS id,
              CONVERT(varchar(36), CONVERSATION_ID) AS conversationId,
              CASE ROLE WHEN 'USER' THEN 'USER' ELSE 'ASSISTANT' END AS role,
@@ -47,7 +53,13 @@ export class MessagesRepository {
     userId?: string,
   ): Promise<ChatMessage> {
     const dbRole = role === ChatRole.User ? 'USER' : 'BOT';
-    const rows = await this.db.query<any>(
+    const rows = await this.db.query<{
+      id: string;
+      conversationId: string;
+      role: string;
+      content: string;
+      createdAt: string;
+    }>(
       `DECLARE @id uniqueidentifier = NEWID();
        INSERT INTO AI_MESSAGES (MESSAGE_ID, CONVERSATION_ID, ROLE, CONTENT, CREATED_AT)
        VALUES (@id, @p0, @p1, @p2, GETUTCDATE());

@@ -1,5 +1,5 @@
 // TTS语音合成相关类型定义
-import { z } from 'zod'
+import { z } from 'zod';
 
 // TTS请求数据验证模式
 export const TtsRequestSchema = z.object({
@@ -21,7 +21,7 @@ export enum VoiceType {
   // 中文音色
   CHINESE_FEMALE_1 = 'zh_female_qinqing',
   CHINESE_MALE_1 = 'zh_male_yujin',
-  // 英文音色  
+  // 英文音色
   ENGLISH_FEMALE_1 = 'en_female_sara',
   ENGLISH_MALE_1 = 'en_male_adam',
 }
@@ -34,4 +34,4 @@ export enum AudioEncoding {
 }
 
 // 从 Zod 模式推导类型
-export type TtsRequest = z.infer<typeof TtsRequestSchema>
+export type TtsRequest = z.infer<typeof TtsRequestSchema>;

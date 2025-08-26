@@ -16,6 +16,7 @@ import { CustomerDictModule } from './features/customer-dict/customer-dict.modul
 import { RequirementsModule } from './features/requirements/requirements.module';
 import { SuggestionsModule } from './features/suggestions/suggestions.module';
 import { BugsModule } from './features/bugs/bugs.module';
+import { InfoFeedModule } from './features/infofeed/infofeed.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { BugsModule } from './features/bugs/bugs.module';
     RequirementsModule,
     SuggestionsModule,
     BugsModule,
+    InfoFeedModule,
   ],
   controllers: [AppController, HealthController],
   providers: [AppService],

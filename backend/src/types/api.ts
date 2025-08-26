@@ -1,5 +1,5 @@
 // Shared API configuration types
-import { z } from 'zod'
+import { z } from 'zod';
 
 export interface ApiConfig {
   baseUrl: string;
@@ -17,13 +17,13 @@ export const ApiErrorSchema = z.object({
   message: z.string(),
   statusCode: z.number(),
   error: z.string().optional(),
-})
+});
 
 export const ApiResponseSchema = z.object({
   success: z.boolean(),
   data: z.any().optional(),
   error: z.string().optional(),
-})
+});
 
 // 认证错误码枚举
 export enum AuthErrorCode {
@@ -34,12 +34,12 @@ export enum AuthErrorCode {
 }
 
 // 从 Zod 模式推导类型
-export type ApiError = z.infer<typeof ApiErrorSchema>
+export type ApiError = z.infer<typeof ApiErrorSchema>;
 export type ApiResponse<T = any> = {
   success: boolean;
   data?: T;
   error?: string;
-}
+};
 
 // 标准错误响应接口（与后端GlobalExceptionFilter统一）
 export interface StandardErrorResponse {
@@ -75,4 +75,3 @@ export interface LogContext {
   ip?: string;
   [key: string]: any;
 }
-

@@ -51,7 +51,8 @@ describe('AuthService', () => {
       };
 
       usersRepository.findByUsername.mockResolvedValue(mockUser);
-      jwtService.sign.mockReturnValue('test-jwt-token');
+      const signSpy = jest.spyOn(jwtService, 'sign');
+      signSpy.mockReturnValue('test-jwt-token');
 
       const result = await service.login({ username: 'test' });
 
@@ -65,7 +66,7 @@ describe('AuthService', () => {
         },
       });
 
-      expect(jwtService.sign).toHaveBeenCalledWith({
+      expect(signSpy).toHaveBeenCalledWith({
         sub: 'user_test',
         username: 'test',
       });

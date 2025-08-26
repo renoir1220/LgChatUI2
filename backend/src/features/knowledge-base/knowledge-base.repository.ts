@@ -50,14 +50,16 @@ export class KnowledgeBaseRepository {
         if (!row.AVAILABLE_USERS) {
           return true;
         }
-        
+
         // 如果没有提供用户名，则不可见
         if (!username) {
           return false;
         }
-        
+
         // 检查用户是否在可用用户列表中
-        const availableUsers = row.AVAILABLE_USERS.split(',').map(u => u.trim());
+        const availableUsers = row.AVAILABLE_USERS.split(',').map((u) =>
+          u.trim(),
+        );
         return availableUsers.includes(username);
       })
       .map((row) => ({

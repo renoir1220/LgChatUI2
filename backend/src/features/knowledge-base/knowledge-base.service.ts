@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { KnowledgeBaseRepository, KnowledgeBaseEntity } from './knowledge-base.repository';
+import {
+  KnowledgeBaseRepository,
+  KnowledgeBaseEntity,
+} from './knowledge-base.repository';
 import { AppLoggerService } from '../../shared/services/logger.service';
 import type { KnowledgeBase } from '../../types';
 
@@ -7,9 +10,7 @@ import type { KnowledgeBase } from '../../types';
 export class KnowledgeBaseService {
   private readonly logger = new AppLoggerService();
 
-  constructor(
-    private readonly repository: KnowledgeBaseRepository,
-  ) {
+  constructor(private readonly repository: KnowledgeBaseRepository) {
     this.logger.setContext(KnowledgeBaseService.name);
   }
 
@@ -23,9 +24,9 @@ export class KnowledgeBaseService {
     try {
       // 从数据库获取用户可访问的知识库配置
       const entities = await this.repository.findEnabledByUser(username);
-      this.logger.debug('从数据库获取到用户可访问的知识库数据', { 
+      this.logger.debug('从数据库获取到用户可访问的知识库数据', {
         count: entities.length,
-        username: username || '未指定用户'
+        username: username || '未指定用户',
       });
 
       // 将数据库实体转换为API响应格式
@@ -64,7 +65,9 @@ export class KnowledgeBaseService {
    * 根据ID获取知识库信息（包含API配置）
    * 内部使用，包含敏感信息
    */
-  async getKnowledgeBaseConfigById(id: string): Promise<KnowledgeBaseEntity | null> {
+  async getKnowledgeBaseConfigById(
+    id: string,
+  ): Promise<KnowledgeBaseEntity | null> {
     this.logger.debug('根据ID获取知识库配置', { id });
 
     try {
@@ -95,7 +98,7 @@ export class KnowledgeBaseService {
    */
   async getKnowledgeBaseById(id: string): Promise<KnowledgeBase | null> {
     const entity = await this.getKnowledgeBaseConfigById(id);
-    
+
     if (!entity) {
       return null;
     }

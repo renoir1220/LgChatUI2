@@ -7,10 +7,7 @@ import { SharedModule } from '../../shared/shared.module';
 @Module({
   imports: [SharedModule], // 导入SharedModule以使用数据库服务
   controllers: [KnowledgeBaseController],
-  providers: [
-    KnowledgeBaseService,
-    KnowledgeBaseRepository,
-  ],
+  providers: [KnowledgeBaseService, KnowledgeBaseRepository],
   exports: [KnowledgeBaseService], // 导出服务供其他模块使用
 })
 export class KnowledgeBaseModule {}

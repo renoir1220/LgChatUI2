@@ -16,7 +16,7 @@ export class MessagesController {
   }
 
   @Post()
-  async create(
+  create(
     @Body() body: Partial<ChatRequest> & { role?: string; content?: string },
   ) {
     const role =

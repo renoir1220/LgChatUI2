@@ -17,6 +17,8 @@ import type { DictionaryItem } from '../../shared/components/DictionarySelector'
 import { SuggestionModal } from '../../suggestions/components/SuggestionModal';
 import { SuggestionListModal } from '../../suggestions/components/SuggestionListModal';
 import { BugReportModal } from '../../bugs/components/BugReportModal';
+import InfoFeedIcon from '../../infofeed/components/InfoFeedIcon';
+import InfoFeedModal from '../../infofeed/components/InfoFeedModal';
 
 /**
  * 重构后的聊天界面组件
@@ -46,6 +48,9 @@ const ChatScreenRefactored: React.FC = () => {
   
   // BUG提交模态框状态
   const [isBugReportModalOpen, setIsBugReportModalOpen] = useState(false);
+  
+  // 信息流模态框状态
+  const [isInfoFeedModalOpen, setIsInfoFeedModalOpen] = useState(false);
 
   // 监听屏幕尺寸变化
   useEffect(() => {
@@ -431,20 +436,13 @@ const ChatScreenRefactored: React.FC = () => {
         // iOS 上 fixed 背景会引发滚动/布局问题，移动端禁用
         backgroundAttachment: isWelcomeMode && !isMobile ? 'fixed' : undefined,
       }}>
-        {/* 欢迎页面时的灯泡图标 */}
+        {/* 欢迎页面时的信息流图标 */}
         {isNewConversation && (
-          <Button
-            type="text"
-            icon={<BulbOutlined />}
-            onClick={() => setIsSuggestionListModalOpen(true)}
-            title="查看建议列表"
-            style={{
-              position: 'absolute',
-              top: 16,
-              right: 24,
-              zIndex: 9999,
-            }}
-          />
+          <div className="fixed top-4 right-4 z-[9999]">
+            <InfoFeedIcon
+              onClick={() => setIsInfoFeedModalOpen(true)}
+            />
+          </div>
         )}
         {/* 聊天标题栏（新对话时不显示） */}
         {!isNewConversation && (
@@ -468,12 +466,9 @@ const ChatScreenRefactored: React.FC = () => {
             <span style={{ fontWeight: 500 }}>{renderChatTitle()}</span>
             {!isMobile && <span style={{ flex: 1 }} />}
             
-            {/* 标题栏内的灯泡图标 */}
-            <Button
-              type="text"
-              icon={<BulbOutlined />}
-              onClick={() => setIsSuggestionListModalOpen(true)}
-              title="查看建议列表"
+            {/* 标题栏内的信息流图标 */}
+            <InfoFeedIcon
+              onClick={() => setIsInfoFeedModalOpen(true)}
             />
           </div>
         )}
@@ -549,6 +544,12 @@ const ChatScreenRefactored: React.FC = () => {
           // BUG提交成功后的处理
           message.success('BUG反馈已提交成功！我们会尽快处理并回复您');
         }}
+      />
+      
+      {/* 信息流模态框 */}
+      <InfoFeedModal
+        isOpen={isInfoFeedModalOpen}
+        onClose={() => setIsInfoFeedModalOpen(false)}
       />
     </div>
   );

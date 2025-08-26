@@ -4,9 +4,9 @@ import { z } from 'zod';
  * 建议解决状态枚举
  */
 export enum SuggestionStatus {
-  NEW = 0,        // 新提交
-  RESOLVED = 1,   // 已解决
-  REJECTED = 9,   // 不做
+  NEW = 0, // 新提交
+  RESOLVED = 1, // 已解决
+  REJECTED = 9, // 不做
 }
 
 /**
@@ -23,13 +23,13 @@ export const SuggestionStatusLabels = {
  */
 export interface Suggestion {
   id: string;
-  submitterName: string;     // 提交人姓名
-  title: string;             // 标题
-  content: string;           // 建议内容
-  developerReply?: string;   // 开发回复
-  status: SuggestionStatus;  // 解决状态
-  createdAt: string;         // 创建时间
-  updatedAt: string;         // 最后更新日期
+  submitterName: string; // 提交人姓名
+  title: string; // 标题
+  content: string; // 建议内容
+  developerReply?: string; // 开发回复
+  status: SuggestionStatus; // 解决状态
+  createdAt: string; // 创建时间
+  updatedAt: string; // 最后更新日期
 }
 
 /**
@@ -37,13 +37,18 @@ export interface Suggestion {
  */
 export const CreateSuggestionRequestSchema = z.object({
   title: z.string().min(1, '标题不能为空').max(100, '标题不能超过100字符'),
-  content: z.string().min(1, '建议内容不能为空').max(1000, '建议内容不能超过1000字符'),
+  content: z
+    .string()
+    .min(1, '建议内容不能为空')
+    .max(1000, '建议内容不能超过1000字符'),
 });
 
 /**
  * 创建建议请求类型
  */
-export type CreateSuggestionRequest = z.infer<typeof CreateSuggestionRequestSchema>;
+export type CreateSuggestionRequest = z.infer<
+  typeof CreateSuggestionRequestSchema
+>;
 
 /**
  * 更新建议请求 Schema（管理员用）
@@ -56,7 +61,9 @@ export const UpdateSuggestionRequestSchema = z.object({
 /**
  * 更新建议请求类型
  */
-export type UpdateSuggestionRequest = z.infer<typeof UpdateSuggestionRequestSchema>;
+export type UpdateSuggestionRequest = z.infer<
+  typeof UpdateSuggestionRequestSchema
+>;
 
 /**
  * 建议列表查询参数 Schema

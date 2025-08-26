@@ -351,9 +351,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         }
         
         // 创建用户消息
+        const cid = conversationId as string; // 已在上方分支保证有值
         const userMessage: ChatMessage = {
           id: Date.now().toString(),
-          conversationId: conversationId,
+          conversationId: cid,
           role: ChatRole.User,
           content,
           createdAt: new Date().toISOString(),
@@ -366,7 +367,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         // 准备聊天请求
         // 选中的知识库ID
         const chatRequest: ChatRequest = {
-          conversationId: conversationId,
+          conversationId: cid,
           message: content,
           knowledgeBaseId: state.selectedKnowledgeBase,
         };
@@ -376,7 +377,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         const tempAssistantMessageId = (Date.now() + 1).toString();
         const tempAssistantMessage: ChatMessage = {
           id: tempAssistantMessageId,
-          conversationId: conversationId,
+          conversationId: cid,
           role: ChatRole.Assistant,
           content: '',
           createdAt: new Date().toISOString(),

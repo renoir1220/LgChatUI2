@@ -11,6 +11,7 @@ import './ChatMessage.css';
 import { CitationList } from '../../knowledge-base/components/CitationList';
 import { VoicePlayer } from './VoicePlayer';
 import { RequirementMessage } from './RequirementMessage';
+import type { RequirementItem } from '@/types/requirement';
 import { detectMessageType, MessageType } from '../../shared/utils/messageTypeDetector';
 import { getUsername } from '../../auth/utils/auth';
 import { FileSearchOutlined, ProjectOutlined, SearchOutlined, BulbOutlined } from '@ant-design/icons';
@@ -154,17 +155,17 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
       const messageData = detectMessageType(finalText);
       let textToCopy = finalText;
       
-      if (messageData.type === MessageType.REQUIREMENTS && messageData.data?.requirements) {
-        const { requirements, total } = messageData.data.requirements;
-        const customerName = requirements.length > 0 ? requirements[0].customerName : '未知客户';
-        
-        textToCopy = `需求清单 - ${customerName} (共${total}条)\n\n` +
-          requirements.map((req, index) => 
-            `${index + 1}. ${req.requirementCode} - ${req.requirementName}\n` +
-            `   状态：${req.currentStage} | 产品：${req.product}\n` +
-            `   创建人：${req.creator} | 更新时间：${req.lastUpdateDate}\n`
-          ).join('\n');
-      }
+          if (messageData.type === MessageType.REQUIREMENTS && messageData.data?.requirements) {
+                const { requirements, total } = messageData.data.requirements;
+                const customerName = requirements.length > 0 ? requirements[0].customerName : '未知客户';
+                
+                textToCopy = `需求清单 - ${customerName} (共${total}条)\n\n` +
+                  requirements.map((req: RequirementItem, index: number) => 
+                    `${index + 1}. ${req.requirementCode} - ${req.requirementName}\n` +
+                    `   状态：${req.currentStage} | 产品：${req.product}\n` +
+                    `   创建人：${req.creator} | 更新时间：${req.lastUpdateDate}\n`
+                  ).join('\n');
+              }
       
       await navigator.clipboard.writeText(textToCopy);
       message.success('消息已复制到剪贴板');

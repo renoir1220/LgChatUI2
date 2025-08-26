@@ -210,6 +210,30 @@ src/
 - 泛型类型约束
 - 明确的事件处理器类型
 
+### 路径导入规范
+**必须使用路径别名，避免相对路径导入**：
+```typescript
+// ✅ 推荐：使用路径别名
+import { InfoFeed, ApiResponse } from '@types/infofeed';
+import { Button } from '@/components/ui/button';
+import { apiGet } from '@/features/shared/services/api';
+
+// ❌ 禁止：使用相对路径
+import { InfoFeed } from '../../../types/infofeed';
+import { Button } from '../../components/ui/button';
+import { apiGet } from '../shared/services/api';
+```
+
+**配置的路径别名**：
+- `@` → `./src` (根目录别名)
+- `@types` → `./src/types` (类型文件别名)
+
+**优势**：
+- 重构时路径不易出错
+- 代码更简洁易读
+- IDE自动完成更好
+- 避免 `../../../` 等复杂相对路径
+
 ### Hook开发规范
 - 遵循Hook使用规则
 - 完整的依赖数组

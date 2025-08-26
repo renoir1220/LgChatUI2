@@ -6,7 +6,6 @@ import type {
   CreateSuggestionRequest,
   UpdateSuggestionRequest,
   SuggestionQuery,
-  SuggestionStatus,
 } from '../../types';
 
 @Injectable()
@@ -25,7 +24,7 @@ export class SuggestionsRepository {
   ): Promise<Suggestion> {
     const sql = `
       DECLARE @id uniqueidentifier = NEWID();
-      INSERT INTO T_AI_SUGGESTIONS (
+      INSERT INTO AI_SUGGESTIONS (
         SUGGESTION_ID, SUBMITTER_NAME, TITLE, CONTENT, 
         STATUS, CREATED_AT, UPDATED_AT
       )
@@ -52,7 +51,7 @@ export class SuggestionsRepository {
         contentLength: data.content.length,
       });
 
-      const result = await this.db.queryWithErrorHandling<any>(
+      const result = await this.db.queryWithErrorHandling<{ id: string }>(
         sql,
         [submitterName, data.title, data.content],
         '创建建议',
@@ -108,7 +107,7 @@ export class SuggestionsRepository {
     // 查询总数
     const countSql = `
       SELECT COUNT(*) as total
-      FROM T_AI_SUGGESTIONS
+      FROM AI_SUGGESTIONS
       ${whereClause}
     `;
 
@@ -123,7 +122,7 @@ export class SuggestionsRepository {
         STATUS AS status,
         CONVERT(varchar(33), CREATED_AT, 126) AS createdAt,
         CONVERT(varchar(33), UPDATED_AT, 126) AS updatedAt
-      FROM T_AI_SUGGESTIONS
+      FROM AI_SUGGESTIONS
       ${whereClause}
       ORDER BY CREATED_AT DESC
       OFFSET @p${paramIndex} ROWS
@@ -144,7 +143,7 @@ export class SuggestionsRepository {
           params,
           '查询建议总数',
         ),
-        this.db.queryWithErrorHandling<any>(
+        this.db.queryWithErrorHandling<Suggestion>(
           dataSql,
           [...params, offset, pageSize],
           '查询建议列表',
@@ -152,7 +151,7 @@ export class SuggestionsRepository {
       ]);
 
       const total = countResult[0]?.total || 0;
-      const suggestions = dataResult as Suggestion[];
+      const suggestions = dataResult;
 
       this.logger.log('建议列表查询成功', {
         total,
@@ -181,7 +180,7 @@ export class SuggestionsRepository {
         STATUS AS status,
         CONVERT(varchar(33), CREATED_AT, 126) AS createdAt,
         CONVERT(varchar(33), UPDATED_AT, 126) AS updatedAt
-      FROM T_AI_SUGGESTIONS
+      FROM AI_SUGGESTIONS
       WHERE SUGGESTION_ID = @p0
     `;
 
@@ -192,7 +191,7 @@ export class SuggestionsRepository {
         '查询建议详情',
       );
 
-      return result.length > 0 ? (result[0] as Suggestion) : null;
+      return result.length > 0 ? result[0] : null;
     } catch (error) {
       this.logger.error('查询建议详情失败', error, { suggestionId });
       throw error;
@@ -230,7 +229,7 @@ export class SuggestionsRepository {
     params.push(suggestionId);
 
     const sql = `
-      UPDATE T_AI_SUGGESTIONS 
+      UPDATE AI_SUGGESTIONS 
       SET ${setParts.join(', ')}
       WHERE SUGGESTION_ID = @p${paramIndex}
     `;
@@ -247,7 +246,7 @@ export class SuggestionsRepository {
     } catch (error) {
       this.logger.error('更新建议失败', error, {
         suggestionId,
-        data,
+        updates: Object.keys(data || {}),
       });
       throw error;
     }
@@ -257,16 +256,20 @@ export class SuggestionsRepository {
    * 删除建议
    */
   async delete(suggestionId: string): Promise<void> {
-    const sql = `DELETE FROM T_AI_SUGGESTIONS WHERE SUGGESTION_ID = @p0`;
+    const sql = `DELETE FROM AI_SUGGESTIONS WHERE SUGGESTION_ID = @p0`;
 
     try {
       this.logger.log('删除建议', { suggestionId });
 
-      await this.db.queryWithErrorHandling(sql, [suggestionId], '删除建议');
+      await this.db.queryWithErrorHandling<void>(
+        sql,
+        [suggestionId],
+        '删除建议',
+      );
 
       this.logger.log('建议删除成功', { suggestionId });
     } catch (error) {
-      this.logger.error('删除建议失败', error, { suggestionId });
+      this.logger.error('删除建议失败', String(error), { suggestionId });
       throw error;
     }
   }

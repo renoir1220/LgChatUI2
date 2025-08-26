@@ -4,19 +4,19 @@ import { z } from 'zod';
  * BUG状态枚举
  */
 export enum BugStatus {
-  NEW = 0,        // 新提交
+  NEW = 0, // 新提交
   IN_PROGRESS = 1, // 处理中
-  RESOLVED = 2,   // 已解决
-  REJECTED = 9,   // 不做
+  RESOLVED = 2, // 已解决
+  REJECTED = 9, // 不做
 }
 
 /**
  * BUG优先级枚举
  */
 export enum BugPriority {
-  LOW = 1,      // 低
-  MEDIUM = 2,   // 中
-  HIGH = 3,     // 高
+  LOW = 1, // 低
+  MEDIUM = 2, // 中
+  HIGH = 3, // 高
   CRITICAL = 4, // 紧急
 }
 
@@ -44,18 +44,18 @@ export const BugPriorityLabels = {
  * BUG数据接口
  */
 export interface Bug {
-  id: string;                // BUG编号 (主键)
-  title: string;             // 标题
-  content: string;           // BUG描述内容
-  submitterName: string;     // 提交人姓名
-  assigneeId?: string;       // 指派人ID (可选)
-  assigneeName?: string;     // 指派人姓名 (可选)
-  priority: BugPriority;     // 优先级
-  status: BugStatus;         // 状态
-  images: string[];          // 图片URL列表 (最多5张)
-  developerReply?: string;   // 开发回复
-  createdAt: string;         // 创建时间
-  updatedAt: string;         // 最后更新时间
+  id: string; // BUG编号 (主键)
+  title: string; // 标题
+  content: string; // BUG描述内容
+  submitterName: string; // 提交人姓名
+  assigneeId?: string; // 指派人ID (可选)
+  assigneeName?: string; // 指派人姓名 (可选)
+  priority: BugPriority; // 优先级
+  status: BugStatus; // 状态
+  images: string[]; // 图片URL列表 (最多5张)
+  developerReply?: string; // 开发回复
+  createdAt: string; // 创建时间
+  updatedAt: string; // 最后更新时间
 }
 
 /**
@@ -63,7 +63,10 @@ export interface Bug {
  */
 export const CreateBugRequestSchema = z.object({
   title: z.string().min(1, '标题不能为空').max(200, '标题不能超过200字符'),
-  content: z.string().min(1, 'BUG描述不能为空').max(2000, 'BUG描述不能超过2000字符'),
+  content: z
+    .string()
+    .min(1, 'BUG描述不能为空')
+    .max(2000, 'BUG描述不能超过2000字符'),
   priority: z.nativeEnum(BugPriority).default(BugPriority.MEDIUM),
   images: z.array(z.string()).max(5, '最多只能上传5张图片').default([]),
 });
@@ -77,8 +80,16 @@ export type CreateBugRequest = z.infer<typeof CreateBugRequestSchema>;
  * 更新BUG请求 Schema (管理员/开发者用)
  */
 export const UpdateBugRequestSchema = z.object({
-  title: z.string().min(1, '标题不能为空').max(200, '标题不能超过200字符').optional(),
-  content: z.string().min(1, 'BUG描述不能为空').max(2000, 'BUG描述不能超过2000字符').optional(),
+  title: z
+    .string()
+    .min(1, '标题不能为空')
+    .max(200, '标题不能超过200字符')
+    .optional(),
+  content: z
+    .string()
+    .min(1, 'BUG描述不能为空')
+    .max(2000, 'BUG描述不能超过2000字符')
+    .optional(),
   assigneeId: z.string().optional(),
   assigneeName: z.string().optional(),
   priority: z.nativeEnum(BugPriority).optional(),

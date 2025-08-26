@@ -19,10 +19,7 @@ export class BugsService {
   /**
    * 创建BUG
    */
-  async createBug(
-    submitterName: string,
-    data: CreateBugRequest,
-  ): Promise<Bug> {
+  async createBug(submitterName: string, data: CreateBugRequest): Promise<Bug> {
     this.logger.log('用户提交BUG', {
       submitterName,
       title: data.title,
@@ -100,10 +97,7 @@ export class BugsService {
   /**
    * 更新BUG（管理员/开发者用）
    */
-  async updateBug(
-    bugId: string,
-    data: UpdateBugRequest,
-  ): Promise<void> {
+  async updateBug(bugId: string, data: UpdateBugRequest): Promise<void> {
     this.logger.log('更新BUG', {
       bugId,
       updates: Object.keys(data),

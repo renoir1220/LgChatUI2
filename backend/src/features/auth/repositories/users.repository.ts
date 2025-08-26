@@ -19,7 +19,7 @@ export class UsersRepository {
   }
 
   async findByUsername(username: string): Promise<User | null> {
-    const rows = await this.db.queryWithErrorHandling<any>(
+    const rows = await this.db.queryWithErrorHandling<{ username: string }>(
       `SELECT TOP 1 员工姓名 as username
        FROM VIEW_EMPLOYEE 
        WHERE 员工姓名 = @p0`,
@@ -40,10 +40,7 @@ export class UsersRepository {
     };
   }
 
-  async create(userData: {
-    username: string;
-    displayName?: string;
-  }): Promise<User> {
+  create(_userData: { username: string; displayName?: string }): never {
     // 对于这个场景，我们不允许创建新用户，只能使用现有员工
     throw new Error('不允许创建新用户，请使用现有员工姓名');
   }

@@ -14,7 +14,7 @@ async function bootstrap() {
   if (process.env.ENABLE_HTTPS === 'true') {
     const certPath = join(__dirname, '../cert.pem');
     const keyPath = join(__dirname, '../key.pem');
-    
+
     if (fs.existsSync(certPath) && fs.existsSync(keyPath)) {
       httpsOptions = {
         key: fs.readFileSync(keyPath),
@@ -26,8 +26,9 @@ async function bootstrap() {
     }
   }
 
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, 
-    httpsOptions ? { httpsOptions } : {}
+  const app = await NestFactory.create<NestExpressApplication>(
+    AppModule,
+    httpsOptions ? { httpsOptions } : {},
   );
 
   // CORS配置
