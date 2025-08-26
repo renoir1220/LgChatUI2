@@ -32,6 +32,10 @@ yarn-error.log*
 # Editor
 .idea/
 .vscode/settings.local.json
+.vscode/settings.json
+
+# SQL session files
+*.session.sql
 
 # Project-specific
 LgChatUI/
