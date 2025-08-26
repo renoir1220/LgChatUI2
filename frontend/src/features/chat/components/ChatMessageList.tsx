@@ -236,7 +236,7 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
 
   // 渲染消息列表
   return (
-    <div style={{ flex: 1, height: '100%', overflow: 'auto' }}>
+    <div style={{ flex: 1, height: '100%', overflow: 'auto', WebkitOverflowScrolling: 'touch' as any, overscrollBehavior: 'contain' as any }}>
       <Bubble.List
         items={messages.map((msg, index) => {
           const isStreamingAssistant = loading && index === messages.length - 1 && msg.role === 'assistant';

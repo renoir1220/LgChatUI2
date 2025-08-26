@@ -51,6 +51,7 @@ export class ConversationsRepository {
       `SELECT CONVERT(varchar(36), CONVERSATION_ID) AS id,
              TITLE as title,
              KNOWLEDGE_BASE_ID as knowledgeBaseId,
+             DIFY_CONVERSATION_ID as difyConversationId,
              CONVERT(varchar(33), CREATED_AT, 126) AS createdAt
       FROM AI_CONVERSATIONS
       WHERE USER_ID = @p0
@@ -87,7 +88,7 @@ export class ConversationsRepository {
   // 更新会话信息
   async updateConversation(
     conversationId: string,
-    updates: { title?: string; knowledgeBaseId?: string },
+    updates: { title?: string; knowledgeBaseId?: string; difyConversationId?: string },
   ): Promise<void> {
     const setParts: string[] = [];
     const params: any[] = [];
@@ -105,6 +106,12 @@ export class ConversationsRepository {
       paramIndex++;
     }
 
+    if (updates.difyConversationId !== undefined) {
+      setParts.push(`DIFY_CONVERSATION_ID = @p${paramIndex}`);
+      params.push(updates.difyConversationId);
+      paramIndex++;
+    }
+
     if (setParts.length === 0) {
       return;
     }
@@ -113,6 +120,32 @@ export class ConversationsRepository {
     const query = `UPDATE AI_CONVERSATIONS SET ${setParts.join(', ')} WHERE CONVERSATION_ID = @p${paramIndex}`;
 
     await this.db.queryWithErrorHandling(query, params, '更新会话信息');
+  }
+
+  // 获取会话的Dify对话ID
+  async getDifyConversationId(conversationId: string): Promise<string | null> {
+    const rows = await this.db.queryWithErrorHandling<{ difyConversationId: string | null }>(
+      `SELECT DIFY_CONVERSATION_ID as difyConversationId
+       FROM AI_CONVERSATIONS
+       WHERE CONVERSATION_ID = @p0`,
+      [conversationId],
+      '获取会话的Dify对话ID',
+    );
+    return rows.length > 0 ? rows[0].difyConversationId : null;
+  }
+
+  // 更新会话的Dify对话ID
+  async updateDifyConversationId(
+    conversationId: string,
+    difyConversationId: string,
+  ): Promise<void> {
+    await this.db.queryWithErrorHandling(
+      `UPDATE AI_CONVERSATIONS 
+       SET DIFY_CONVERSATION_ID = @p1
+       WHERE CONVERSATION_ID = @p0`,
+      [conversationId, difyConversationId],
+      '更新会话的Dify对话ID',
+    );
   }
 
   // 删除会话及其所有消息

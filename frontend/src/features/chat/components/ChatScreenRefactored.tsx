@@ -406,7 +406,7 @@ const ChatScreenRefactored: React.FC = () => {
   
 
   return (
-    <div className="chat-container" style={{ display: 'flex', height: '100vh', width: '100vw', position: 'relative' }}>
+    <div className="chat-container" style={{ display: 'flex', position: 'relative' }}>
       {/* 侧边栏 */}
       <ChatSidebar
         conversations={conversations}
@@ -428,7 +428,8 @@ const ChatScreenRefactored: React.FC = () => {
         backgroundImage: isWelcomeMode 
           ? 'radial-gradient(ellipse at top, #eff6ff 0%, #ffffff 50%, #e0e7ff 100%)'
           : undefined,
-        backgroundAttachment: isWelcomeMode ? 'fixed' : undefined,
+        // iOS 上 fixed 背景会引发滚动/布局问题，移动端禁用
+        backgroundAttachment: isWelcomeMode && !isMobile ? 'fixed' : undefined,
       }}>
         {/* 欢迎页面时的灯泡图标 */}
         {isNewConversation && (

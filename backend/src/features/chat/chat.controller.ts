@@ -164,13 +164,19 @@ export class ChatController {
     try {
       this.logger.debug('调用Dify API', { conversationId });
 
-      // 调用Dify API获取流式响应
-      // 不传递conversationId给Dify，让Dify自己管理会话
+      // 获取已存在的Dify对话ID，用于维持连续对话记忆
+      const existingDifyConversationId = await this.conversations.getDifyConversationId(conversationId);
+      this.logger.debug('获取已存在的Dify对话ID', {
+        conversationId,
+        existingDifyConversationId,
+      });
+
+      // 调用Dify API获取流式响应，传递已存在的对话ID以维持记忆
       const stream = await this.difyService.chatWithStreaming(
         userMessage,
         conversationId, // 使用conversationId作为user参数
         knowledgeBaseId,
-        undefined, // 不传递conversationId给Dify
+        existingDifyConversationId || undefined, // 传递Dify对话ID维持记忆（null转换为undefined）
       );
 
       if (!stream) {
@@ -179,6 +185,7 @@ export class ChatController {
 
       let assistantMessage = '';
       let buffer = '';
+      let difyConversationIdFromResponse: string | null = null;
       // 初始化citation解析器
       const citationParser = new StreamingCitationParser();
       const allExtractedCitations: Citation[] = [];
@@ -197,6 +204,15 @@ export class ChatController {
 
             const streamData = this.difyService.parseDifyStreamLine(line);
             if (!streamData) continue;
+
+            // 捕获Dify返回的conversation_id，用于后续保存
+            if (streamData.conversation_id && !difyConversationIdFromResponse) {
+              difyConversationIdFromResponse = streamData.conversation_id;
+              this.logger.debug('捕获到Dify对话ID', {
+                conversationId,
+                difyConversationId: difyConversationIdFromResponse,
+              });
+            }
 
             // 处理消息内容
             if (
@@ -324,6 +340,19 @@ export class ChatController {
         ChatRole.Assistant,
         assistantMessage,
       );
+
+      // 如果捕获到新的Dify对话ID，且与数据库中的不同，则更新数据库
+      if (difyConversationIdFromResponse && difyConversationIdFromResponse !== existingDifyConversationId) {
+        await this.conversations.updateDifyConversationId(
+          conversationId,
+          difyConversationIdFromResponse,
+        );
+        this.logger.log('更新Dify对话ID到数据库', {
+          conversationId,
+          oldDifyConversationId: existingDifyConversationId,
+          newDifyConversationId: difyConversationIdFromResponse,
+        });
+      }
 
       return {
         messageId: savedMessage.id,

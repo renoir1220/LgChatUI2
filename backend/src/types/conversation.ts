@@ -6,6 +6,7 @@ export interface Conversation {
   title: string;
   userId: string;
   knowledgeBaseId?: string; // 关联的知识库ID
+  difyConversationId?: string; // Dify对话记忆ID，用于维持连续对话
   createdAt: string; // ISO timestamp
   updatedAt?: string; // ISO timestamp
   messageCount?: number;
@@ -18,6 +19,7 @@ export const ConversationSchema = z.object({
   title: z.string(),
   userId: z.string(),
   knowledgeBaseId: z.string().optional(),
+  difyConversationId: z.string().optional(),
   createdAt: z.string(),
   updatedAt: z.string().optional(),
   messageCount: z.number().optional(),
