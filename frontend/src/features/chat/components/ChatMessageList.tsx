@@ -24,6 +24,29 @@ const md = new MarkdownIt({
   typographer: true
 });
 
+// 解析 <think>...</think> 标签（deepseek-r1 等模型）
+const parseThinkMarkup = (raw: string) => {
+  if (!raw) return { hasThink: false, closed: false, thinkText: '', finalText: '', previewText: '' };
+  const openIdx = raw.search(/<think>/i);
+  const closeIdx = raw.search(/<\/think>/i);
+  const hasOpen = openIdx !== -1;
+  const hasClose = closeIdx !== -1;
+  if (!hasOpen) {
+    return { hasThink: false, closed: false, thinkText: '', finalText: raw, previewText: raw };
+  }
+  if (hasOpen && !hasClose) {
+    // 流式阶段：出现了 <think> 但尚未闭合，隐藏其后的内容
+    const previewText = raw.slice(0, openIdx).trimEnd();
+    return { hasThink: true, closed: false, thinkText: '', finalText: '', previewText };
+  }
+  // 完整闭合：抽取思考文本，并移除后得到最终可见文本
+  const thinkRegex = /<think>[\s\S]*?<\/think>/gi;
+  const firstThink = /<think>([\s\S]*?)<\/think>/i.exec(raw);
+  const thinkText = firstThink?.[1] ?? '';
+  const finalText = raw.replace(thinkRegex, '').trimStart();
+  return { hasThink: true, closed: true, thinkText, finalText, previewText: finalText };
+};
+
 // Markdown 渲染函数
 const renderMarkdown = (content: string, isUser = false) => {
   const renderedHTML = md.render(content || '');
@@ -68,12 +91,68 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
   messagesLoading = false,
   onQuickAction,
 }) => {
+  // 折叠面板：思考过程（每条消息独立控制）
+  const ThinkBlock: React.FC<{ text: string }> = ({ text }) => {
+    const [open, setOpen] = React.useState(false);
+    if (!text) return null;
+    return (
+      <div
+        style={{
+          border: '1px solid #e5e7eb',
+          background: '#f9fafb',
+          borderRadius: 8,
+          padding: 8,
+          marginBottom: 8,
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: 12, color: '#6b7280' }}>思考过程（可能不完全准确）</span>
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            style={{
+              fontSize: 12,
+              color: '#2563eb',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 4,
+            }}
+          >
+            {open ? '收起' : '展开'}
+          </button>
+        </div>
+        {open ? (
+          <pre
+            style={{
+              marginTop: 8,
+              fontSize: 12,
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+              color: '#374151',
+              padding: 8,
+              borderRadius: 6,
+              background: '#ffffff',
+              border: '1px solid #e5e7eb',
+              maxHeight: 240,
+              overflow: 'auto',
+            }}
+          >
+            {text}
+          </pre>
+        ) : null}
+      </div>
+    );
+  };
+
   // 复制消息到剪贴板
   const handleCopyMessage = async (content: string) => {
     try {
+      // 移除思考过程，仅复制可见答案
+      const { finalText } = parseThinkMarkup(content);
       // 检测消息类型，如果是需求消息，复制格式化文本
-      const messageData = detectMessageType(content);
-      let textToCopy = content;
+      const messageData = detectMessageType(finalText);
+      let textToCopy = finalText;
       
       if (messageData.type === MessageType.REQUIREMENTS && messageData.data?.requirements) {
         const { requirements, total } = messageData.data.requirements;
@@ -243,10 +322,12 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
           
           // 检测消息类型并处理消息内容
           let contentNode: React.ReactNode;
+          // 对消息内容进行 think 标签解析
+          const { hasThink, thinkText, finalText } = parseThinkMarkup(msg.content);
           
           if (!isStreamingAssistant && msg.role === 'assistant') {
-            // 检测消息类型
-            const messageData = detectMessageType(msg.content);
+            // 基于最终可见文本检测消息类型
+            const messageData = detectMessageType(finalText);
             
             if (messageData.type === MessageType.REQUIREMENTS && messageData.data?.requirements) {
               // 渲染需求消息
@@ -260,14 +341,20 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
               // 渲染带引用的普通消息
               contentNode = (
                 <div>
-                  {renderMarkdown(msg.content, false)}
+                  {hasThink ? <ThinkBlock text={thinkText} /> : null}
+                  {renderMarkdown(finalText, false)}
                   <Divider style={{ margin: '8px 0' }} />
                   <CitationList citations={msg.citations} kbId={currentKnowledgeBase} />
                 </div>
               );
             } else {
-              // 渲染普通消息
-              contentNode = msg.content;
+              // 渲染普通消息（可能包含思考过程）
+              contentNode = (
+                <div>
+                  {hasThink ? <ThinkBlock text={thinkText} /> : null}
+                  {renderMarkdown(finalText || '', false)}
+                </div>
+              );
             }
           } else {
             // 用户消息或流式消息
@@ -312,7 +399,7 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
                       gap: 4, 
                       alignItems: 'center' 
                     }}>
-                      <VoicePlayer text={msg.content} />
+                      <VoicePlayer text={finalText || msg.content} />
                       
                       <Button
                         variant="ghost"
@@ -352,7 +439,18 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
             loadingRender: () => <Spin size="small" />,
             messageRender: (content: React.ReactNode) => {
               if (typeof content === 'string') {
-                return renderMarkdown(content, false);
+                // 对任意字符串消息（特别是流式）处理 think 标签
+                const parsed = parseThinkMarkup(content);
+                if (!parsed.hasThink) {
+                  return renderMarkdown(content, false);
+                }
+                if (!parsed.closed) {
+                  // 尚未闭合：仅显示 think 之前的可见内容，或占位提示
+                  const display = parsed.previewText?.trim()?.length ? parsed.previewText : '模型正在思考…';
+                  return renderMarkdown(display, false);
+                }
+                // 已闭合：显示移除 think 后的可见内容
+                return renderMarkdown(parsed.finalText, false);
               }
               return content;
             },

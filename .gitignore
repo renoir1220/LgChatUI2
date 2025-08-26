@@ -34,8 +34,12 @@ yarn-error.log*
 .vscode/settings.local.json
 .vscode/settings.json
 
-# SQL session files
+# SQL files - 数据库相关文件
+*.sql
 *.session.sql
+sql/
+**/sql/
+**/*.sql
 
 # Project-specific
 LgChatUI/

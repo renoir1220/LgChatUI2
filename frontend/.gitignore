@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# SQL files - 数据库相关文件
+*.sql
+**/*.sql

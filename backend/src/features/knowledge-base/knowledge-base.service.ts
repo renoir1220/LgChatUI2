@@ -14,16 +14,19 @@ export class KnowledgeBaseService {
   }
 
   /**
-   * 获取所有可用的知识库列表
-   * 从数据库获取完整配置信息
+   * 获取指定用户可用的知识库列表
+   * 从数据库获取完整配置信息，并根据用户权限过滤
    */
-  async getKnowledgeBases(): Promise<KnowledgeBase[]> {
+  async getKnowledgeBases(username?: string): Promise<KnowledgeBase[]> {
     this.logger.log('开始获取知识库列表');
 
     try {
-      // 从数据库获取知识库完整配置
-      const entities = await this.repository.findAllEnabled();
-      this.logger.debug('从数据库获取到知识库数据', { count: entities.length });
+      // 从数据库获取用户可访问的知识库配置
+      const entities = await this.repository.findEnabledByUser(username);
+      this.logger.debug('从数据库获取到用户可访问的知识库数据', { 
+        count: entities.length,
+        username: username || '未指定用户'
+      });
 
       // 将数据库实体转换为API响应格式
       const knowledgeBases: KnowledgeBase[] = entities.map((entity) => ({

@@ -65,6 +65,17 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const valueRef = useRef<string>(inputValue);
+  valueRef.current = inputValue;
+
+  // 设备类型检测：区分移动端/桌面端
+  const isMobile = React.useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    const coarse = window.matchMedia?.('(pointer: coarse)').matches;
+    const ua = (navigator.userAgent || navigator.vendor || (window as any).opera || '').toLowerCase();
+    const mobileUA = /android|iphone|ipad|ipod|mobile/i.test(ua);
+    return !!(coarse || mobileUA);
+  }, []);
   
   const handleSubmit = () => {
     if (inputValue.trim()) {
@@ -125,6 +136,39 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     }
   }, [focusAtEndSignal]);
 
+  // 移动端：拦截回车，插入换行，不触发提交
+  useEffect(() => {
+    if (!isMobile) return;
+    const root = containerRef.current;
+    if (!root) return;
+    const textarea = root.querySelector('textarea');
+    if (!textarea) return;
+
+    const onKeyDown = (e: Event) => {
+      const ke = e as KeyboardEvent;
+      if (ke.key === 'Enter' && !ke.isComposing) {
+        // Enter 在移动端为换行；Shift+Enter 也当换行
+        ke.preventDefault();
+        const el = ke.target as HTMLTextAreaElement;
+        const start = el.selectionStart ?? valueRef.current.length;
+        const end = el.selectionEnd ?? start;
+        const before = valueRef.current.slice(0, start);
+        const after = valueRef.current.slice(end);
+        const next = `${before}\n${after}`;
+        onInputChange(next);
+        // 恢复光标位置到换行后
+        requestAnimationFrame(() => {
+          try {
+            el.setSelectionRange(start + 1, start + 1);
+          } catch {}
+        });
+      }
+    };
+
+    textarea.addEventListener('keydown', onKeyDown as any, { passive: false });
+    return () => textarea.removeEventListener('keydown', onKeyDown as any);
+  }, [isMobile, onInputChange]);
+
   const senderHeader = (
     <Sender.Header
       title="上传文件"
@@ -176,7 +220,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           onCancel={onCancel}
           loading={loading}
           placeholder="询问任何问题"
-          submitType="shiftEnter"
+          // 桌面：Enter 发送，Shift+Enter 换行；移动端：通过 keydown 拦截实现回车换行
+          submitType="enter"
           style={{ 
             border: 'none',
             boxShadow: 'none',
@@ -446,12 +491,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           </Flex>
           
           {/* 右侧提示文字 */}
-          <span style={{
-            fontSize: 11,
-            color: '#999',
-            marginRight: 4
-          }}>
-            Shift+Enter 换行
+          <span style={{ fontSize: 11, color: '#999', marginRight: 4 }}>
+            {isMobile ? '回车换行 · 点发送按钮发送' : 'Enter 发送 · Shift+Enter 换行'}
           </span>
         </div>
       </div>
