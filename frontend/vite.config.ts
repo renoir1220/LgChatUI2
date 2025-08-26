@@ -15,6 +15,16 @@ const certPath = path.resolve(__dirname, '.cert/cert.pem')
 const keyPath = path.resolve(__dirname, '.cert/key.pem')
 
 export default defineConfig({
+  define: (() => {
+    try {
+      const rootPkgPath = path.resolve(__dirname, '..', 'package.json')
+      const pkgJson = JSON.parse(fs.readFileSync(rootPkgPath, 'utf8'))
+      const version = pkgJson.version || '0.0.0'
+      return { 'import.meta.env.VITE_APP_VERSION': JSON.stringify(version) }
+    } catch {
+      return { 'import.meta.env.VITE_APP_VERSION': JSON.stringify('0.0.0') }
+    }
+  })(),
   plugins: [
     react(), 
     tailwindcss(),

@@ -199,7 +199,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
           width: isMobile 
             ? (isMobileMenuOpen ? 280 : 0) 
             : (isSidebarCollapsed ? 64 : 280),
-          height: '100vh', 
+          height: '100%', 
           borderRight: isMobile && !isMobileMenuOpen ? 'none' : '1px solid #f0f0f0', 
           display: 'flex', 
           flexDirection: 'column',
@@ -209,6 +209,8 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
           position: isMobile ? 'fixed' : 'relative',
           left: isMobile ? (isMobileMenuOpen ? 0 : '-280px') : 'auto',
           zIndex: isMobile ? 1001 : 'auto',
+          boxSizing: 'border-box',
+          paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))',
         }}>
         
         {/* 顶部工具栏 - 在折叠状态下显示汉堡菜单 */}
@@ -354,17 +356,15 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
 
         {/* 会话列表：移动端打开菜单时也显示 */}
         {(!isSidebarCollapsed || (isMobile && isMobileMenuOpen)) && (
-          <div style={{ flex: 1, overflow: 'auto' }}>
+          <div style={{ flex: 1, overflow: 'auto', minHeight: 0, WebkitOverflowScrolling: 'touch' as any, overscrollBehavior: 'contain' as any }}>
             <Conversations
           items={conversations}
           activeKey={currentConversation}
           onActiveChange={(val) => {
-            setTimeout(() => {
-              onConversationChange(val as string);
-              if (isMobile) {
-                setIsMobileMenuOpen(false);
-              }
-            }, 100);
+            onConversationChange(val as string);
+            if (isMobile) {
+              setIsMobileMenuOpen(false);
+            }
           }}
           groupable
           styles={{ item: { padding: '0 8px' } }}
@@ -411,7 +411,8 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
         {!isSidebarCollapsed || (isMobile && isMobileMenuOpen) ? (
           <div style={{ 
             padding: '12px 12px', 
-            borderTop: '1px solid #f0f0f0' 
+            borderTop: '1px solid #f0f0f0',
+            background: '#fff',
           }}>
         <Dropdown
           placement="topLeft"
@@ -425,6 +426,8 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
                 label: '退出登录',
                 onClick: handleLogout,
               },
+              { type: 'divider' as const },
+              { key: 'version', label: `版本 v${String(import.meta.env.VITE_APP_VERSION || '')}`, disabled: true },
             ],
           }}
         >
@@ -481,6 +484,8 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
                     label: '退出登录',
                     onClick: handleLogout,
                   },
+                  { type: 'divider' as const },
+                  { key: 'version', label: `版本 v${String(import.meta.env.VITE_APP_VERSION || '')}`, disabled: true },
                 ],
               }}
             >
