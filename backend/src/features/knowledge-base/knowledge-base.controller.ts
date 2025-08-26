@@ -1,49 +1,33 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { KnowledgeBaseService } from './knowledge-base.service';
+import { AppLoggerService } from '../../shared/services/logger.service';
 import type { KnowledgeBase } from '../../types';
 
 @UseGuards(JwtAuthGuard)
 @Controller('api')
 export class KnowledgeBaseController {
-  constructor(private configService: ConfigService) {}
+  private readonly logger = new AppLoggerService();
+
+  constructor(private readonly knowledgeBaseService: KnowledgeBaseService) {
+    this.logger.setContext(KnowledgeBaseController.name);
+  }
 
   // GET /api/knowledge-bases - 获取知识库列表
   @Get('knowledge-bases')
   async getKnowledgeBases(): Promise<KnowledgeBase[]> {
-    // 从环境变量读取知识库配置
-    const knowledgeBases: KnowledgeBase[] = [];
+    this.logger.log('接收获取知识库列表请求');
 
-    // 读取配置的知识库
-    for (let i = 1; i <= 3; i++) {
-      const name = this.configService.get(`KB_${i}_NAME`);
-      const apiKey = this.configService.get(`KB_${i}_API_KEY`);
-      const url = this.configService.get(`KB_${i}_URL`);
-
-      if (name && apiKey && url) {
-        knowledgeBases.push({
-          id: `kb-${i}`,
-          name: name,
-          description: `${name} - Dify 知识库`,
-          enabled: true,
-          apiKey: apiKey, // 在实际使用中，不应该直接返回API key
-          apiUrl: url,
-        });
-      }
+    try {
+      const result = await this.knowledgeBaseService.getKnowledgeBases();
+      
+      this.logger.log('知识库列表获取成功', { count: result.length });
+      return result;
+    } catch (error) {
+      this.logger.error('获取知识库列表失败', error.stack, {
+        errorMessage: error.message,
+      });
+      throw error;
     }
-
-    // 如果没有配置知识库，返回默认的
-    if (knowledgeBases.length === 0) {
-      return [
-        {
-          id: 'kb-default',
-          name: '默认聊天',
-          description: '普通聊天模式，不使用知识库',
-          enabled: true,
-        },
-      ];
-    }
-
-    return knowledgeBases;
   }
 }

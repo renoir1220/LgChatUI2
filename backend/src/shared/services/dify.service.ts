@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosResponse } from 'axios';
+import { LgChatUIDatabaseService } from '../database/database.service';
 
 interface DifyChatRequest {
   inputs: Record<string, any>;
@@ -56,7 +57,10 @@ interface DifyStreamResponse {
 
 @Injectable()
 export class DifyService {
-  constructor(private configService: ConfigService) {}
+  constructor(
+    private configService: ConfigService,
+    private readonly db: LgChatUIDatabaseService,
+  ) {}
 
   /**
    * 调用Dify聊天API，支持流式响应
@@ -73,20 +77,20 @@ export class DifyService {
     console.log('参数: knowledgeBaseId:', knowledgeBaseId);
     console.log('参数: conversationId:', conversationId);
 
-    const apiKey = this.getKnowledgeBaseApiKey(knowledgeBaseId);
-    const apiUrl = this.getKnowledgeBaseApiUrl(knowledgeBaseId);
+    const config = await this.getKnowledgeBaseConfig(knowledgeBaseId);
 
+    if (!config) {
+      const errorMsg = `Knowledge base configuration not found for knowledgeBaseId: ${knowledgeBaseId}`;
+      console.error('DifyService错误:', errorMsg);
+      throw new Error(errorMsg);
+    }
+
+    const { apiKey, apiUrl } = config;
     console.log(
       '解析到的配置: apiKey:',
       apiKey ? `...${apiKey.slice(-4)}` : '未获取',
     );
     console.log('解析到的配置: apiUrl:', apiUrl);
-
-    if (!apiKey || !apiUrl) {
-      const errorMsg = `Knowledge base configuration not found for knowledgeBaseId: ${knowledgeBaseId}`;
-      console.error('DifyService错误:', errorMsg);
-      throw new Error(errorMsg);
-    }
 
     const requestData: DifyChatRequest = {
       inputs: {},
@@ -140,20 +144,20 @@ export class DifyService {
     console.log('DifyService: 开始处理阻塞式聊天请求');
     console.log('参数: knowledgeBaseId:', knowledgeBaseId);
 
-    const apiKey = this.getKnowledgeBaseApiKey(knowledgeBaseId);
-    const apiUrl = this.getKnowledgeBaseApiUrl(knowledgeBaseId);
+    const config = await this.getKnowledgeBaseConfig(knowledgeBaseId);
 
+    if (!config) {
+      const errorMsg = `Knowledge base configuration not found for knowledgeBaseId: ${knowledgeBaseId}`;
+      console.error('DifyService错误:', errorMsg);
+      throw new Error(errorMsg);
+    }
+
+    const { apiKey, apiUrl } = config;
     console.log(
       '解析到的配置: apiKey:',
       apiKey ? `...${apiKey.slice(-4)}` : '未获取',
     );
     console.log('解析到的配置: apiUrl:', apiUrl);
-
-    if (!apiKey || !apiUrl) {
-      const errorMsg = `Knowledge base configuration not found for knowledgeBaseId: ${knowledgeBaseId}`;
-      console.error('DifyService错误:', errorMsg);
-      throw new Error(errorMsg);
-    }
 
     const requestData: DifyChatRequest = {
       inputs: {},
@@ -195,67 +199,62 @@ export class DifyService {
   }
 
   /**
-   * 根据知识库ID获取API Key
+   * 根据知识库ID获取API配置
+   * 直接从数据库获取配置信息
    */
-  private getKnowledgeBaseApiKey(knowledgeBaseId?: string): string | undefined {
-    console.log('getKnowledgeBaseApiKey: knowledgeBaseId =', knowledgeBaseId);
+  private async getKnowledgeBaseConfig(
+    knowledgeBaseId?: string,
+  ): Promise<{ apiKey: string; apiUrl: string } | null> {
+    console.log('getKnowledgeBaseConfig: knowledgeBaseId =', knowledgeBaseId);
 
-    if (!knowledgeBaseId) {
-      const defaultKey = this.configService.get<string>('KB_1_API_KEY');
-      console.log(
-        '使用默认知识库 KB_1，API Key:',
-        defaultKey ? `...${defaultKey.slice(-4)}` : '未获取',
-      );
-      return defaultKey;
+    try {
+      let rows;
+      
+      if (!knowledgeBaseId) {
+        // 如果没有指定知识库，获取第一个启用的知识库
+        rows = await this.db.queryWithErrorHandling<{
+          API_KEY: string;
+          API_URL: string;
+          NAME: string;
+        }>(
+          `SELECT TOP 1 API_KEY, API_URL, NAME 
+           FROM AI_KNOWLEDGE_BASES 
+           WHERE ENABLED = 1 
+           ORDER BY SORT_ORDER ASC`,
+          [],
+          '获取默认知识库配置',
+        );
+      } else {
+        // 根据ID获取知识库配置
+        rows = await this.db.queryWithErrorHandling<{
+          API_KEY: string;
+          API_URL: string;
+          NAME: string;
+        }>(
+          `SELECT API_KEY, API_URL, NAME 
+           FROM AI_KNOWLEDGE_BASES 
+           WHERE KB_KEY = @p0 AND ENABLED = 1`,
+          [knowledgeBaseId],
+          '根据ID获取知识库配置',
+        );
+      }
+
+      if (rows.length === 0) {
+        console.error('未找到知识库配置:', knowledgeBaseId);
+        return null;
+      }
+
+      const config = rows[0];
+      console.log('获取到知识库配置:', config.NAME);
+
+      return {
+        apiKey: config.API_KEY,
+        apiUrl: config.API_URL,
+      };
+    } catch (error) {
+      console.error('获取知识库配置失败:', error.message);
+      return null;
     }
-
-    // 根据知识库ID解析配置项
-    const kbNumber = this.extractKnowledgeBaseNumber(knowledgeBaseId);
-    const configKey = `KB_${kbNumber}_API_KEY`;
-    const apiKey = this.configService.get<string>(configKey);
-    console.log(
-      `知识库 ${knowledgeBaseId} 解析为编号 ${kbNumber}，配置项 ${configKey}:`,
-      apiKey ? `...${apiKey.slice(-4)}` : '未获取',
-    );
-
-    return apiKey;
-  }
-
-  /**
-   * 根据知识库ID获取API URL
-   */
-  private getKnowledgeBaseApiUrl(knowledgeBaseId?: string): string | undefined {
-    console.log('getKnowledgeBaseApiUrl: knowledgeBaseId =', knowledgeBaseId);
-
-    if (!knowledgeBaseId) {
-      const defaultUrl = this.configService.get<string>('KB_1_URL');
-      console.log('使用默认知识库 KB_1，URL:', defaultUrl);
-      return defaultUrl;
-    }
-
-    // 根据知识库ID解析配置项
-    const kbNumber = this.extractKnowledgeBaseNumber(knowledgeBaseId);
-    const configKey = `KB_${kbNumber}_URL`;
-    const apiUrl = this.configService.get<string>(configKey);
-    console.log(
-      `知识库 ${knowledgeBaseId} 解析为编号 ${kbNumber}，配置项 ${configKey}:`,
-      apiUrl,
-    );
-
-    return apiUrl;
-  }
-
-  /**
-   * 从知识库ID中提取编号
-   */
-  private extractKnowledgeBaseNumber(knowledgeBaseId: string): number {
-    console.log('extractKnowledgeBaseNumber: 输入 =', knowledgeBaseId);
-
-    const match = knowledgeBaseId.match(/kb-(\d+)/);
-    const number = match ? parseInt(match[1], 10) : 1;
-
-    console.log('extractKnowledgeBaseNumber: 提取到编号 =', number);
-    return number;
   }
 
   /**
@@ -284,11 +283,12 @@ export class DifyService {
     fileId: string,
     knowledgeBaseId?: string,
   ): Promise<NodeJS.ReadableStream> {
-    const apiKey = this.getKnowledgeBaseApiKey(knowledgeBaseId);
-    const apiUrl = this.getKnowledgeBaseApiUrl(knowledgeBaseId);
-    if (!apiKey || !apiUrl) {
+    const config = await this.getKnowledgeBaseConfig(knowledgeBaseId);
+    if (!config) {
       throw new Error('Knowledge base configuration missing');
     }
+
+    const { apiKey, apiUrl } = config;
 
     const url = `${apiUrl}/files/${fileId}/file-preview`;
     const resp = await axios.get(url, {
