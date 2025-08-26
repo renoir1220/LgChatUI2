@@ -121,13 +121,13 @@ src/
 - **事务支持**: 关键操作的ACID保证
 
 ### 核心表结构
-- **T_AI_CONVERSATION**: 会话信息
-- **T_AI_MESSAGE**: 消息记录
-- **T_AI_USER**: 用户信息
-- **T_AI_BUGS**: BUG管理信息（编号、标题、内容、状态、优先级、图片等）
-- **T_AI_SUGGESTIONS**: 建议管理信息（标题、内容、状态、开发回复等）
+- **AI_CONVERSATIONS**: 会话信息
+- **AI_MESSAGES**: 消息记录
+- **AI_USER**: 用户信息
+- **AI_BUGS**: BUG管理信息（编号、标题、内容、状态、优先级、图片等）
+- **AI_SUGGESTIONS**: 建议管理信息（标题、内容、状态、开发回复等）
 
-所有AI相关表以`T_AI_`开头，便于识别和管理。BUG和建议功能连接到LgChatUI数据库。
+所有AI相关表以`AI_`开头，便于识别和管理。BUG和建议功能连接到LgChatUI数据库。
 
 ## API设计
 

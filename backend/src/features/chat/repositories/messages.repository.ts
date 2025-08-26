@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { CrmDatabaseService } from '../../../shared/database/database.service';
+import { LgChatUIDatabaseService } from '../../../shared/database/database.service';
 import { PAGINATION_CONSTANTS } from '../../../shared/constants/pagination.constants';
 import { ChatMessage, ChatRole } from '../../../types';
 
 @Injectable()
 export class MessagesRepository {
-  constructor(private readonly db: CrmDatabaseService) {}
+  constructor(private readonly db: LgChatUIDatabaseService) {}
 
   async listByConversation(
     conversationId: string,
@@ -20,7 +20,7 @@ export class MessagesRepository {
              CASE ROLE WHEN 'USER' THEN 'USER' ELSE 'ASSISTANT' END AS role,
              CONTENT AS content,
              CONVERT(varchar(33), CREATED_AT, 126) AS createdAt
-      FROM T_AI_MESSAGES 
+      FROM AI_MESSAGES 
       WHERE CONVERSATION_ID = @p0
       ORDER BY CREATED_AT ASC
       OFFSET @p1 ROWS
@@ -49,7 +49,7 @@ export class MessagesRepository {
     const dbRole = role === ChatRole.User ? 'USER' : 'BOT';
     const rows = await this.db.query<any>(
       `DECLARE @id uniqueidentifier = NEWID();
-       INSERT INTO T_AI_MESSAGES (MESSAGE_ID, CONVERSATION_ID, ROLE, CONTENT, CREATED_AT)
+       INSERT INTO AI_MESSAGES (MESSAGE_ID, CONVERSATION_ID, ROLE, CONTENT, CREATED_AT)
        VALUES (@id, @p0, @p1, @p2, GETUTCDATE());
        SELECT CONVERT(varchar(36), @id) AS id,
               CONVERT(varchar(36), @p0) AS conversationId,
@@ -70,13 +70,13 @@ export class MessagesRepository {
     };
   }
 
-  // 检查某会话是否属于指定用户（依据 T_AI_CONVERSATIONS.USER_ID）
+  // 检查某会话是否属于指定用户（依据 AI_CONVERSATIONS.USER_ID）
   async isConversationOwnedByUser(
     conversationId: string,
     userId: string,
   ): Promise<boolean> {
     const rows = await this.db.query<any>(
-      `SELECT TOP 1 1 AS ok FROM T_AI_CONVERSATIONS WHERE CONVERSATION_ID = @p0 AND USER_ID = @p1`,
+      `SELECT TOP 1 1 AS ok FROM AI_CONVERSATIONS WHERE CONVERSATION_ID = @p0 AND USER_ID = @p1`,
       conversationId,
       userId,
     );

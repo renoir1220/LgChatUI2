@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { CrmDatabaseService } from '../../../shared/database/database.service';
+import { LgChatUIDatabaseService } from '../../../shared/database/database.service';
 import { PAGINATION_CONSTANTS } from '../../../shared/constants/pagination.constants';
 import { Conversation } from '../../../types';
 
 @Injectable()
 export class ConversationsRepository {
-  constructor(private readonly db: CrmDatabaseService) {}
+  constructor(private readonly db: LgChatUIDatabaseService) {}
 
   async list(page = 1, pageSize = 20): Promise<Conversation[]> {
     const offset = (page - 1) * pageSize + 1;
@@ -14,7 +14,7 @@ export class ConversationsRepository {
       `WITH C AS (
         SELECT CONVERSATION_ID, TITLE, CREATED_AT,
                ROW_NUMBER() OVER (ORDER BY CREATED_AT DESC) AS rn
-        FROM T_AI_CONVERSATIONS
+        FROM AI_CONVERSATIONS
       )
       SELECT CONVERT(varchar(36), CONVERSATION_ID) AS id,
              TITLE as title,
@@ -29,7 +29,7 @@ export class ConversationsRepository {
   async create(title: string): Promise<Conversation> {
     const rows = await this.db.queryWithErrorHandling<Conversation>(
       `DECLARE @id uniqueidentifier = NEWID();
-       INSERT INTO T_AI_CONVERSATIONS (CONVERSATION_ID, TITLE, CREATED_AT)
+       INSERT INTO AI_CONVERSATIONS (CONVERSATION_ID, TITLE, CREATED_AT)
        VALUES (@id, @p0, GETUTCDATE());
        SELECT CONVERT(varchar(36), @id) AS id, @p0 AS title,
               CONVERT(varchar(33), GETUTCDATE(), 126) AS createdAt;`,
@@ -52,7 +52,7 @@ export class ConversationsRepository {
              TITLE as title,
              KNOWLEDGE_BASE_ID as knowledgeBaseId,
              CONVERT(varchar(33), CREATED_AT, 126) AS createdAt
-      FROM T_AI_CONVERSATIONS
+      FROM AI_CONVERSATIONS
       WHERE USER_ID = @p0
       ORDER BY CREATED_AT DESC
       OFFSET @p1 ROWS
@@ -71,7 +71,7 @@ export class ConversationsRepository {
   ): Promise<Conversation> {
     const rows = await this.db.queryWithErrorHandling<any>(
       `DECLARE @id uniqueidentifier = NEWID();
-       INSERT INTO T_AI_CONVERSATIONS (CONVERSATION_ID, USER_ID, TITLE, KNOWLEDGE_BASE_ID, CREATED_AT)
+       INSERT INTO AI_CONVERSATIONS (CONVERSATION_ID, USER_ID, TITLE, KNOWLEDGE_BASE_ID, CREATED_AT)
        VALUES (@id, @p0, @p1, @p2, GETUTCDATE());
        SELECT CONVERT(varchar(36), @id) AS id, 
               @p1 AS title,
@@ -110,7 +110,7 @@ export class ConversationsRepository {
     }
 
     params.push(conversationId);
-    const query = `UPDATE T_AI_CONVERSATIONS SET ${setParts.join(', ')} WHERE CONVERSATION_ID = @p${paramIndex}`;
+    const query = `UPDATE AI_CONVERSATIONS SET ${setParts.join(', ')} WHERE CONVERSATION_ID = @p${paramIndex}`;
 
     await this.db.queryWithErrorHandling(query, params, '更新会话信息');
   }
@@ -119,8 +119,8 @@ export class ConversationsRepository {
   async deleteConversation(conversationId: string): Promise<void> {
     await this.db.queryWithErrorHandling(
       `BEGIN TRANSACTION;
-       DELETE FROM T_AI_MESSAGES WHERE CONVERSATION_ID = @p0;
-       DELETE FROM T_AI_CONVERSATIONS WHERE CONVERSATION_ID = @p0;
+       DELETE FROM AI_MESSAGES WHERE CONVERSATION_ID = @p0;
+       DELETE FROM AI_CONVERSATIONS WHERE CONVERSATION_ID = @p0;
        COMMIT;`,
       [conversationId],
       '删除会话及相关消息',

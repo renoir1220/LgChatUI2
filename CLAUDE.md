@@ -191,7 +191,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 ### 数据库配置
 - **类型**: MSSQL Server 2008
 - **测试环境**: 详见 `CLAUDE.local.md`
-- **表命名规范**: 所有AI相关表以 `T_AI_` 开头
+- **表命名规范**: 所有AI相关表以 `AI_` 开头
 
 ### 构建产物说明
 - **backend/dist/**: TypeScript编译后的JavaScript文件，生产环境运行入口
