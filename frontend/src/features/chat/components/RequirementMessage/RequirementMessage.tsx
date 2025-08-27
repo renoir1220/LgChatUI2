@@ -81,6 +81,7 @@ export const RequirementMessage: React.FC<RequirementMessageProps> = ({
                 key={requirement.requirementCode}
                 requirement={requirement}
                 index={index}
+                total={requirements.length}
               />
             ))}
           </div>

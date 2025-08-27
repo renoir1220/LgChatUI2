@@ -200,17 +200,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       paddingBottom: 'max(16px, env(safe-area-inset-bottom, 16px))'
     }}>
       {/* 现代Chat UI布局 */}
-      <div style={{
-        borderRadius: 24,
-        border: glass ? '1px solid rgba(255,255,255,0.5)' : '1px solid #e1e5e9',
-        backgroundColor: '#ffffff',
-        backdropFilter: glass ? 'blur(8px)' as any : undefined,
-        WebkitBackdropFilter: glass ? 'blur(8px)' as any : undefined,
-        padding: '8px 12px 6px 12px',
-        boxShadow: '0 0 20px rgba(59, 130, 246, 0.15), 0 2px 12px rgba(0, 0, 0, 0.08)',
-        transition: 'all 0.2s ease',
-        position: 'relative'
-      }}>
+      <div className={`chat-input-container ${glass ? 'chat-input-glass' : ''}`}>
         {/* 主输入区域 */}
         <Sender
           value={inputValue}

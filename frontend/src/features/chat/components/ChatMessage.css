@@ -221,6 +221,16 @@
   width: 100% !important;
 }
 
+.requirement-item-wrapper {
+  width: 100%;
+}
+
+.requirement-divider {
+  height: 1px;
+  background-color: #e1e4e8;
+  margin: 16px 0;
+}
+
 .requirement-collapse .ant-collapse-header {
   width: 100% !important;
   padding-left: 0 !important;
@@ -273,6 +283,11 @@
   border-bottom: none !important;
 }
 
+/* 确保AI消息头像隐藏 */
+.ant-bubble-list .ant-bubble-avatar {
+  display: none !important;
+}
+
 /* 响应式优化 */
 /* 大屏幕时设置最小宽度以撑开组件 */
 @media (min-width: 1024px) {
@@ -306,4 +321,110 @@
   .ant-bubble-list .ant-bubble-content {
     padding: 12px 0 !important;
   }
+  
+  .chat-input-container {
+    border-radius: 20px;
+    padding: 6px 10px 4px 10px;
+  }
+}
+
+/* 聊天输入框样式 */
+.chat-input-container {
+  border-radius: 24px;
+  border: 1px solid #e1e5e9;
+  background-color: #ffffff;
+  padding: 8px 12px 6px 12px;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.15), 0 2px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.chat-input-glass {
+  border: 1px solid rgba(255,255,255,0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.chat-input-sender {
+  background-color: transparent;
+}
+
+.chat-input-sender .ant-input {
+  background-color: transparent;
+}
+
+.chat-input-actions {
+  margin-left: 8px;
+}
+
+.chat-input-send-button {
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.chat-input-send-button-enabled {
+  background-color: #1677ff;
+}
+
+.chat-input-send-button-disabled {
+  background-color: #ccc;
+}
+
+.chat-input-dropdown-actions {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  padding: 8px;
+  margin-bottom: 8px;
+  border: 1px solid #e1e5e9;
+}
+
+.chat-input-action-item {
+  padding: 12px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.chat-input-action-item:hover {
+  background-color: #f5f5f5;
+}
+
+.chat-input-kb-selector {
+  padding: 8px 12px;
+  border-radius: 20px;
+  border: 1px solid #e1e5e9;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  color: #666;
+}
+
+.chat-input-kb-item {
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.chat-input-kb-item:hover {
+  background-color: #f5f5f5;
 }

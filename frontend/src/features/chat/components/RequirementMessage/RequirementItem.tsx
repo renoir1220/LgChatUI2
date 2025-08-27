@@ -14,6 +14,7 @@ const { Text } = Typography;
 interface RequirementItemProps {
   requirement: RequirementItemType;
   index: number;
+  total: number;
 }
 
 /**
@@ -40,6 +41,7 @@ function getStageVariant(stage: string): 'primary' | 'success' | 'warning' | 'da
 export const RequirementItem: React.FC<RequirementItemProps> = ({
   requirement,
   index,
+  total,
 }) => {
   // 构建折叠面板的标题 - 充分利用可用宽度
   const header = (
@@ -116,16 +118,19 @@ export const RequirementItem: React.FC<RequirementItemProps> = ({
   ];
 
   return (
-    <Collapse
-      items={items}
-      ghost
-      style={{ 
-        marginBottom: index < 2 ? 8 : 0,
-        border: 'none'
-      }}
-      expandIconPosition="start"
-      // 自定义样式确保充分利用宽度
-      className="requirement-collapse"
-    />
+    <div className="requirement-item-wrapper">
+      <Collapse
+        items={items}
+        ghost
+        style={{ 
+          border: 'none'
+        }}
+        expandIconPosition="start"
+        // 自定义样式确保充分利用宽度
+        className="requirement-collapse"
+      />
+      {/* 分割线，最后一个item不显示 */}
+      {index < total - 1 && <div className="requirement-divider" />}
+    </div>
   );
 };

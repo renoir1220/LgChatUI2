@@ -52,9 +52,14 @@ export class AuthService {
       return cached.user;
     }
 
-    // 数据库错误会被DatabaseService统一处理并抛出DatabaseException
-    // 该异常会直接传播到Controller层，无需在此处捕获
-    const user = await this.usersRepository.findByUsername(username);
+    // 为了稳健性，捕获底层仓库错误并返回null（避免影响调用方）
+    let user: User | null = null;
+    try {
+      user = await this.usersRepository.findByUsername(username);
+    } catch (e: any) {
+      this.logger.error(`validateUser 查询失败: ${e?.message || e}`);
+      return null;
+    }
 
     // 仅缓存存在的用户，避免将不存在用户长期缓存
     if (user) {
