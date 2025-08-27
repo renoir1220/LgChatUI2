@@ -455,13 +455,16 @@ const ChatScreenRefactored: React.FC = () => {
             paddingBottom: 16,
             // 移动端时左侧边距与右侧一致，菜单已悬浮无需额外留白
             paddingLeft: isMobile ? '24px' : '24px',
-            justifyContent: isMobile ? 'center' : 'flex-start',
+            justifyContent: 'space-between', // 改为两端对齐，让按钮始终靠右
             backgroundColor: '#fff',
           }}>
-            <span style={{ fontWeight: 500 }}>{renderChatTitle()}</span>
-            {!isMobile && <span style={{ flex: 1 }} />}
+            {/* 左侧：保持空白，确保标题居中 */}
+            <div style={{ width: '32px' }} />
             
-            {/* 标题栏内的信息流图标 */}
+            {/* 中间：标题 */}
+            <span style={{ fontWeight: 500, textAlign: 'center', flex: 1 }}>{renderChatTitle()}</span>
+            
+            {/* 右侧：信息流图标 */}
             <InfoFeedIcon onClick={() => navigate('/feeds')} />
           </div>
         )}

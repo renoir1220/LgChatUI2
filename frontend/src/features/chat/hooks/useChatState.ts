@@ -36,8 +36,12 @@ export interface BubbleDataType {
 }
 
 export interface StreamResponse {
-  event: 'agent_message' | 'message';
+  // 服务端可能发送 'error' 事件用于 SSE 错误传播
+  event: 'agent_message' | 'message' | 'error';
   answer?: string;
+  // 错误事件兼容字段
+  error?: string;
+  message?: string;
   metadata?: {
     retriever_resources?: Array<{
       document_name?: string;

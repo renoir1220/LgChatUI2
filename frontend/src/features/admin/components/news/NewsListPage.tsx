@@ -201,6 +201,7 @@ const NewsListPage: React.FC = () => {
                 <tr className="text-left border-b border-border">
                   <th className="py-2 pr-3 w-[96px]">缩略图</th>
                   <th className="py-2 pr-3">标题</th>
+                  <th className="py-2 pr-3 w-[80px]">置顶</th>
                   <th className="py-2 pr-3 w-[120px]">状态</th>
                   <th className="py-2 pr-3 w-[160px]">发布时间</th>
                   <th className="py-2 pr-3 w-[160px]">操作</th>
@@ -226,6 +227,15 @@ const NewsListPage: React.FC = () => {
                     <td className="py-2 pr-3">
                       <div className="font-medium">{r.title}</div>
                       <div className="text-xs text-muted-foreground line-clamp-1">{r.summary}</div>
+                    </td>
+                    <td className="py-2 pr-3">
+                      {r.is_pinned ? (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                          📌 置顶
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">普通</span>
+                      )}
                     </td>
                     <td className="py-2 pr-3">
                       <Select value={r.status} onValueChange={(v) => onChangeStatus(r.id, v as InfoFeedStatus)}>

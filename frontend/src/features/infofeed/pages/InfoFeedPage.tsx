@@ -41,10 +41,10 @@ const InfoFeedPage: React.FC = () => {
 
   const inDetail = !!(uiState.selectedFeed && selectedFeedDetail);
 
-  // 页面容器（全屏，无蒙层）
+  // 页面容器（占满可视区，避免 w-screen 带来的水平溢出）
   return (
-    <div className="w-screen h-screen bg-white dark:bg-gray-900">
-      <div className="flex flex-col h-full">
+    <div className="w-full min-h-screen bg-white dark:bg-gray-900">
+      <div className="flex flex-col min-h-screen">
         {/* TopBar 持久存在 */}
         <TopBar
           withDivider={inDetail}
@@ -137,4 +137,3 @@ const InfoFeedPage: React.FC = () => {
 };
 
 export default InfoFeedPage;
-

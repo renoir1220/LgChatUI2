@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import ReactMarkdown from 'react-markdown';
 import '@/features/infofeed/components/feed-markdown.css';
 import { InfoFeedCategory, InfoFeedStatus } from '@/types/infofeed';
@@ -30,6 +31,7 @@ const NewsEditorPage: React.FC = () => {
   const [content, setContent] = React.useState('');
   const [status, setStatus] = React.useState<InfoFeedStatus>(InfoFeedStatus.DRAFT);
   const [publishTime, setPublishTime] = React.useState<string>('');
+  const [isPinned, setIsPinned] = React.useState(false);
 
   React.useEffect(() => {
     if (isNew) return;
@@ -40,6 +42,7 @@ const NewsEditorPage: React.FC = () => {
         setSummary(data.summary || '');
         setContent(data.content || '');
         setStatus(data.status);
+        setIsPinned(data.is_pinned || false);
         // 转换为 datetime-local 可用的格式
         const dt = new Date(data.publish_time);
         const iso = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000)
@@ -72,6 +75,7 @@ const NewsEditorPage: React.FC = () => {
         category: InfoFeedCategory.NEWS,
         status,
         publish_time: publishTime ? new Date(publishTime).toISOString() : undefined,
+        is_pinned: isPinned,
       };
       if (isNew) {
         await createNews(body);
@@ -141,6 +145,22 @@ const NewsEditorPage: React.FC = () => {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="space-y-2">
+                <div className="text-sm text-muted-foreground">置顶</div>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={isPinned}
+                    onCheckedChange={setIsPinned}
+                    id="pinned-switch"
+                  />
+                  <label 
+                    htmlFor="pinned-switch" 
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    {isPinned ? '已置顶' : '普通'}
+                  </label>
+                </div>
               </div>
               <div className="space-y-2">
                 <div className="text-sm text-muted-foreground">发布时间</div>
