@@ -150,10 +150,10 @@ const InfoFeedModal: React.FC<InfoFeedModalProps> = ({
             right={
               <button
                 onClick={inDetail ? closeFeedDetail : handleRequestClose}
-                className="flex items-center gap-1 px-2 py-1 hover:bg-muted rounded-md transition-colors"
+                className="flex items-center gap-1 px-3 py-2 min-w-[44px] min-h-[44px] justify-center hover:bg-muted rounded-md transition-colors touch-manipulation"
                 aria-label="返回"
               >
-                <svg className="w-4 h-4 text-foreground/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-foreground/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
                 </svg>
                 <span className="hidden sm:inline text-xs text-foreground/70">返回</span>

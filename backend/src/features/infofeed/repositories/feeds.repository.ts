@@ -66,7 +66,7 @@ export class InfoFeedsRepository {
     const offset = (page - 1) * limit;
     const sql = `
       SELECT 
-        id, title, summary, category, thumbnail_url, source,
+        id, title, content, summary, category, thumbnail_url, source,
         author_id, view_count, like_count, comment_count,
         is_pinned, status, publish_time, created_at, updated_at
       FROM AI_InfoFeed

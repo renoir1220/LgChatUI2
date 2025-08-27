@@ -54,7 +54,8 @@ async function bootstrap() {
   });
 
   // 配置uploads文件服务
-  const uploadsPath = join(__dirname, '../../uploads');
+  // Serve uploads from backend CWD (backend/uploads), not dist path
+  const uploadsPath = join(process.cwd(), 'uploads');
   app.useStaticAssets(uploadsPath, {
     prefix: '/uploads/',
     setHeaders: (res, path) => {
@@ -64,6 +65,21 @@ async function bootstrap() {
       }
     },
   });
+  // Fallback static mapping for legacy root-level uploads (if exists)
+  try {
+    const legacyUploads = join(process.cwd(), '..', 'uploads');
+    if (fs.existsSync(legacyUploads)) {
+      app.useStaticAssets(legacyUploads, {
+        prefix: '/uploads/',
+        setHeaders: (res, path) => {
+          if (path.match(/\.(png|jpg|jpeg|gif|webp)$/)) {
+            res.setHeader('Cache-Control', 'public, max-age=86400');
+          }
+        },
+      });
+      console.log('已启用根级 uploads 兼容映射:', legacyUploads);
+    }
+  } catch {}
 
   // 监听所有网络接口，允许Docker容器访问
   const port = process.env.PORT ?? 3000;

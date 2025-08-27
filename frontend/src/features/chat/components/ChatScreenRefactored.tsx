@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { message, Button } from 'antd';
 import { BulbOutlined } from '@ant-design/icons';
 import { useChatState } from '../hooks/useChatState';
@@ -18,7 +18,6 @@ import { SuggestionModal } from '../../suggestions/components/SuggestionModal';
 import { SuggestionListModal } from '../../suggestions/components/SuggestionListModal';
 import { BugReportModal } from '../../bugs/components/BugReportModal';
 import InfoFeedIcon from '../../infofeed/components/InfoFeedIcon';
-import InfoFeedModal from '../../infofeed/components/InfoFeedModal';
 
 /**
  * 重构后的聊天界面组件
@@ -49,8 +48,7 @@ const ChatScreenRefactored: React.FC = () => {
   // BUG提交模态框状态
   const [isBugReportModalOpen, setIsBugReportModalOpen] = useState(false);
   
-  // 信息流模态框状态
-  const [isInfoFeedModalOpen, setIsInfoFeedModalOpen] = useState(false);
+  const navigate = useNavigate();
 
   // 监听屏幕尺寸变化
   useEffect(() => {
@@ -264,6 +262,9 @@ const ChatScreenRefactored: React.FC = () => {
 
     let quickMessage = '';
     switch (action) {
+      case 'open-infofeed':
+        navigate('/feeds');
+        return;
       case 'readme-query':
         quickMessage = '查询参数：';
         // 设置后将焦点移动到输入末尾，便于继续输入
@@ -435,9 +436,7 @@ const ChatScreenRefactored: React.FC = () => {
         {/* 欢迎页面时的信息流图标 */}
         {isNewConversation && (
           <div className="fixed top-4 right-4 z-[9999]">
-            <InfoFeedIcon
-              onClick={() => setIsInfoFeedModalOpen(true)}
-            />
+            <InfoFeedIcon onClick={() => navigate('/feeds')} />
           </div>
         )}
         {/* 聊天标题栏（新对话时不显示） */}
@@ -463,9 +462,7 @@ const ChatScreenRefactored: React.FC = () => {
             {!isMobile && <span style={{ flex: 1 }} />}
             
             {/* 标题栏内的信息流图标 */}
-            <InfoFeedIcon
-              onClick={() => setIsInfoFeedModalOpen(true)}
-            />
+            <InfoFeedIcon onClick={() => navigate('/feeds')} />
           </div>
         )}
 
@@ -503,6 +500,8 @@ const ChatScreenRefactored: React.FC = () => {
         />
       </div>
       
+      {/* 信息流已迁移为独立页面 /feeds */}
+
       {/* 客户字典选择器 */}
       <DictionarySelector
         dictionaries={dictionaries}
@@ -542,11 +541,7 @@ const ChatScreenRefactored: React.FC = () => {
         }}
       />
       
-      {/* 信息流模态框 */}
-      <InfoFeedModal
-        isOpen={isInfoFeedModalOpen}
-        onClose={() => setIsInfoFeedModalOpen(false)}
-      />
+      {/* 信息流已迁移为独立页面 /feeds */}
     </div>
   );
 };

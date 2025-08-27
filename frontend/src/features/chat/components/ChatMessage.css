@@ -283,6 +283,11 @@
   border-bottom: none !important;
 }
 
+/* 用户消息背景色 */
+.ant-bubble-list .ant-bubble[data-role="user"] .ant-bubble-content {
+  background: #f0f0f0 !important;
+}
+
 /* 确保AI消息头像隐藏 */
 .ant-bubble-list .ant-bubble-avatar {
   display: none !important;
@@ -318,7 +323,7 @@
     min-width: auto !important;
   }
   
-  .ant-bubble-list .ant-bubble-content {
+  .ant-bubble-list .ant-bubble[data-role="assistant"] .ant-bubble-content {
     padding: 12px 0 !important;
   }
   

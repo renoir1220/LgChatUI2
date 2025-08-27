@@ -19,6 +19,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import * as fs from 'fs';
 import * as path from 'path';
+import type { File as MulterFile } from 'multer';
 
 @Controller('api/admin/news')
 export class NewsAdminController {
@@ -70,6 +71,7 @@ export class NewsAdminController {
           const now = new Date();
           const year = String(now.getFullYear());
           const month = String(now.getMonth() + 1).padStart(2, '0');
+          // Save under backend/uploads
           const dir = path.resolve(process.cwd(), 'uploads', 'news', year, month);
           fs.mkdirSync(dir, { recursive: true });
           cb(null, dir);
@@ -88,13 +90,13 @@ export class NewsAdminController {
       },
     }),
   )
-  async upload(@UploadedFile() file?: Express.Multer.File) {
+  async upload(@UploadedFile() file?: MulterFile) {
     if (!file) return { error: '未接收到文件' };
+    // Build public URL under /uploads/ from backend cwd
     const rel = path
       .relative(path.resolve(process.cwd()), file.path)
       .split(path.sep)
       .join('/');
-    // 将相对 backend 根目录的路径映射为以 /uploads 开头的URL
     const idx = rel.indexOf('uploads/');
     const url = '/' + (idx >= 0 ? rel.slice(idx) : rel);
     return { url };

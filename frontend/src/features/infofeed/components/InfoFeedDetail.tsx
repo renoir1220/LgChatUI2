@@ -403,22 +403,22 @@ const InfoFeedDetail: React.FC<InfoFeedDetailProps> = ({
       {/* 对齐内容列的悬浮导航（固定于可视区域，不随内容滚动） */}
       <div className="pointer-events-none absolute inset-0 z-10">
         <div className="mx-auto max-w-3xl h-full relative px-4 md:px-6">
-          <div className="absolute right-0 bottom-4 flex flex-col gap-2">
+          <div className="absolute right-0 bottom-4 flex flex-col gap-3">
             <button
-              className="pointer-events-auto inline-flex items-center justify-center w-10 h-10 rounded-full bg-black/35 hover:bg-black/45 text-white backdrop-blur-sm shadow-lg transition-colors"
+              className="pointer-events-auto inline-flex items-center justify-center w-12 h-12 md:w-10 md:h-10 rounded-full bg-black/35 hover:bg-black/45 active:bg-black/55 text-white backdrop-blur-sm shadow-lg transition-colors touch-manipulation"
               aria-label="前一篇"
               onClick={handlePrevClick}
               title={prevTitle || '前一篇'}
             >
-              <ChevronUp className="w-5 h-5" />
+              <ChevronUp className="w-6 h-6 md:w-5 md:h-5" />
             </button>
             <button
-              className="pointer-events-auto inline-flex items-center justify-center w-10 h-10 rounded-full bg-black/35 hover:bg-black/45 text-white backdrop-blur-sm shadow-lg transition-colors"
+              className="pointer-events-auto inline-flex items-center justify-center w-12 h-12 md:w-10 md:h-10 rounded-full bg-black/35 hover:bg-black/45 active:bg-black/55 text-white backdrop-blur-sm shadow-lg transition-colors touch-manipulation"
               aria-label="后一篇"
               onClick={handleNextClick}
               title={nextTitle || '后一篇'}
             >
-              <ChevronDown className="w-5 h-5" />
+              <ChevronDown className="w-6 h-6 md:w-5 md:h-5" />
             </button>
           </div>
         </div>
@@ -469,10 +469,14 @@ function FeedImageBlock(
 ) {
   const [loaded, setLoaded] = React.useState(false);
   const [failed, setFailed] = React.useState(false);
+  
+  // 从props中分离出自定义属性，避免传递给img标签
+  const { linkHref, ...imgProps } = props;
+  
   const Img = (
     // eslint-disable-next-line jsx-a11y/alt-text
     <img
-      {...props}
+      {...imgProps}
       className={`feed-img-img ${loaded ? 'is-loaded' : ''}`}
       onLoad={(e) => {
         setLoaded(true);
@@ -487,12 +491,12 @@ function FeedImageBlock(
   return (
     <figure className="feed-img-wrapper" style={{ minHeight: 160 }}>
       {!loaded && !failed && <div className="feed-img-skeleton" />}
-      {props.linkHref ? (
-        <a href={props.linkHref} target="_blank" rel="noreferrer noopener">{Img}</a>
+      {linkHref ? (
+        <a href={linkHref} target="_blank" rel="noreferrer noopener">{Img}</a>
       ) : (
         Img
       )}
-      {props.alt && <figcaption>{props.alt}</figcaption>}
+      {imgProps.alt && <figcaption>{imgProps.alt}</figcaption>}
     </figure>
   );
 }

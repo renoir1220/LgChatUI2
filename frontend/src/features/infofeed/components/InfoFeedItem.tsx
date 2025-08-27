@@ -31,8 +31,8 @@ const InfoFeedItem: React.FC<InfoFeedItemProps> = ({
   onClick, 
   className = '' 
 }) => {
-  // 获取缩略图URL，如果没有则使用占位符
-  const thumbnailUrl = feed.thumbnail_url || infoFeedService.getPlaceholderThumbnail(feed.category);
+  // 获取缩略图：优先使用后端字段，其次从正文提取；不使用demo占位图
+  const thumbnailUrl = feed.thumbnail_url || infoFeedService.extractThumbnailFromContent(feed.content || '');
   const [imgLoaded, setImgLoaded] = React.useState(false);
   const [imgFailed, setImgFailed] = React.useState(false);
   const hoverTimer = React.useRef<number | null>(null);
@@ -64,13 +64,14 @@ const InfoFeedItem: React.FC<InfoFeedItemProps> = ({
 
   return (
     <article
-      className={`group relative cursor-pointer transition-all hover:bg-accent/5 active:scale-[0.995] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md ${className}`}
+      className={`group relative cursor-pointer transition-all hover:bg-accent/5 active:bg-accent/10 active:scale-[0.995] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md touch-manipulation p-3 md:p-4 -mx-3 md:-mx-4 ${className}`}
       onClick={() => onClick(feed)}
       onMouseEnter={prefetch}
       onMouseLeave={cancelPrefetch}
       onFocus={prefetch}
       onBlur={cancelPrefetch}
       tabIndex={0}
+      role="button"
     >
       <div className="flex flex-col md:flex-row gap-3 md:gap-4">
         {/* 文本区域 */}
@@ -111,15 +112,6 @@ const InfoFeedItem: React.FC<InfoFeedItemProps> = ({
 
             {/* 统计数据 */}
             <div className="flex items-center gap-4">
-              {/* 浏览次数 */}
-              <div className="flex items-center gap-1">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-                <span>{feed.view_count}</span>
-              </div>
-
               {/* 点赞次数 */}
               <div className="flex items-center gap-1">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
@@ -135,6 +127,15 @@ const InfoFeedItem: React.FC<InfoFeedItemProps> = ({
                 </svg>
                 <span>{feed.comment_count}</span>
               </div>
+
+              {/* 浏览次数 */}
+              <div className="flex items-center gap-1">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                <span>{feed.view_count}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -142,20 +143,20 @@ const InfoFeedItem: React.FC<InfoFeedItemProps> = ({
         {/* 媒体区域（右侧，≥md），移动端置于顶部 */}
         <div className="w-full md:w-[180px] shrink-0">
           <div className="relative rounded-xl overflow-hidden bg-muted aspect-video">
-            {!imgLoaded && !imgFailed && <div className="feed-img-skeleton" />}
-            <img
-              src={thumbnailUrl}
-              alt={feed.title}
-              loading="lazy"
-              decoding="async"
-              className={`feed-img-img w-full h-full object-cover transition-transform duration-200 group-hover:scale-105 ${imgLoaded ? 'is-loaded' : ''}`}
-              onLoad={() => setImgLoaded(true)}
-              onError={(e) => {
-                setImgFailed(true);
-                const target = e.target as HTMLImageElement;
-                target.src = infoFeedService.getPlaceholderThumbnail(feed.category);
-              }}
-            />
+            {!imgLoaded && !!thumbnailUrl && !imgFailed && <div className="feed-img-skeleton" />}
+            {thumbnailUrl && !imgFailed ? (
+              <img
+                src={thumbnailUrl}
+                alt={feed.title}
+                loading="lazy"
+                decoding="async"
+                className={`feed-img-img w-full h-full object-cover transition-transform duration-200 group-hover:scale-105 ${imgLoaded ? 'is-loaded' : ''}`}
+                onLoad={() => setImgLoaded(true)}
+                onError={() => setImgFailed(true)}
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground">无图</div>
+            )}
 
             {/* 分类标签（弱化色） */}
             <div className="absolute bottom-2 left-2">

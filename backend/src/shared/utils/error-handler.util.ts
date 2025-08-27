@@ -87,10 +87,14 @@ export class ErrorHandlerUtil {
 
     // 发送错误事件到前端
     try {
+      const msg =
+        (error && (error.message || error.msg)) ||
+        (error?.response && (error.response.data?.message || error.response.statusText)) ||
+        '处理请求时发生错误，请稍后再试';
       response.write(
         `data: ${JSON.stringify({
           event: 'error',
-          error: '处理请求时发生错误，请稍后再试',
+          error: msg,
         })}\n\n`,
       );
     } catch (writeError) {

@@ -3,24 +3,10 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { getAdminMenus, getIsAdmin, type AdminMenuItem } from '../services/adminApi';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import AdminSidebar from './AdminSidebar';
+import NewsListPage from './news/NewsListPage';
+import NewsEditorPage from './news/NewsEditorPage';
 
-const NewsAdminPage: React.FC = () => {
-  return (
-    <div className="p-6">
-      <Card className="border-border">
-        <CardHeader>
-          <CardTitle>新闻管理</CardTitle>
-          <CardDescription>占位页面：后续在此实现新闻的增删改查与发布。</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-            暂无数据。稍后将在此展示新闻列表与操作按钮。
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-};
+// 移除占位，改为实际页面
 
 const AdminShell: React.FC = () => {
   const [isAdmin, setIsAdmin] = React.useState<boolean | null>(null);
@@ -75,7 +61,9 @@ const AdminShell: React.FC = () => {
         {/* 内容区 */}
         <main className="flex-1 min-h-[calc(100vh-48px)]">
           <Routes>
-            <Route path="news" element={<NewsAdminPage />} />
+            <Route path="news" element={<NewsListPage />} />
+            <Route path="news/new" element={<NewsEditorPage />} />
+            <Route path="news/edit/:id" element={<NewsEditorPage />} />
             <Route path="*" element={<Navigate to="news" replace />} />
           </Routes>
         </main>

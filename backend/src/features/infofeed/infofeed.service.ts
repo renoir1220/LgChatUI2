@@ -42,7 +42,7 @@ export class InfoFeedService {
     const page = typeof rawPage === 'string' ? parseInt(rawPage) : rawPage;
     const limit = typeof rawLimit === 'string' ? parseInt(rawLimit) : rawLimit;
     try {
-      const [listResult, total] = await Promise.all([
+      const [rawList, total] = await Promise.all([
         this.feedsRepo.list({
           category,
           user_id,
@@ -54,6 +54,15 @@ export class InfoFeedService {
         }),
         this.feedsRepo.count({ category, user_id, currentUserId }),
       ]);
+
+      // 补充缩略图：若DB中未提供，则从正文提取首图作为缩略图（仅用于展示，不修改DB）
+      const listResult = rawList.map((it) => {
+        if (!it.thumbnail_url && it.content) {
+          const thumb = this.extractThumbnailFromContent(it.content);
+          if (thumb?.url) return { ...it, thumbnail_url: thumb.url } as InfoFeed;
+        }
+        return it as InfoFeed;
+      });
 
       const totalPages = Math.ceil(total / limit);
       this.logger.log(`获取信息流列表成功 - category: ${category}, page: ${page}, limit: ${limit}, total: ${total}, resultCount: ${listResult.length}`);

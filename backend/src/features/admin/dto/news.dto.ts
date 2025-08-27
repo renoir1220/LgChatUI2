@@ -3,12 +3,12 @@ import { InfoFeedCategory, InfoFeedStatus } from '../../../types/infofeed';
 
 export class ListNewsQueryDto {
   @IsOptional()
-  @IsEnum(InfoFeedCategory)
-  category?: InfoFeedCategory;
+  @IsString()
+  category?: string; // 支持逗号分隔多选，如: news,features
 
   @IsOptional()
-  @IsEnum(InfoFeedStatus)
-  status?: InfoFeedStatus;
+  @IsString()
+  status?: string; // 支持逗号分隔多选，如: draft,published
 
   @IsOptional()
   @IsString()
@@ -116,4 +116,3 @@ export class UpdateStatusDto {
   @IsEnum(InfoFeedStatus)
   status!: InfoFeedStatus;
 }
-

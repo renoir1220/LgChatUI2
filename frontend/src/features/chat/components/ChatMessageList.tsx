@@ -232,78 +232,16 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
           >
             <AntdButton
               size="large"
-              type="text"
-              icon={<FileSearchOutlined />}
-              onClick={() => onQuickAction?.('readme-query')}
+              type="primary"
+              onClick={() => onQuickAction?.('open-infofeed')}
               style={{
                 borderRadius: 12,
-                border: '1px solid #1677ff',
-                background: 'transparent',
-                color: '#1677ff',
-                padding: '8px 18px',
-                height: 44,
-              }}
-            >
-              Readme查询
-            </AntdButton>
-            <AntdButton
-              size="large"
-              type="text"
-              icon={<ProjectOutlined />}
-              onClick={() => onQuickAction?.('requirement-progress')}
-              style={{
-                borderRadius: 12,
-                border: '1px solid #1677ff',
-                background: 'transparent',
-                color: '#1677ff',
-                padding: '8px 18px',
-                height: 44,
-              }}
-            >
-              需求进展
-            </AntdButton>
-            <AntdButton
-              size="large"
-              type="text"
-              icon={<SearchOutlined />}
-              onClick={() => onQuickAction?.('similar-requirements')}
-              style={{
-                borderRadius: 12,
-                border: '1px solid #1677ff',
-                background: 'transparent',
-                color: '#1677ff',
-                padding: '8px 18px',
-                height: 44,
-              }}
-            >
-              相似需求
-            </AntdButton>
-            <AntdButton
-              size="large"
-              type="text"
-              icon={<BulbOutlined />}
-              onClick={() => onQuickAction?.('suggestion')}
-              style={{
-                borderRadius: 12,
-                border: '2px solid #f5a623',
-                background: 'linear-gradient(135deg, #f5a623 0%, #f7b731 100%)',
-                color: '#ffffff',
                 padding: '8px 18px',
                 height: 44,
                 fontWeight: 600,
-                boxShadow: '0 4px 12px rgba(245, 166, 35, 0.3)',
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-1px)';
-                e.currentTarget.style.boxShadow = '0 6px 20px rgba(245, 166, 35, 0.4)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(245, 166, 35, 0.3)';
               }}
             >
-              提建议
+              使用说明
             </AntdButton>
           </div>
         </div>

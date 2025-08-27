@@ -87,6 +87,11 @@ export default defineConfig({
         changeOrigin: true,
         secure: false, // 允许代理到HTTP后端
       },
+      '/uploads': {
+        target: API_TARGET,
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
 })

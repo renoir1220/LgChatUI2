@@ -104,6 +104,12 @@ export async function getApiBase(): Promise<string> {
   return cachedApiBase;
 }
 
+// 构造API完整URL（遵循运行时配置）：当 API_BASE 为空时返回相对路径，走Vite代理
+export async function buildApiUrl(path: string): Promise<string> {
+  const base = await getApiBase();
+  return `${base || ''}${path}`;
+}
+
 // 为了向后兼容，保留同步版本（使用环境变量作为后备）
 export const API_BASE = (import.meta.env?.VITE_API_BASE as string) || ''
 
@@ -183,4 +189,3 @@ export async function apiDelete<T = unknown>(path: string): Promise<T> {
   }
   return resp.json() as Promise<T>;
 }
-

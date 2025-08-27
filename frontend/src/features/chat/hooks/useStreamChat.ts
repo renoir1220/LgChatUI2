@@ -145,6 +145,19 @@ export function useStreamChat() {
             
             const streamResponse = jsonData as StreamResponse;
             
+            // 处理服务端错误事件
+            if (streamResponse.event === 'error') {
+              const errMsg = (jsonData && (jsonData.error || jsonData.message)) || '服务端处理失败';
+              setMessages(prev => prev.map((msg, index) => {
+                if (index === botMessageIndex && msg.role === 'assistant') {
+                  return { ...msg, content: `请求失败: ${errMsg}` };
+                }
+                return msg;
+              }));
+              // 直接结束处理
+              return;
+            }
+
             // 处理文本增量
             if (streamResponse.event === 'agent_message' || streamResponse.event === 'message') {
               setMessages(prev => prev.map((msg, index) => {

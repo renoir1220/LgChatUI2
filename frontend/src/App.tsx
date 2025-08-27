@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import LoginScreen from './features/auth/components/LoginScreen'
 import ChatScreenRefactored from './features/chat/components/ChatScreenRefactored'
+import InfoFeedPage from './features/infofeed/pages/InfoFeedPage'
 import AdminApp from './features/admin/components/AdminApp'
 import RequireAuth from './features/auth/components/RequireAuth'
 import { NotificationProvider } from './features/shared/contexts/NotificationContext'
@@ -49,6 +50,16 @@ function App() {
                     </RequireAuth>
                   </div>
                 } 
+              />
+              <Route 
+                path="/feeds" 
+                element={
+                  <div className="h-full flex-1">
+                    <RequireAuth>
+                      <InfoFeedPage />
+                    </RequireAuth>
+                  </div>
+                }
               />
               {/* 默认重定向到主页 */}
               <Route path="*" element={<Navigate to="/" replace />} />
