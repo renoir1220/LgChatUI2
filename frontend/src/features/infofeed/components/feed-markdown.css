@@ -1,0 +1,133 @@
+/* Feed markdown typography inspired by Perplexity/News sites */
+.feed-markdown {
+  color: inherit;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.feed-markdown p { margin: 0 0 0.75em; }
+
+.feed-markdown h1,
+.feed-markdown h2,
+.feed-markdown h3,
+.feed-markdown h4 {
+  font-weight: 650;
+  line-height: 1.25;
+  margin: 1.4em 0 0.5em;
+}
+
+.feed-markdown h1 { font-size: 1.65rem; }
+.feed-markdown h2 { font-size: 1.3rem; }
+.feed-markdown h3 { font-size: 1.12rem; }
+.feed-markdown h4 { font-size: 1.05rem; }
+
+.feed-markdown a {
+  color: #2563eb;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.feed-markdown a:hover { color: #1d4ed8; }
+
+.feed-markdown hr {
+  height: 1px;
+  border: 0;
+  margin: 1.5em 0;
+  background: rgba(0,0,0,0.08);
+}
+
+.feed-markdown ul,
+.feed-markdown ol { margin: 0.5em 0 0.75em; padding-left: 1.25em; }
+.feed-markdown li { margin: 0.25em 0; }
+
+.feed-markdown blockquote {
+  margin: 1em 0;
+  padding: 0.6em 0.9em;
+  border-left: 4px solid rgba(0,0,0,0.12);
+  background: rgba(0,0,0,0.03);
+  border-radius: 0 8px 8px 0;
+  color: rgba(0,0,0,0.7);
+}
+
+.dark .feed-markdown blockquote {
+  border-left-color: rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.8);
+}
+
+.feed-markdown code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.88em;
+  background: rgba(0,0,0,0.05);
+  padding: 0.15em 0.4em;
+  border-radius: 6px;
+}
+.dark .feed-markdown code { background: rgba(255,255,255,0.12); }
+
+.feed-markdown pre {
+  background: #0b1020;
+  color: #e6edf3;
+  border: 1px solid rgba(148,163,184,0.2);
+  border-radius: 12px;
+  padding: 12px 14px;
+  overflow-x: auto;
+  margin: 0.75em 0;
+}
+.dark .feed-markdown pre { background: #0b1020; border-color: rgba(148,163,184,0.25); }
+.feed-markdown pre code { background: transparent; color: inherit; padding: 0; }
+
+.feed-markdown img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 10px auto;
+  border-radius: 12px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+}
+.dark .feed-markdown img { box-shadow: 0 1px 6px rgba(0,0,0,0.45); }
+
+.feed-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.75em 0;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.dark .feed-markdown table { border-color: rgba(255,255,255,0.15); }
+.feed-markdown th,
+.feed-markdown td {
+  padding: 8px 10px;
+  border: 1px solid rgba(0,0,0,0.06);
+  text-align: left;
+}
+.dark .feed-markdown th,
+.dark .feed-markdown td { border-color: rgba(255,255,255,0.12); }
+.feed-markdown th { background: rgba(0,0,0,0.03); font-weight: 600; }
+.dark .feed-markdown th { background: rgba(255,255,255,0.06); }
+
+.feed-markdown figure { margin: 1em 0; }
+.feed-markdown figcaption {
+  text-align: center;
+  color: rgba(0,0,0,0.6);
+  font-size: 0.92em;
+}
+.dark .feed-markdown figcaption { color: rgba(255,255,255,0.7); }
+
+/* Tighten spacing after headings when followed by an image */
+.feed-markdown h2 + p > img,
+.feed-markdown h3 + p > img { margin-top: 6px; }
+
+/* Image skeleton shimmer */
+.feed-img-wrapper { position: relative; }
+.feed-img-skeleton {
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(0,0,0,0.05) 25%, rgba(0,0,0,0.09) 37%, rgba(0,0,0,0.05) 63%);
+  animation: feed-shimmer 1.1s infinite;
+  border-radius: 12px;
+}
+.dark .feed-img-skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.08) 25%, rgba(255,255,255,0.14) 37%, rgba(255,255,255,0.08) 63%);
+}
+.feed-img-img { opacity: 0; transition: opacity .28s ease; width: 100%; height: auto; display: block; border-radius: 12px; }
+.feed-img-img.is-loaded { opacity: 1; }
+@keyframes feed-shimmer { 0% { background-position: -200px 0; } 100% { background-position: calc(200px + 100%) 0; } }

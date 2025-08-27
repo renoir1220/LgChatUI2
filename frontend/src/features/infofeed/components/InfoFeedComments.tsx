@@ -74,7 +74,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
 
   return (
     <div className="group">
-      <div className="flex space-x-3">
+      <div className="flex gap-2.5">
         {/* 用户头像 */}
         <div className="flex-shrink-0">
           <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium">
@@ -84,28 +84,28 @@ const CommentItem: React.FC<CommentItemProps> = ({
 
         {/* 评论内容 */}
         <div className="flex-1 min-w-0">
-          <div className="bg-gray-100 dark:bg-gray-700 rounded-lg px-3 py-2">
-            <div className="flex items-center space-x-2 mb-1">
-              <span className="text-sm font-medium text-gray-900 dark:text-white">
+          <div className="rounded-md px-2.5 py-1.5 hover:bg-muted transition-colors">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[13px] font-medium text-foreground">
                 {comment.user?.username || `用户${comment.user_id}`}
               </span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="text-[11px] text-muted-foreground">
                 {formatTime(comment.created_at)}
               </span>
             </div>
-            <p className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
+            <p className="text-[13px] text-foreground whitespace-pre-wrap">
               {comment.content}
             </p>
           </div>
 
           {/* 操作按钮 */}
-          <div className="flex items-center space-x-4 mt-2 text-xs">
+          <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground">
             {/* 点赞按钮 */}
             <button
               onClick={() => onLike(comment.id)}
               className={`
-                flex items-center space-x-1 hover:text-red-500 transition-colors
-                ${comment.is_liked ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'}
+                flex items-center gap-1 hover:text-red-500 transition-colors
+                ${comment.is_liked ? 'text-red-500' : ''}
               `}
             >
               <svg className="w-4 h-4" fill={comment.is_liked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
@@ -120,7 +120,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
                 setShowReplyInput(!showReplyInput);
                 onReply(comment.id);
               }}
-              className="text-gray-500 dark:text-gray-400 hover:text-blue-500 transition-colors"
+              className="hover:text-blue-500 transition-colors"
             >
               回复
             </button>
@@ -128,7 +128,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
 
           {/* 回复输入框 */}
           {showReplyInput && (
-            <div className="mt-3 flex space-x-2">
+            <div className="mt-2.5 flex gap-2">
               <div className="flex-1 relative">
                 <textarea
                   ref={replyRef}
@@ -139,17 +139,17 @@ const CommentItem: React.FC<CommentItemProps> = ({
                   }}
                   onFocus={() => autoResize(replyRef.current)}
                   placeholder="写下你的回复..."
-                  className="w-full pr-16 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
+                  className="w-full pr-16 px-3 py-1.5 text-[13px] border border-gray-300 dark:border-gray-600 rounded-md resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
                   rows={1}
                   style={{ overflow: 'auto' }}
                 />
-                <div className="absolute right-2 bottom-2 flex items-center gap-2">
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
                   <button
                     onClick={() => {
                       setShowReplyInput(false);
                       setReplyText('');
                     }}
-                    className="px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                    className="px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
                   >
                     取消
                   </button>
@@ -167,7 +167,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
 
           {/* 子评论/回复 */}
           {comment.replies && comment.replies.length > 0 && (
-            <div className="mt-4 space-y-3 pl-4 border-l-2 border-gray-200 dark:border-gray-600">
+            <div className="mt-3 space-y-2.5 pl-3 border-l border-gray-200 dark:border-gray-600">
               {comment.replies.map((reply) => (
                 <CommentItem
                   key={reply.id}
@@ -234,10 +234,10 @@ const InfoFeedComments: React.FC<InfoFeedCommentsProps> = ({
   };
 
   return (
-    <div className={`p-6 ${className}`}>
+    <div className={`p-4 ${className}`}>
       {/* 评论标题 */}
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-base font-medium text-foreground">
           评论 ({comments.length})
         </h3>
       </div>
@@ -245,9 +245,9 @@ const InfoFeedComments: React.FC<InfoFeedCommentsProps> = ({
       {/* 添加评论 */}
       {isUserAuthenticated ? (
         <div className="mb-6">
-          <div className="flex gap-3">
+          <div className="flex gap-2.5">
             <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium">
+              <div className="w-7 h-7 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-medium">
                 {currentUsername?.charAt(0) || '我'}
               </div>
             </div>
@@ -261,14 +261,14 @@ const InfoFeedComments: React.FC<InfoFeedCommentsProps> = ({
                 }}
                 onFocus={() => autoResize(newRef.current)}
                 placeholder="写下你的看法..."
-                className="w-full pr-14 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
+                className="w-full pr-14 px-3 py-1.5 text-[13px] border border-gray-300 dark:border-gray-600 rounded-md resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
                 rows={1}
                 style={{ overflow: 'auto' }}
               />
               <button
                 onClick={handleAddComment}
                 disabled={!newComment.trim() || submitting}
-                className="absolute right-2 bottom-2 px-3 h-7 bg-blue-500 text-white text-xs rounded-md hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                className="absolute right-2 top-1/2 -translate-y-1/2 px-2.5 h-7 bg-blue-500 text-white text-xs rounded-md hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
               >
                 {submitting ? '发表中...' : '发表'}
               </button>
@@ -276,7 +276,7 @@ const InfoFeedComments: React.FC<InfoFeedCommentsProps> = ({
           </div>
         </div>
       ) : (
-        <div className="mb-6 text-center py-8 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+        <div className="mb-6 text-center py-6 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
           <p className="text-gray-600 dark:text-gray-400">
             请先登录后再参与讨论
           </p>
@@ -309,7 +309,7 @@ const InfoFeedComments: React.FC<InfoFeedCommentsProps> = ({
           </p>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {comments.map((comment) => (
             <CommentItem
               key={comment.id}
@@ -327,7 +327,7 @@ const InfoFeedComments: React.FC<InfoFeedCommentsProps> = ({
               <button
                 onClick={loadMore}
                 disabled={loading}
-                className="px-4 py-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 disabled:opacity-50"
+                className="px-3 py-1.5 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 disabled:opacity-50"
               >
                 {loading ? '加载中...' : '查看更多评论'}
               </button>

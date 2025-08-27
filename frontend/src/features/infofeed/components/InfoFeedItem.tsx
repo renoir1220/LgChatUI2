@@ -9,6 +9,7 @@ import type { InfoFeed } from '@/types/infofeed';
 import { InfoFeedCategory } from '@/types/infofeed';
 import { infoFeedService } from '../services/infoFeedService';
 import { Badge } from '@/components/ui/badge';
+import './feed-markdown.css';
 
 interface InfoFeedItemProps {
   feed: InfoFeed;
@@ -32,6 +33,8 @@ const InfoFeedItem: React.FC<InfoFeedItemProps> = ({
 }) => {
   // 获取缩略图URL，如果没有则使用占位符
   const thumbnailUrl = feed.thumbnail_url || infoFeedService.getPlaceholderThumbnail(feed.category);
+  const [imgLoaded, setImgLoaded] = React.useState(false);
+  const [imgFailed, setImgFailed] = React.useState(false);
 
   // 格式化发布时间
   const formattedTime = infoFeedService.formatPublishTime(feed.publish_time);
@@ -105,11 +108,14 @@ const InfoFeedItem: React.FC<InfoFeedItemProps> = ({
         {/* 媒体区域（右侧，≥md），移动端置于顶部 */}
         <div className="w-full md:w-[180px] shrink-0">
           <div className="relative rounded-md overflow-hidden bg-muted aspect-video">
+            {!imgLoaded && !imgFailed && <div className="feed-img-skeleton" />}
             <img
               src={thumbnailUrl}
               alt={feed.title}
-              className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+              className={`feed-img-img w-full h-full object-cover transition-transform duration-200 group-hover:scale-105 ${imgLoaded ? 'is-loaded' : ''}`}
+              onLoad={() => setImgLoaded(true)}
               onError={(e) => {
+                setImgFailed(true);
                 const target = e.target as HTMLImageElement;
                 target.src = infoFeedService.getPlaceholderThumbnail(feed.category);
               }}

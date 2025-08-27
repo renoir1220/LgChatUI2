@@ -161,8 +161,6 @@ const InfoFeedModal: React.FC<InfoFeedModalProps> = ({
                   </div>
                   <h2 className="text-xl md:text-2xl font-semibold text-foreground">信息流</h2>
                 </div>
-
-                {/* 统一样式的返回按钮（功能仍为关闭） */}
                 <button
                   onClick={handleRequestClose}
                   className="flex items-center gap-1 px-2 py-1 hover:bg-muted rounded-md transition-colors"

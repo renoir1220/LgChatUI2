@@ -6,12 +6,14 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
+import './feed-markdown.css';
 import { FEED_NAV_CONFIG } from '../config';
 import { InfoFeedCategory } from '@/types/infofeed';
 import type { InfoFeed, InfoFeedDetailResponse } from '@/types/infofeed';
 import { infoFeedService } from '../services/infoFeedService';
 import InfoFeedComments from './InfoFeedComments';
 import { Badge } from '@/components/ui/badge';
+import { ChevronUp, ChevronDown } from 'lucide-react';
 
 interface InfoFeedDetailProps {
   feed: InfoFeedDetailResponse;
@@ -59,6 +61,9 @@ const InfoFeedDetail: React.FC<InfoFeedDetailProps> = ({
 }) => {
   const [isLiking, setIsLiking] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const itemRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const [currentTitle, setCurrentTitle] = useState<string>(feed.title);
+  const [showStickyTitle, setShowStickyTitle] = useState(false);
   const [atBottom, setAtBottom] = useState(false);
   const [armed, setArmed] = useState(false);
   const armTimerRef = useRef<number | null>(null);
@@ -67,6 +72,10 @@ const InfoFeedDetail: React.FC<InfoFeedDetailProps> = ({
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const [stack, setStack] = useState<InfoFeedDetailResponse[]>([feed]);
   const [loadingNext, setLoadingNext] = useState(false);
+  const [loadingPrev, setLoadingPrev] = useState(false);
+  const [baseIndex, setBaseIndex] = useState<number>(startIndex ?? 0);
+  const [activeStackIndex, setActiveStackIndex] = useState<number>(0);
+  const [likeAnim, setLikeAnim] = useState<Record<number, '+1' | '-1' | undefined>>({});
 
   // 处理点赞
   const handleLike = async () => {
@@ -106,6 +115,27 @@ const InfoFeedDetail: React.FC<InfoFeedDetailProps> = ({
         armTimerRef.current = null;
       }
     }
+
+    // 更新当前标题（取视口顶部附近的文章）
+    const threshold = 64; // 顶部阈值
+    let activeIdx = -1;
+    for (let i = 0; i < itemRefs.current.length; i++) {
+      const node = itemRefs.current[i];
+      if (!node) continue;
+      const top = node.offsetTop - el.scrollTop;
+      if (top <= threshold) {
+        activeIdx = i;
+      } else {
+        break;
+      }
+    }
+    const firstTop = (itemRefs.current[0]?.offsetTop ?? 0) - el.scrollTop;
+    const shouldShow = firstTop <= threshold && activeIdx >= 0;
+    setShowStickyTitle(shouldShow);
+    const active = activeIdx >= 0 ? stack[activeIdx] : undefined;
+    const nextTitle = shouldShow && active ? active.title : '';
+    if (nextTitle !== currentTitle) setCurrentTitle(nextTitle);
+    if (activeIdx !== activeStackIndex) setActiveStackIndex(Math.max(0, activeIdx));
   };
 
   // 两步确认翻页（旧方案保留，用于没有列表上下文时触发 next 回调）
@@ -153,6 +183,8 @@ const InfoFeedDetail: React.FC<InfoFeedDetailProps> = ({
     // 如果是连续阅读模式，重置栈
     if (list && startIndex !== undefined) {
       setStack([feed]);
+      setBaseIndex(startIndex);
+      setActiveStackIndex(0);
     }
   }, [feed.id, list, startIndex]);
 
@@ -173,7 +205,7 @@ const InfoFeedDetail: React.FC<InfoFeedDetailProps> = ({
         const entry = entries[0];
         if (!entry.isIntersecting) return;
         // 是否还有下一条
-        const nextMetaIndex = (startIndex ?? 0) + stack.length;
+        const nextMetaIndex = baseIndex + stack.length;
         if (nextMetaIndex >= list.length) return;
         if (loadingNext) return;
         setLoadingNext(true);
@@ -190,22 +222,79 @@ const InfoFeedDetail: React.FC<InfoFeedDetailProps> = ({
 
     observer.observe(target);
     return () => observer.disconnect();
-  }, [list, startIndex, stack.length, loadingNext]);
+  }, [list, baseIndex, stack.length, loadingNext]);
+
+  // 平滑滚动到指定 stack 索引
+  const smoothScrollTo = (idx: number) => {
+    const container = scrollRef.current;
+    const target = itemRefs.current[idx];
+    if (!container || !target) return;
+    container.scrollTo({ top: target.offsetTop, behavior: 'smooth' });
+  };
+
+  const handleNextClick = async () => {
+    // 连续阅读模式：优先在本页内滚动
+    if (list) {
+      const nextIdx = activeStackIndex + 1;
+      if (nextIdx < stack.length) {
+        smoothScrollTo(nextIdx);
+        return;
+      }
+      // 需要加载下一条
+      const nextMetaIndex = baseIndex + stack.length;
+      if (nextMetaIndex < (list?.length ?? 0) && !loadingNext) {
+        setLoadingNext(true);
+        try {
+          const nextId = list[nextMetaIndex].id;
+          const detail = await infoFeedService.getInfoFeedDetail(nextId);
+          setStack((prev) => [...prev, detail]);
+          // 等待渲染后滚动
+          requestAnimationFrame(() => smoothScrollTo(nextIdx));
+        } finally {
+          setLoadingNext(false);
+        }
+        return;
+      }
+    }
+    // 回退：调用外部回调
+    onNext?.();
+  };
+
+  const handlePrevClick = async () => {
+    if (list) {
+      const prevIdx = activeStackIndex - 1;
+      if (prevIdx >= 0) {
+        smoothScrollTo(prevIdx);
+        return;
+      }
+      // 需要加载上一条（在列表首之前）
+      if ((baseIndex > 0) && !loadingPrev) {
+        setLoadingPrev(true);
+        try {
+          const prevId = list[baseIndex - 1].id;
+          const detail = await infoFeedService.getInfoFeedDetail(prevId);
+          setStack((prev) => [detail, ...prev]);
+          setBaseIndex((b) => b - 1);
+          // 渲染后滚动到新增的顶部
+          requestAnimationFrame(() => smoothScrollTo(0));
+        } finally {
+          setLoadingPrev(false);
+        }
+        return;
+      }
+    }
+    onPrev?.();
+  };
 
   return (
-    <div className={`bg-white dark:bg-gray-800 ${className}`}>
-      {/* 头部区域 */}
+    <div className={`relative bg-white dark:bg-gray-800 ${className}`}>
+      {/* 顶部栏：固定显示当前文章标题 + 导航 */}
       <div className="border-b border-gray-200 dark:border-gray-700">
         <div className="mx-auto max-w-3xl px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-lg">{categoryConfig.icon}</span>
-            <Badge variant="secondary" className="text-[11px]">{categoryLabel}</Badge>
-            {feed.is_pinned && (
-              <Badge variant="secondary" className="text-[11px] ml-1">置顶</Badge>
-            )}
-          </div>
-          {/* 返回按钮（返回到信息流列表） */}
-          <div className="flex items-center gap-2">
+          <h1 className="text-[22px] md:text-2xl font-semibold text-foreground truncate" title={currentTitle}>
+            {showStickyTitle ? currentTitle : ''}
+          </h1>
+          <div className="flex items-center gap-1 md:gap-2">
             <button
               onClick={onClose}
               className="flex items-center gap-1 px-2 py-1 hover:bg-muted rounded-md transition-colors"
@@ -232,36 +321,46 @@ const InfoFeedDetail: React.FC<InfoFeedDetailProps> = ({
           const formattedTimeEach = infoFeedService.formatPublishTime(item.publish_time);
           const fullDateTimeEach = new Date(item.publish_time).toLocaleString('zh-CN');
           return (
-            <div key={item.id} className="px-4 md:px-6 py-6 border-b border-gray-200 dark:border-gray-700">
+            <div
+              key={item.id}
+              ref={(el) => { itemRefs.current[idx] = el; }}
+              className="px-4 md:px-6 py-6 border-b border-gray-200 dark:border-gray-700"
+            >
               <div className="mx-auto max-w-3xl">
-              {/* 标题 */}
-              <h1 className="text-[22px] md:text-2xl font-semibold text-foreground mb-3">
-                {item.title}
-              </h1>
+              {/* 标签位于标题上方 */}
+              <div className="mb-2 flex items-center gap-2">
+                <Badge variant="secondary" className="text-[10px]">{CATEGORY_LABELS[item.category]}</Badge>
+                {item.is_pinned && (
+                  <Badge variant="secondary" className="text-[10px]">置顶</Badge>
+                )}
+              </div>
+              {/* 标题（主体内仍展示，顶部栏已固定显示当前标题） */}
+              <h1 className="text-[22px] md:text-2xl font-semibold text-foreground mb-3">{item.title}</h1>
 
               {/* 元数据 */}
               <div className="flex items-center justify-between text-[12px] text-muted-foreground mb-5">
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 flex-wrap">
                   <time dateTime={item.publish_time} title={fullDateTimeEach} className="flex items-center gap-1">
                     <span aria-hidden>📅</span> {formattedTimeEach}
                   </time>
-                  <div className="flex items-center gap-1">
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                    <span>{item.view_count} 浏览</span>
-                  </div>
                   <div className="flex items-center gap-1">
                     <span aria-hidden>{item.source === 'auto' ? '🤖' : '✏️'}</span>
                     <span>{item.source === 'auto' ? '自动采集' : '人工发布'}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
+                  <div className="relative">
                   <button
                     onClick={async () => {
                       try {
+                        const prevLiked = item.is_liked;
                         const r = await infoFeedService.toggleInfoFeedLike(item.id);
+                        // 动画：根据点赞方向显示 +1 / -1
+                        const delta = r.is_liked && !prevLiked ? '+1' : (!r.is_liked && prevLiked ? '-1' : undefined);
+                        if (delta) {
+                          setLikeAnim((m) => ({ ...m, [item.id]: delta }));
+                          setTimeout(() => setLikeAnim((m) => ({ ...m, [item.id]: undefined })), 700);
+                        }
                         setStack(prev => prev.map((it, i) => i === idx ? { ...it, is_liked: r.is_liked, like_count: r.like_count } : it));
                       } catch {}
                     }}
@@ -273,18 +372,31 @@ const InfoFeedDetail: React.FC<InfoFeedDetailProps> = ({
                     </svg>
                     <span>{item.like_count}</span>
                   </button>
+                  {/* +1/-1 动画标记 */}
+                  {likeAnim[item.id] && (
+                    <span className={`absolute -top-3 right-0 text-[10px] ${likeAnim[item.id] === '+1' ? 'text-red-500' : 'text-foreground/60'} animate-bounce`}>{likeAnim[item.id]}</span>
+                  )}
+                  </div>
                   <div className="hidden md:flex items-center gap-1">
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                     </svg>
                     <span>{item.comment_count}</span>
                   </div>
+                  {/* 浏览次数移动到这里，与点赞/评论并列，仅显示图标+数字 */}
+                  <div className="hidden md:flex items-center gap-1">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    <span>{item.view_count}</span>
+                  </div>
                 </div>
               </div>
 
               {/* 正文内容 */}
-              <div className="prose prose-gray dark:prose-invert max-w-none">
-                <ReactMarkdown>
+              <div className="feed-markdown">
+                <ReactMarkdown components={markdownComponents}>
                   {item.content}
                 </ReactMarkdown>
               </div>
@@ -299,11 +411,68 @@ const InfoFeedDetail: React.FC<InfoFeedDetailProps> = ({
             </div>
           );
         })}
+        {/* 悬浮 前一篇/后一篇 按钮 */}
         {/* 加载更多 sentinel */}
         <div ref={loadMoreRef} className="h-8" />
+      </div>
+
+      {/* 对齐内容列的悬浮导航（固定于可视区域，不随内容滚动） */}
+      <div className="pointer-events-none absolute inset-0 z-10">
+        <div className="mx-auto max-w-3xl h-full relative px-4 md:px-6">
+          <div className="absolute right-0 bottom-4 flex flex-col gap-2">
+            <button
+              className="pointer-events-auto inline-flex items-center justify-center w-10 h-10 rounded-full bg-black/35 hover:bg-black/45 text-white backdrop-blur-sm shadow-lg transition-colors"
+              aria-label="前一篇"
+              onClick={handlePrevClick}
+              title={prevTitle || '前一篇'}
+            >
+              <ChevronUp className="w-5 h-5" />
+            </button>
+            <button
+              className="pointer-events-auto inline-flex items-center justify-center w-10 h-10 rounded-full bg-black/35 hover:bg-black/45 text-white backdrop-blur-sm shadow-lg transition-colors"
+              aria-label="后一篇"
+              onClick={handleNextClick}
+              title={nextTitle || '后一篇'}
+            >
+              <ChevronDown className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
 export default InfoFeedDetail;
+
+// Markdown renderers for feed content
+const markdownComponents = {
+  img: (props: React.ImgHTMLAttributes<HTMLImageElement>) => {
+    return <FeedImage {...props} />;
+  },
+};
+
+function FeedImage(props: React.ImgHTMLAttributes<HTMLImageElement>) {
+  const [loaded, setLoaded] = React.useState(false);
+  const [failed, setFailed] = React.useState(false);
+  // Provide a graceful minimum box while loading to avoid layout jump
+  return (
+    <figure className="feed-img-wrapper" style={{ minHeight: 160 }}>
+      {!loaded && !failed && <div className="feed-img-skeleton" />}
+      {/* eslint-disable-next-line jsx-a11y/alt-text */}
+      <img
+        {...props}
+        className={`feed-img-img ${loaded ? 'is-loaded' : ''}`}
+        onLoad={(e) => {
+          setLoaded(true);
+          props.onLoad?.(e);
+        }}
+        onError={(e) => {
+          setFailed(true);
+          props.onError?.(e);
+        }}
+      />
+      {props.alt && <figcaption>{props.alt}</figcaption>}
+    </figure>
+  );
+}
