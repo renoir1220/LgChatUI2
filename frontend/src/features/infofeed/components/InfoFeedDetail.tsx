@@ -27,6 +27,7 @@ interface InfoFeedDetailProps {
   list?: InfoFeed[];
   startIndex?: number;
   className?: string;
+  onTitleChange?: (title: string, visible: boolean) => void;
 }
 
 // 分类配置
@@ -57,7 +58,8 @@ const InfoFeedDetail: React.FC<InfoFeedDetailProps> = ({
   nextTitle,
   list,
   startIndex,
-  className = ''
+  className = '',
+  onTitleChange
 }) => {
   const [isLiking, setIsLiking] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -135,6 +137,8 @@ const InfoFeedDetail: React.FC<InfoFeedDetailProps> = ({
     const active = activeIdx >= 0 ? stack[activeIdx] : undefined;
     const nextTitle = shouldShow && active ? active.title : '';
     if (nextTitle !== currentTitle) setCurrentTitle(nextTitle);
+    // 通知父级用于 TopBar 标题切换
+    if (onTitleChange) onTitleChange(nextTitle, shouldShow);
     if (activeIdx !== activeStackIndex) setActiveStackIndex(Math.max(0, activeIdx));
   };
 
@@ -288,31 +292,11 @@ const InfoFeedDetail: React.FC<InfoFeedDetailProps> = ({
 
   return (
     <div className={`relative bg-white dark:bg-gray-800 ${className}`}>
-      {/* 顶部栏：固定显示当前文章标题 + 导航 */}
-      <div className="border-b border-gray-200 dark:border-gray-700">
-        <div className="mx-auto max-w-3xl px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
-          <h1 className="text-[22px] md:text-2xl font-semibold text-foreground truncate" title={currentTitle}>
-            {showStickyTitle ? currentTitle : ''}
-          </h1>
-          <div className="flex items-center gap-1 md:gap-2">
-            <button
-              onClick={onClose}
-              className="flex items-center gap-1 px-2 py-1 hover:bg-muted rounded-md transition-colors"
-              aria-label="返回"
-            >
-              <svg className="w-4 h-4 text-foreground/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-              </svg>
-              <span className="text-xs text-foreground/70">返回</span>
-            </button>
-          </div>
-        </div>
-      </div>
 
       {/* 内容区域 */}
       <div
         ref={scrollRef}
-        className="h-[calc(100vh-64px)] overflow-y-auto"
+        className="h-full overflow-y-auto"
         onScroll={handleScroll}
         onWheel={handleWheel}
       >
@@ -447,18 +431,79 @@ export default InfoFeedDetail;
 
 // Markdown renderers for feed content
 const markdownComponents = {
+  // 1) Make <p> smart: if it only contains an image (or link-wrapped image),
+  // render a block-level figure instead of a paragraph to avoid invalid nesting.
+  p: ({ node, children }: any) => {
+    const c: any[] = node?.children || [];
+    // Filter out pure whitespace text nodes
+    const meaningful = c.filter((n: any) => !(n.type === 'text' && !/\S/.test(n.value || '')));
+    const onlyOne = meaningful.length === 1 ? meaningful[0] : null;
+    const isImg = onlyOne?.tagName === 'img';
+    const isLinkWithImg = onlyOne?.tagName === 'a' && onlyOne?.children?.length === 1 && onlyOne.children[0]?.tagName === 'img';
+
+    if (isImg || isLinkWithImg) {
+      // Extract image props
+      const imgNode = isImg ? onlyOne : onlyOne.children[0];
+      const linkHref = isLinkWithImg ? (onlyOne.properties?.href as string | undefined) : undefined;
+      const props = imgNode?.properties || {};
+      return (
+        <FeedImageBlock
+          src={props.src}
+          alt={props.alt}
+          title={props.title}
+          linkHref={linkHref}
+        />
+      );
+    }
+    return <p>{children}</p>;
+  },
+  // 2) Default inline images inside text paragraphs must be inline-safe
   img: (props: React.ImgHTMLAttributes<HTMLImageElement>) => {
-    return <FeedImage {...props} />;
+    return <FeedImageInline {...props} />;
   },
 };
 
-function FeedImage(props: React.ImgHTMLAttributes<HTMLImageElement>) {
+// Block figure image with shimmer skeleton and optional caption
+function FeedImageBlock(
+  props: React.ImgHTMLAttributes<HTMLImageElement> & { linkHref?: string }
+) {
   const [loaded, setLoaded] = React.useState(false);
   const [failed, setFailed] = React.useState(false);
-  // Provide a graceful minimum box while loading to avoid layout jump
+  const Img = (
+    // eslint-disable-next-line jsx-a11y/alt-text
+    <img
+      {...props}
+      className={`feed-img-img ${loaded ? 'is-loaded' : ''}`}
+      onLoad={(e) => {
+        setLoaded(true);
+        props.onLoad?.(e);
+      }}
+      onError={(e) => {
+        setFailed(true);
+        props.onError?.(e);
+      }}
+    />
+  );
   return (
     <figure className="feed-img-wrapper" style={{ minHeight: 160 }}>
       {!loaded && !failed && <div className="feed-img-skeleton" />}
+      {props.linkHref ? (
+        <a href={props.linkHref} target="_blank" rel="noreferrer noopener">{Img}</a>
+      ) : (
+        Img
+      )}
+      {props.alt && <figcaption>{props.alt}</figcaption>}
+    </figure>
+  );
+}
+
+// Inline-safe image renderer to be valid inside <p>
+function FeedImageInline(props: React.ImgHTMLAttributes<HTMLImageElement>) {
+  const [loaded, setLoaded] = React.useState(false);
+  const [failed, setFailed] = React.useState(false);
+  return (
+    <span className="feed-img-inline">
+      {!loaded && !failed && <span className="feed-img-skeleton" />}
       {/* eslint-disable-next-line jsx-a11y/alt-text */}
       <img
         {...props}
@@ -472,7 +517,6 @@ function FeedImage(props: React.ImgHTMLAttributes<HTMLImageElement>) {
           props.onError?.(e);
         }}
       />
-      {props.alt && <figcaption>{props.alt}</figcaption>}
-    </figure>
+    </span>
   );
 }

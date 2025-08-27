@@ -131,3 +131,8 @@
 .feed-img-img { opacity: 0; transition: opacity .28s ease; width: 100%; height: auto; display: block; border-radius: 12px; }
 .feed-img-img.is-loaded { opacity: 1; }
 @keyframes feed-shimmer { 0% { background-position: -200px 0; } 100% { background-position: calc(200px + 100%) 0; } }
+
+/* Inline-safe image wrapper for images inside <p> */
+.feed-img-inline { position: relative; display: inline-block; max-width: 100%; }
+.feed-img-inline > .feed-img-skeleton { border-radius: 8px; }
+.feed-img-inline > .feed-img-img { border-radius: 8px; display: inline-block; }

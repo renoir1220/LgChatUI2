@@ -52,12 +52,15 @@ const CommentItem: React.FC<CommentItemProps> = ({
     }
   };
 
-  // 自适应高度
+  // 自适应高度（回复输入框）：单行无滚动，达上限后才显示纵向滚动条
   const autoResize = (el: HTMLTextAreaElement | null) => {
     if (!el) return;
-    el.style.height = 'auto';
     const maxH = 160; // 上限高度
-    el.style.height = Math.min(el.scrollHeight, maxH) + 'px';
+    el.style.height = 'auto';
+    const next = Math.min(el.scrollHeight, maxH);
+    el.style.height = next + 'px';
+    el.style.overflowY = el.scrollHeight > maxH ? 'auto' : 'hidden';
+    el.style.overflowX = 'hidden';
   };
 
   // 格式化时间
@@ -128,8 +131,8 @@ const CommentItem: React.FC<CommentItemProps> = ({
 
           {/* 回复输入框 */}
           {showReplyInput && (
-            <div className="mt-2.5 flex gap-2">
-              <div className="flex-1 relative">
+            <div className="mt-2.5 flex items-end gap-2">
+              <div className="flex-1">
                 <textarea
                   ref={replyRef}
                   value={replyText}
@@ -138,29 +141,35 @@ const CommentItem: React.FC<CommentItemProps> = ({
                     autoResize(replyRef.current);
                   }}
                   onFocus={() => autoResize(replyRef.current)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleReplySubmit();
+                    }
+                  }}
                   placeholder="写下你的回复..."
-                  className="w-full pr-16 px-3 py-1.5 text-[13px] border border-gray-300 dark:border-gray-600 rounded-md resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
+                  className="w-full px-3 py-1.5 text-[13px] border border-gray-300 dark:border-gray-600 rounded-md resize-none overflow-hidden focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
                   rows={1}
-                  style={{ overflow: 'auto' }}
+                  style={{}}
                 />
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                  <button
-                    onClick={() => {
-                      setShowReplyInput(false);
-                      setReplyText('');
-                    }}
-                    className="px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
-                  >
-                    取消
-                  </button>
-                  <button
-                    onClick={handleReplySubmit}
-                    disabled={!replyText.trim() || submittingReply}
-                    className="px-2.5 h-7 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                  >
-                    {submittingReply ? '发送中...' : '发送'}
-                  </button>
-                </div>
+              </div>
+              <div className="flex items-center gap-2 pb-1">
+                <button
+                  onClick={() => {
+                    setShowReplyInput(false);
+                    setReplyText('');
+                  }}
+                  className="px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={handleReplySubmit}
+                  disabled={!replyText.trim() || submittingReply}
+                  className="px-3 h-8 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                >
+                  {submittingReply ? '发送中...' : '发送'}
+                </button>
               </div>
             </div>
           )}
@@ -194,9 +203,12 @@ const InfoFeedComments: React.FC<InfoFeedCommentsProps> = ({
   const newRef = React.useRef<HTMLTextAreaElement | null>(null);
   const autoResize = (el: HTMLTextAreaElement | null) => {
     if (!el) return;
-    el.style.height = 'auto';
     const maxH = 200;
-    el.style.height = Math.min(el.scrollHeight, maxH) + 'px';
+    el.style.height = 'auto';
+    const next = Math.min(el.scrollHeight, maxH);
+    el.style.height = next + 'px';
+    el.style.overflowY = el.scrollHeight > maxH ? 'auto' : 'hidden';
+    el.style.overflowX = 'hidden';
   };
   
   // 获取当前用户信息
@@ -251,7 +263,7 @@ const InfoFeedComments: React.FC<InfoFeedCommentsProps> = ({
                 {currentUsername?.charAt(0) || '我'}
               </div>
             </div>
-            <div className="flex-1 relative">
+            <div className="flex-1 flex items-end gap-2">
               <textarea
                 ref={newRef}
                 value={newComment}
@@ -260,15 +272,21 @@ const InfoFeedComments: React.FC<InfoFeedCommentsProps> = ({
                   autoResize(newRef.current);
                 }}
                 onFocus={() => autoResize(newRef.current)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleAddComment();
+                  }
+                }}
                 placeholder="写下你的看法..."
-                className="w-full pr-14 px-3 py-1.5 text-[13px] border border-gray-300 dark:border-gray-600 rounded-md resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
+                className="flex-1 px-3 py-1.5 text-[13px] border border-gray-300 dark:border-gray-600 rounded-md resize-none overflow-hidden focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
                 rows={1}
-                style={{ overflow: 'auto' }}
+                style={{}}
               />
               <button
                 onClick={handleAddComment}
                 disabled={!newComment.trim() || submitting}
-                className="absolute right-2 top-1/2 -translate-y-1/2 px-2.5 h-7 bg-blue-500 text-white text-xs rounded-md hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                className="shrink-0 px-3 h-8 bg-blue-500 text-white text-xs rounded-md hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors self-end"
               >
                 {submitting ? '发表中...' : '发表'}
               </button>

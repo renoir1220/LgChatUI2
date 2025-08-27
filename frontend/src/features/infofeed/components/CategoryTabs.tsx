@@ -54,7 +54,7 @@ const CategoryTabs: React.FC<CategoryTabsProps> = ({
   className = ''
 }) => {
   return (
-    <div className={`flex items-center gap-2 overflow-x-auto scrollbar-hide ${className}`}>
+    <div className={`flex items-center gap-1.5 overflow-x-auto scrollbar-hide ${className}`}>
       {CATEGORY_CONFIGS.map((config) => {
         const isSelected = selectedCategory === config.key;
         return (
@@ -62,16 +62,22 @@ const CategoryTabs: React.FC<CategoryTabsProps> = ({
             key={config.key}
             onClick={() => onCategoryChange(config.key)}
             className={`
-              inline-flex items-center gap-1.5 rounded-full whitespace-nowrap
-              px-3 py-1.5 text-sm transition-colors
+              relative inline-flex h-9 items-end gap-1.5 rounded-full whitespace-nowrap
+              px-3 text-sm transition-colors pb-2
               ${isSelected
-                ? 'bg-accent/30 text-primary ring-1 ring-primary/20'
-                : 'bg-muted text-foreground/70 hover:bg-muted/80'}
+                ? 'text-foreground font-semibold'
+                : 'text-foreground/70 hover:text-foreground'}
             `}
             aria-pressed={isSelected}
+            aria-current={isSelected ? 'true' : undefined}
           >
             <span className="text-sm">{config.icon}</span>
             <span className="leading-none">{config.label}</span>
+            {/* 下划线指示器：绝对定位，不影响布局 */}
+            <span
+              className={`absolute left-1/2 bottom-0 -translate-x-1/2 h-[3px] rounded-full transition-all duration-200 ease-out ${isSelected ? 'bg-primary w-8' : 'bg-transparent w-0'}`}
+              aria-hidden
+            />
           </button>
         );
       })}

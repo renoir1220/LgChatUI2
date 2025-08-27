@@ -35,14 +35,41 @@ const InfoFeedItem: React.FC<InfoFeedItemProps> = ({
   const thumbnailUrl = feed.thumbnail_url || infoFeedService.getPlaceholderThumbnail(feed.category);
   const [imgLoaded, setImgLoaded] = React.useState(false);
   const [imgFailed, setImgFailed] = React.useState(false);
+  const hoverTimer = React.useRef<number | null>(null);
 
   // 格式化发布时间
   const formattedTime = infoFeedService.formatPublishTime(feed.publish_time);
+
+  // 生成摘要：优先 summary，没有则从 content 提取纯文本前若干字符
+  const preview = React.useMemo(() => {
+    if (feed.summary && feed.summary.trim()) return feed.summary.trim();
+    const text = stripMarkdown(feed.content || '');
+    const trimmed = text.replace(/\s+/g, ' ').trim();
+    return trimmed.length > 120 ? trimmed.slice(0, 120) + '…' : trimmed;
+  }, [feed.summary, feed.content]);
+
+  // 预取详情：悬停/聚焦时延迟请求，提升进入详情的首屏速度
+  const prefetch = React.useCallback(() => {
+    if (hoverTimer.current) return;
+    hoverTimer.current = window.setTimeout(() => {
+      infoFeedService.getInfoFeedDetail(feed.id).catch(() => {});
+    }, 150);
+  }, [feed.id]);
+  const cancelPrefetch = React.useCallback(() => {
+    if (hoverTimer.current) {
+      clearTimeout(hoverTimer.current);
+      hoverTimer.current = null;
+    }
+  }, []);
 
   return (
     <article
       className={`group relative cursor-pointer transition-all hover:bg-accent/5 active:scale-[0.995] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md ${className}`}
       onClick={() => onClick(feed)}
+      onMouseEnter={prefetch}
+      onMouseLeave={cancelPrefetch}
+      onFocus={prefetch}
+      onBlur={cancelPrefetch}
       tabIndex={0}
     >
       <div className="flex flex-col md:flex-row gap-3 md:gap-4">
@@ -58,22 +85,29 @@ const InfoFeedItem: React.FC<InfoFeedItemProps> = ({
             </h3>
           </div>
 
-          {/* 摘要 */}
-          {feed.summary && (
+          {/* 摘要（无 summary 时从内容提取） */}
+          {preview && (
             <p className="text-sm md:text-[14px] text-muted-foreground line-clamp-2 md:line-clamp-3 mb-2 md:mb-3">
-              {feed.summary}
+              {preview}
             </p>
           )}
 
           {/* 元信息行 */}
           <div className="flex items-center justify-between text-[12px] text-muted-foreground">
-            {/* 发布时间 */}
-            <time dateTime={feed.publish_time} className="flex items-center gap-1">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>{formattedTime}</span>
-            </time>
+            {/* 发布时间 + 来源 */}
+            <div className="flex items-center gap-3">
+              <time dateTime={feed.publish_time} className="flex items-center gap-1">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{formattedTime}</span>
+              </time>
+              <span className="flex items-center gap-1">
+                <span aria-hidden>{feed.source === 'auto' ? '🤖' : '✏️'}</span>
+                <span className="sr-only">来源：</span>
+                <span className="hidden sm:inline">{feed.source === 'auto' ? '自动' : '人工'}</span>
+              </span>
+            </div>
 
             {/* 统计数据 */}
             <div className="flex items-center gap-4">
@@ -107,11 +141,13 @@ const InfoFeedItem: React.FC<InfoFeedItemProps> = ({
 
         {/* 媒体区域（右侧，≥md），移动端置于顶部 */}
         <div className="w-full md:w-[180px] shrink-0">
-          <div className="relative rounded-md overflow-hidden bg-muted aspect-video">
+          <div className="relative rounded-xl overflow-hidden bg-muted aspect-video">
             {!imgLoaded && !imgFailed && <div className="feed-img-skeleton" />}
             <img
               src={thumbnailUrl}
               alt={feed.title}
+              loading="lazy"
+              decoding="async"
               className={`feed-img-img w-full h-full object-cover transition-transform duration-200 group-hover:scale-105 ${imgLoaded ? 'is-loaded' : ''}`}
               onLoad={() => setImgLoaded(true)}
               onError={(e) => {
@@ -135,3 +171,25 @@ const InfoFeedItem: React.FC<InfoFeedItemProps> = ({
 };
 
 export default InfoFeedItem;
+
+// 粗略移除 Markdown/HTML，生成纯文本预览
+function stripMarkdown(input: string): string {
+  return input
+    // Remove code blocks
+    .replace(/```[\s\S]*?```/g, '')
+    // Remove inline code
+    .replace(/`([^`]+)`/g, '$1')
+    // Remove images ![alt](url)
+    .replace(/!\[[^\]]*\]\([^\)]+\)/g, '')
+    // Remove links [text](url)
+    .replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '$1')
+    // Remove headings, lists, blockquotes markers
+    .replace(/^\s{0,3}(#{1,6}|[-*+]\s|>\s)/gm, '')
+    // Remove HTML tags
+    .replace(/<[^>]+>/g, '')
+    // Decode basic entities
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>');
+}

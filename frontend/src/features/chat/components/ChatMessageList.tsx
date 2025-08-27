@@ -216,6 +216,9 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
         {/* 装饰性渐变圆斑 */}
         <div className="pointer-events-none absolute -top-24 -left-24 size-[38rem] rounded-full bg-gradient-to-tr from-indigo-300/40 to-blue-200/30 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-24 -right-24 size-[38rem] rounded-full bg-gradient-to-tr from-cyan-200/40 to-violet-200/30 blur-3xl" />
+        {/* 四周淡化过渡，以融入纯色区域 */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/60 via-transparent to-white/60 dark:from-gray-900/60 dark:to-gray-900/60" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-white/50 via-transparent to-white/50 dark:from-gray-900/50 dark:to-gray-900/50" />
 
         {/* 欢迎文字与快捷操作：仅将欢迎词垂直居中，按钮独立放在其下方 */}
         <div className="relative z-10 h-full w-full p-6">

@@ -10,6 +10,8 @@ import type { InfoFeed } from '@/types/infofeed';
 import { useInfoFeedUI, useInfoFeedDetail } from '../hooks/useInfoFeed';
 import CategoryTabs from './CategoryTabs';
 import { Newspaper } from 'lucide-react';
+import TopBar from './TopBar';
+import SubHeader from '../../shared/components/SubHeader';
 import InfoFeedList from './InfoFeedList';
 import InfoFeedDetail from './InfoFeedDetail';
 
@@ -97,7 +99,17 @@ const InfoFeedModal: React.FC<InfoFeedModalProps> = ({
     };
   }, [isOpen]);
 
+  // 顶部标题（详情滚动时显示）的本地状态：必须在任何 return 之前声明，避免 Hooks 顺序变化
+  const [detailTopTitle, setDetailTopTitle] = useState<string>('');
+  const [detailTitleVisible, setDetailTitleVisible] = useState<boolean>(false);
+  const handleDetailTitleChange = (title: string, visible: boolean) => {
+    setDetailTopTitle(title);
+    setDetailTitleVisible(visible);
+  };
+
   if (!isOpen) return null;
+
+  const inDetail = !!(uiState.selectedFeed && selectedFeedDetail);
 
   return (
     <div className="fixed inset-0 z-[10050] flex items-center justify-center">
@@ -113,7 +125,7 @@ const InfoFeedModal: React.FC<InfoFeedModalProps> = ({
         }}
       />
 
-      {/* 主要内容区域 */}
+      {/* 主要内容区域 - Feature Shell */}
       <div className={`
         relative w-screen h-screen rounded-none overflow-hidden
         bg-white dark:bg-gray-900
@@ -122,80 +134,81 @@ const InfoFeedModal: React.FC<InfoFeedModalProps> = ({
         ${entered && !exiting ? 'opacity-100 scale-100 translate-x-0 translate-y-0' : 'opacity-0 scale-95 translate-x-2 -translate-y-1'}
         ${className}
       `}>
-        {/* 如果选中了具体信息流，显示详情 */}
-        {uiState.selectedFeed && selectedFeedDetail ? (
-          <InfoFeedDetail
-            feed={selectedFeedDetail}
-            onClose={closeFeedDetail}
-            onLikeToggle={toggleLike}
-            onPrev={uiState.selectedIndex && uiState.selectedIndex > 0 ? prevFeed : undefined}
-            onNext={
-              uiState.feedList && uiState.selectedIndex !== undefined &&
-              uiState.selectedIndex < uiState.feedList.length - 1 ? nextFeed : undefined
-            }
-            prevTitle={
-              uiState.feedList && uiState.selectedIndex !== undefined && uiState.selectedIndex > 0
-                ? uiState.feedList[uiState.selectedIndex - 1].title
-                : undefined
-            }
-            nextTitle={
-              uiState.feedList && uiState.selectedIndex !== undefined &&
-              uiState.selectedIndex < (uiState.feedList.length - 1)
-                ? uiState.feedList[uiState.selectedIndex + 1].title
-                : undefined
-            }
-            list={uiState.feedList}
-            startIndex={uiState.selectedIndex}
-            className="h-full"
-          />
-        ) : (
-          /* 否则显示信息流列表 */
-            <div className="flex flex-col h-full">
-            {/* 头部区域 */}
-            <div className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700">
-              <div className="mx-auto max-w-3xl px-4 md:px-6 py-4 md:py-6">
-              <div className="flex items-center justify-between mb-3 md:mb-4">
-                <div className="flex items-center gap-2">
-                  <div className="rounded-md bg-accent/40 text-primary p-1.5">
-                    <Newspaper className="w-4 h-4" />
-                  </div>
-                  <h2 className="text-xl md:text-2xl font-semibold text-foreground">信息流</h2>
+        <div className="flex flex-col h-full">
+          {/* TopBar 持久存在 */}
+          <TopBar
+            withDivider={inDetail}
+            dense={inDetail}
+            title={inDetail ? (detailTitleVisible ? detailTopTitle : '') : (
+              <div className="flex items-center gap-2">
+                <div className="rounded-md bg-accent/40 text-primary p-1.5">
+                  <Newspaper className="w-4 h-4" />
                 </div>
-                <button
-                  onClick={handleRequestClose}
-                  className="flex items-center gap-1 px-2 py-1 hover:bg-muted rounded-md transition-colors"
-                  aria-label="返回"
-                >
-                  <svg className="w-4 h-4 text-foreground/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-                  </svg>
-                  <span className="text-xs text-foreground/70">返回</span>
-                </button>
+                <span>信息流</span>
               </div>
+            )}
+            right={
+              <button
+                onClick={inDetail ? closeFeedDetail : handleRequestClose}
+                className="flex items-center gap-1 px-2 py-1 hover:bg-muted rounded-md transition-colors"
+                aria-label="返回"
+              >
+                <svg className="w-4 h-4 text-foreground/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                </svg>
+                <span className="hidden sm:inline text-xs text-foreground/70">返回</span>
+              </button>
+            }
+          />
 
-              {/* 分类标签 */}
-              <div className="mx-auto max-w-3xl px-4 md:px-6 pb-2">
-                <CategoryTabs
-                  selectedCategory={uiState.selectedCategory}
-                  onCategoryChange={switchCategory}
-                />
-              </div>
-              </div>
-            </div>
+          {/* SubHeader：列表显示分类（胶囊轨道），详情隐藏 */}
+          <SubHeader visible={!inDetail}>
+            <CategoryTabs
+              selectedCategory={uiState.selectedCategory}
+              onCategoryChange={switchCategory}
+            />
+          </SubHeader>
 
-            {/* 内容区域 */}
-            <div className="flex-1 overflow-hidden">
+          {/* 内容区域（统一滚动容器） */}
+          <div className="flex-1 overflow-hidden">
+            {!inDetail ? (
               <div className="h-full overflow-y-auto">
                 <div className="mx-auto max-w-3xl px-4 md:px-6 py-4 md:py-6">
-                <InfoFeedList
-                  category={uiState.selectedCategory}
-                  onItemClick={openFeedDetail}
-                />
+                  <InfoFeedList
+                    category={uiState.selectedCategory}
+                    onItemClick={openFeedDetail}
+                  />
                 </div>
               </div>
-            </div>
+            ) : (
+              <InfoFeedDetail
+                feed={selectedFeedDetail}
+                onClose={closeFeedDetail}
+                onLikeToggle={toggleLike}
+                onPrev={uiState.selectedIndex && uiState.selectedIndex > 0 ? prevFeed : undefined}
+                onNext={
+                  uiState.feedList && uiState.selectedIndex !== undefined &&
+                  uiState.selectedIndex < uiState.feedList.length - 1 ? nextFeed : undefined
+                }
+                prevTitle={
+                  uiState.feedList && uiState.selectedIndex !== undefined && uiState.selectedIndex > 0
+                    ? uiState.feedList[uiState.selectedIndex - 1].title
+                    : undefined
+                }
+                nextTitle={
+                  uiState.feedList && uiState.selectedIndex !== undefined &&
+                  uiState.selectedIndex < (uiState.feedList.length - 1)
+                    ? uiState.feedList[uiState.selectedIndex + 1].title
+                    : undefined
+                }
+                list={uiState.feedList}
+                startIndex={uiState.selectedIndex}
+                className="h-full"
+                onTitleChange={handleDetailTitleChange}
+              />
+            )}
           </div>
-        )}
+        </div>
 
         {/* 加载状态遮罩 */}
         {detailLoading && uiState.selectedFeed && (
