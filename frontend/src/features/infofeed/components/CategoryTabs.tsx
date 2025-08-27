@@ -54,25 +54,24 @@ const CategoryTabs: React.FC<CategoryTabsProps> = ({
   className = ''
 }) => {
   return (
-    <div className={`flex space-x-2 overflow-x-auto scrollbar-hide ${className}`}>
+    <div className={`flex items-center gap-2 overflow-x-auto scrollbar-hide ${className}`}>
       {CATEGORY_CONFIGS.map((config) => {
         const isSelected = selectedCategory === config.key;
-        
         return (
           <button
             key={config.key}
             onClick={() => onCategoryChange(config.key)}
             className={`
-              flex items-center space-x-2 px-4 py-2 rounded-full whitespace-nowrap
-              transition-all duration-200 text-sm font-medium
-              ${isSelected 
-                ? config.color + ' shadow-lg transform scale-105' 
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }
+              inline-flex items-center gap-1.5 rounded-full whitespace-nowrap
+              px-3 py-1.5 text-sm transition-colors
+              ${isSelected
+                ? 'bg-accent/30 text-primary ring-1 ring-primary/20'
+                : 'bg-muted text-foreground/70 hover:bg-muted/80'}
             `}
+            aria-pressed={isSelected}
           >
-            <span className="text-base">{config.icon}</span>
-            <span>{config.label}</span>
+            <span className="text-sm">{config.icon}</span>
+            <span className="leading-none">{config.label}</span>
           </button>
         );
       })}

@@ -141,16 +141,19 @@ export const SuggestionListModal: React.FC<SuggestionListModalProps> = ({
   return (
     <Modal
       title={
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <BulbOutlined 
-            style={{ 
-              fontSize: 16, 
-              color: '#666',
-              filter: 'opacity(0.7)',
-              textShadow: '0 0 1px rgba(102, 102, 102, 0.3)'
-            }} 
-          />
-          建议列表 ({total}条)
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+            <BulbOutlined 
+              style={{ 
+                fontSize: 16, 
+                color: '#666',
+                filter: 'opacity(0.7)',
+                textShadow: '0 0 1px rgba(102, 102, 102, 0.3)'
+              }} 
+            />
+            <span style={{ fontWeight: 500, whiteSpace: 'nowrap' }}>建议列表</span>
+            <span style={{ color: '#999', fontSize: 12, whiteSpace: 'nowrap' }}>({total}条)</span>
+          </div>
           {onCreateSuggestion && (
             <Button
               type="link"
@@ -159,9 +162,8 @@ export const SuggestionListModal: React.FC<SuggestionListModalProps> = ({
               style={{ 
                 color: '#1677ff',
                 fontSize: 14,
-                height: 'auto',
+                height: 28,
                 padding: 0,
-                marginLeft: 8
               }}
             >
               提建议

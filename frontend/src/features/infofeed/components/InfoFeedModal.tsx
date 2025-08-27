@@ -9,6 +9,7 @@ import { InfoFeedCategory } from '@/types/infofeed';
 import type { InfoFeed } from '@/types/infofeed';
 import { useInfoFeedUI, useInfoFeedDetail } from '../hooks/useInfoFeed';
 import CategoryTabs from './CategoryTabs';
+import { Newspaper } from 'lucide-react';
 import InfoFeedList from './InfoFeedList';
 import InfoFeedDetail from './InfoFeedDetail';
 
@@ -149,44 +150,50 @@ const InfoFeedModal: React.FC<InfoFeedModalProps> = ({
           />
         ) : (
           /* 否则显示信息流列表 */
-          <div className="flex flex-col h-full">
+            <div className="flex flex-col h-full">
             {/* 头部区域 */}
-            <div className="flex-shrink-0 p-4 md:p-6 border-b border-gray-200 dark:border-gray-700">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-3">
-                  <div className="text-2xl">📰</div>
-                  <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
-                    信息流
-                  </h2>
+            <div className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700">
+              <div className="mx-auto max-w-3xl px-4 md:px-6 py-4 md:py-6">
+              <div className="flex items-center justify-between mb-3 md:mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="rounded-md bg-accent/40 text-primary p-1.5">
+                    <Newspaper className="w-4 h-4" />
+                  </div>
+                  <h2 className="text-xl md:text-2xl font-semibold text-foreground">信息流</h2>
                 </div>
-                
-                {/* 关闭按钮 */}
+
+                {/* 统一样式的返回按钮（功能仍为关闭） */}
                 <button
                   onClick={handleRequestClose}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                  aria-label="关闭信息流"
+                  className="flex items-center gap-1 px-2 py-1 hover:bg-muted rounded-md transition-colors"
+                  aria-label="返回"
                 >
-                  <svg className="w-6 h-6 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  <svg className="w-4 h-4 text-foreground/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
                   </svg>
+                  <span className="text-xs text-foreground/70">返回</span>
                 </button>
               </div>
 
               {/* 分类标签 */}
-              <CategoryTabs
-                selectedCategory={uiState.selectedCategory}
-                onCategoryChange={switchCategory}
-                className="pb-2"
-              />
+              <div className="mx-auto max-w-3xl px-4 md:px-6 pb-2">
+                <CategoryTabs
+                  selectedCategory={uiState.selectedCategory}
+                  onCategoryChange={switchCategory}
+                />
+              </div>
+              </div>
             </div>
 
             {/* 内容区域 */}
             <div className="flex-1 overflow-hidden">
-              <div className="h-full overflow-y-auto p-4 md:p-6">
+              <div className="h-full overflow-y-auto">
+                <div className="mx-auto max-w-3xl px-4 md:px-6 py-4 md:py-6">
                 <InfoFeedList
                   category={uiState.selectedCategory}
                   onItemClick={openFeedDetail}
                 />
+                </div>
               </div>
             </div>
           </div>

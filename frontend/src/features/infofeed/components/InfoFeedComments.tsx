@@ -31,6 +31,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
   onAddReply
 }) => {
   const [replyText, setReplyText] = useState('');
+  const replyRef = React.useRef<HTMLTextAreaElement | null>(null);
   const [showReplyInput, setShowReplyInput] = useState(false);
   const [submittingReply, setSubmittingReply] = useState(false);
 
@@ -49,6 +50,14 @@ const CommentItem: React.FC<CommentItemProps> = ({
     } finally {
       setSubmittingReply(false);
     }
+  };
+
+  // 自适应高度
+  const autoResize = (el: HTMLTextAreaElement | null) => {
+    if (!el) return;
+    el.style.height = 'auto';
+    const maxH = 160; // 上限高度
+    el.style.height = Math.min(el.scrollHeight, maxH) + 'px';
   };
 
   // 格式化时间
@@ -120,28 +129,34 @@ const CommentItem: React.FC<CommentItemProps> = ({
           {/* 回复输入框 */}
           {showReplyInput && (
             <div className="mt-3 flex space-x-2">
-              <div className="flex-1">
+              <div className="flex-1 relative">
                 <textarea
+                  ref={replyRef}
                   value={replyText}
-                  onChange={(e) => setReplyText(e.target.value)}
+                  onChange={(e) => {
+                    setReplyText(e.target.value);
+                    autoResize(replyRef.current);
+                  }}
+                  onFocus={() => autoResize(replyRef.current)}
                   placeholder="写下你的回复..."
-                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
-                  rows={2}
+                  className="w-full pr-16 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
+                  rows={1}
+                  style={{ overflow: 'auto' }}
                 />
-                <div className="flex justify-end space-x-2 mt-2">
+                <div className="absolute right-2 bottom-2 flex items-center gap-2">
                   <button
                     onClick={() => {
                       setShowReplyInput(false);
                       setReplyText('');
                     }}
-                    className="px-3 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                    className="px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
                   >
                     取消
                   </button>
                   <button
                     onClick={handleReplySubmit}
                     disabled={!replyText.trim() || submittingReply}
-                    className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    className="px-2.5 h-7 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
                   >
                     {submittingReply ? '发送中...' : '发送'}
                   </button>
@@ -176,6 +191,13 @@ const InfoFeedComments: React.FC<InfoFeedCommentsProps> = ({
   className = ''
 }) => {
   const [newComment, setNewComment] = useState('');
+  const newRef = React.useRef<HTMLTextAreaElement | null>(null);
+  const autoResize = (el: HTMLTextAreaElement | null) => {
+    if (!el) return;
+    el.style.height = 'auto';
+    const maxH = 200;
+    el.style.height = Math.min(el.scrollHeight, maxH) + 'px';
+  };
   
   // 获取当前用户信息
   const isUserAuthenticated = isAuthenticated();
@@ -223,29 +245,33 @@ const InfoFeedComments: React.FC<InfoFeedCommentsProps> = ({
       {/* 添加评论 */}
       {isUserAuthenticated ? (
         <div className="mb-6">
-          <div className="flex space-x-3">
+          <div className="flex gap-3">
             <div className="flex-shrink-0">
               <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium">
                 {currentUsername?.charAt(0) || '我'}
               </div>
             </div>
-            <div className="flex-1">
+            <div className="flex-1 relative">
               <textarea
+                ref={newRef}
                 value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
+                onChange={(e) => {
+                  setNewComment(e.target.value);
+                  autoResize(newRef.current);
+                }}
+                onFocus={() => autoResize(newRef.current)}
                 placeholder="写下你的看法..."
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
-                rows={3}
+                className="w-full pr-14 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
+                rows={1}
+                style={{ overflow: 'auto' }}
               />
-              <div className="flex justify-end mt-3">
-                <button
-                  onClick={handleAddComment}
-                  disabled={!newComment.trim() || submitting}
-                  className="px-4 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-                >
-                  {submitting ? '发表中...' : '发表评论'}
-                </button>
-              </div>
+              <button
+                onClick={handleAddComment}
+                disabled={!newComment.trim() || submitting}
+                className="absolute right-2 bottom-2 px-3 h-7 bg-blue-500 text-white text-xs rounded-md hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              >
+                {submitting ? '发表中...' : '发表'}
+              </button>
             </div>
           </div>
         </div>

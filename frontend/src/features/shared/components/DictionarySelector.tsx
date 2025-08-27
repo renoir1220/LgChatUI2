@@ -79,7 +79,7 @@ export const DictionarySelector: React.FC<DictionarySelectorProps> = ({
 
   return (
     <Modal
-      title={title}
+      title={<div style={{ display: 'flex', alignItems: 'center' }}><span style={{ fontWeight: 500 }}>{title}</span></div>}
       open={isOpen}
       onCancel={handleClose}
       footer={null}
@@ -87,7 +87,7 @@ export const DictionarySelector: React.FC<DictionarySelectorProps> = ({
       destroyOnHidden
       centered
     >
-      <div style={{ marginBottom: 16 }}>
+      <div style={{ marginBottom: 12 }}>
         <Input
           className="dictionary-search-input"
           placeholder="输入中文或拼音搜索..."
@@ -120,10 +120,13 @@ export const DictionarySelector: React.FC<DictionarySelectorProps> = ({
                 }}
                 style={{ 
                   cursor: 'pointer',
-                  transition: 'background-color 0.2s'
+                  transition: 'background-color 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  minHeight: 36,
                 }}
               >
-                <div style={{ fontSize: '13px' }}>
+                <div style={{ fontSize: 13 }}>
                   {dictionary.customerName}
                 </div>
               </List.Item>

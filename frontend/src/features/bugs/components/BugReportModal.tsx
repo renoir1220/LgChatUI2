@@ -77,9 +77,11 @@ export const BugReportModal: React.FC<BugReportModalProps> = ({
   return (
     <Modal
       title={
-        <div className="flex items-center gap-2">
-          <BugOutlined className="text-red-500" />
-          <span>提交BUG反馈</span>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <BugOutlined className="text-red-500" />
+            <span className="font-medium">提交BUG反馈</span>
+          </div>
         </div>
       }
       open={open}
@@ -165,8 +167,8 @@ export const BugReportModal: React.FC<BugReportModalProps> = ({
         </Form.Item>
 
 
-        <div className="flex justify-end gap-3">
-          <Button onClick={handleCancel} disabled={submitting}>
+        <div className="flex justify-end gap-2 md:gap-3 mt-2">
+          <Button onClick={handleCancel} disabled={submitting} style={{ height: 32 }}>
             取消
           </Button>
           <Button
@@ -174,6 +176,7 @@ export const BugReportModal: React.FC<BugReportModalProps> = ({
             htmlType="submit"
             loading={submitting}
             icon={<BugOutlined />}
+            style={{ height: 32 }}
           >
             {submitting ? '提交中...' : '提交BUG'}
           </Button>

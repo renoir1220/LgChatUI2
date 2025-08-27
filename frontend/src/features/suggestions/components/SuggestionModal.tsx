@@ -77,7 +77,7 @@ export const SuggestionModal: React.FC<SuggestionModalProps> = ({
       destroyOnHidden
       centered
       footer={[
-        <Button key="cancel" onClick={handleClose} disabled={isSubmitting}>
+        <Button key="cancel" onClick={handleClose} disabled={isSubmitting} style={{ height: 32 }}>
           取消
         </Button>,
         <Button
@@ -86,6 +86,7 @@ export const SuggestionModal: React.FC<SuggestionModalProps> = ({
           onClick={handleSubmit}
           disabled={isSubmitting}
           icon={isSubmitting ? <LoadingOutlined /> : null}
+          style={{ height: 32 }}
         >
           {isSubmitting ? '提交中...' : '提交建议'}
         </Button>,
