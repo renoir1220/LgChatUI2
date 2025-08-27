@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import LoginScreen from './features/auth/components/LoginScreen'
 import ChatScreenRefactored from './features/chat/components/ChatScreenRefactored'
+import AdminApp from './features/admin/components/AdminApp'
 import RequireAuth from './features/auth/components/RequireAuth'
 import { NotificationProvider } from './features/shared/contexts/NotificationContext'
 import { SettingsProvider } from './features/shared/contexts/SettingsContext'
@@ -35,6 +36,16 @@ function App() {
                   <div className="h-full flex-1">
                     <RequireAuth>
                       <ChatScreenRefactored />
+                    </RequireAuth>
+                  </div>
+                } 
+              />
+              <Route 
+                path="/admin/*" 
+                element={
+                  <div className="h-full flex-1">
+                    <RequireAuth>
+                      <AdminApp />
                     </RequireAuth>
                   </div>
                 } 

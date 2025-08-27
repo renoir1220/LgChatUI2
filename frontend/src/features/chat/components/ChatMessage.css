@@ -182,9 +182,9 @@
   51%, 100% { opacity: 0; }
 }
 
-/* 用户消息样式优化 */
+/* 用户消息样式优化 - ChatGPT风格浅灰气泡 */
 .user-message .chat-markdown-body {
-  color: #ffffff !important;
+  color: #1f1f1f !important;
 }
 
 .user-message .chat-markdown-body h1,
@@ -193,27 +193,27 @@
 .user-message .chat-markdown-body h4,
 .user-message .chat-markdown-body h5,
 .user-message .chat-markdown-body h6 {
-  color: #ffffff !important;
+  color: #1f1f1f !important;
 }
 
 .user-message .chat-markdown-body code {
-  background: rgba(255, 255, 255, 0.2) !important;
-  color: #ffffff !important;
+  background: #e5e5e5 !important;
+  color: #1f1f1f !important;
 }
 
 .user-message .chat-markdown-body pre {
-  background: rgba(255, 255, 255, 0.1) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  background: #e5e5e5 !important;
+  border: 1px solid #d0d0d0 !important;
 }
 
 .user-message .chat-markdown-body blockquote {
-  color: rgba(255, 255, 255, 0.8) !important;
-  border-left: 4px solid rgba(255, 255, 255, 0.3) !important;
-  background: rgba(255, 255, 255, 0.1) !important;
+  color: #4a4a4a !important;
+  border-left: 4px solid #999999 !important;
+  background: #e8e8e8 !important;
 }
 
 .user-message .chat-markdown-body a {
-  color: #93c5fd !important;
+  color: #0066cc !important;
 }
 
 /* 需求消息组件样式优化 */
@@ -262,6 +262,17 @@
 }
 
 
+
+/* AI消息无气泡样式 - 细线分隔 */
+.ant-bubble-list .ant-bubble[data-role="assistant"] .ant-bubble-content {
+  border-bottom: 1px solid #f0f0f0 !important;
+  padding: 16px 0 !important;
+}
+
+.ant-bubble-list .ant-bubble[data-role="assistant"]:last-child .ant-bubble-content {
+  border-bottom: none !important;
+}
+
 /* 响应式优化 */
 /* 大屏幕时设置最小宽度以撑开组件 */
 @media (min-width: 1024px) {
@@ -277,6 +288,7 @@
   }
 }
 
+
 /* 小屏幕时不设置最小宽度，保持响应式 */
 @media (max-width: 767px) {
   .chat-markdown-body {
@@ -289,5 +301,9 @@
   
   .requirement-collapse .ant-collapse-header {
     min-width: auto !important;
+  }
+  
+  .ant-bubble-list .ant-bubble-content {
+    padding: 12px 0 !important;
   }
 }

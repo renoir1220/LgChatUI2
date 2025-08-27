@@ -186,6 +186,48 @@ git commit -m "实现会话重命名功能
 Co-Authored-By: Claude <noreply@anthropic.com>"
 ```
 
+## 后台管理（Admin）渐进式接入指引（AI用）
+
+目标
+- 采用“后端优先”的增量方式为后台管理增加新页面（例如：新闻管理、统计查询等）。
+- 保持后端风格与现有会话/功能模块一致；前端采用 React + Tailwind + shadcn/ui 的简洁布局与组件。
+
+总体入口
+- 后端：统一挂载在 `/api/admin/*`，由 `AdminGuard` 保护，仅管理员可访问；管理员名单文件热加载（`backend/config/admins.txt` 或 `ADMIN_CONFIG_PATH`）。
+- 前端：通过聊天界面用户信息的二级菜单“后台管理”以新页面方式打开 `/admin`；仅在检测到管理员权限时显示入口。
+
+增量步骤（每个新后台页面都遵循）
+1) 后端优先（NestJS）
+- 在 `backend/src/features/admin/` 下新增对应 Controller（例如 `stats.controller.ts`），路由前缀建议：`@Controller('api/admin/stats')`。
+- 控制器方法统一加守卫：`@UseGuards(JwtAuthGuard, AdminGuard)`。
+- 返回最小可用的占位数据结构（空列表 + 分页信息或简单对象），保持 JSON 字段清晰稳定。
+- 如需建表，将 SQL 放入 `backend/sql/<feature>/`，不要在代码中直接创建表。
+- 将新菜单加入 `AdminController.menus()` 返回值，形如：`{ key: 'stats', label: '统计查询' }`。
+
+2) 前端骨架（React + shadcn/ui）
+- 页面位置：`frontend/src/features/admin/components/` 下新增页面组件文件，或在 `pages/` 子目录中组织。
+- 路由注册：在 `AdminApp.tsx` 的 `<Routes>` 中添加 `<Route path="stats" element={<StatsPage />} />`。
+- 侧栏菜单：`AdminApp.tsx` 里通过后端 `GET /api/admin/menus` 动态渲染；或在 `AdminSidebar` 中将后端返回的 `{ key, label }` 映射为 `{ to: "/admin/<key>" }`。
+- 视觉规范：
+  - 布局：沿用 `AdminApp.tsx` 提供的壳（顶部细分隔线 + 左侧 `AdminSidebar` + 右侧内容区）。
+  - 容器：使用 `Card`（标题 + 描述 + 内容），或表格页用 `Card` 包裹表格与工具栏。
+  - 组件：优先使用现有 shadcn/ui 组件（Button/Input/Dropdown/ScrollArea/Separator/Card 等）。
+  - API：统一通过 `features/shared/services/api.ts` 的 `apiGet/apiPost/...`（自动带 Authorization 与 API_BASE）。
+- 先上占位：最初只渲染一个空状态或示例表格结构，不接入真实业务逻辑，确保渐进可用。
+
+3) 权限与入口
+- 管理员检测：前端通过 `GET /api/admin/permissions/me` 判断是否显示“后台管理”入口与页面内容。
+- 入口位置：聊天界面侧栏用户菜单（已接入），以新窗口/新标签打开 `/admin`，不影响当前会话。
+
+4) 代码参考
+- 后端：参考 `backend/src/features/admin/admin.controller.ts`、`admin.guard.ts`、`admin.module.ts` 的结构与用法。
+- 前端：参考 `frontend/src/features/admin/components/AdminApp.tsx` 与 `AdminSidebar.tsx` 的布局与样式；“新闻管理”页面即为未来新页面的样板（即使尚为占位）。
+
+5) 注意事项
+- 避免过度设计：先保证菜单→路由→占位可用，再逐步填充真实功能。
+- 一致性：后端日志使用 `AppLoggerService`，错误处理与返回风格对齐既有模块；前端样式与 shadcn 组件保持统一。
+- 数据服务：需要数据时走 lgchatui data service；如需新表，SQL 统一放 `backend/sql/`，由维护者执行。
+
 ## 数据库和部署
 
 ### 数据库配置

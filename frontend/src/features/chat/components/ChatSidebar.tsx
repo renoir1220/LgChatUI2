@@ -8,6 +8,7 @@ import {
   SmileOutlined,
   MenuOutlined
 } from '@ant-design/icons';
+import { getIsAdmin } from '../../admin/services/adminApi';
 import { Conversations } from '@ant-design/x';
 import logoTree from '../../../assets/logoTree.png';
 import { clearAuth, getUsername } from '../../auth/utils/auth';
@@ -57,6 +58,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // 响应式检测（三态：展开 / 折叠 / 悬浮）
   useEffect(() => {
@@ -88,6 +90,15 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
     applyLayoutByWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // 检查是否为管理员，用于显示“后台管理”入口
+  useEffect(() => {
+    let mounted = true;
+    getIsAdmin()
+      .then((ok) => { if (mounted) setIsAdmin(!!ok); })
+      .catch(() => { if (mounted) setIsAdmin(false); });
+    return () => { mounted = false; };
   }, []);
 
   // 切换侧边栏状态
@@ -419,6 +430,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
           menu={{
             items: [
               { key: 'profile', label: '个人资料' },
+              ...(isAdmin ? [{ key: 'admin', label: (<a href="/admin" target="_blank" rel="noopener noreferrer">后台管理</a>) }] : []),
               { type: 'divider' as const },
               { 
                 key: 'logout', 
@@ -477,6 +489,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
               menu={{
                 items: [
                   { key: 'profile', label: '个人资料' },
+                  ...(isAdmin ? [{ key: 'admin', label: (<a href="/admin" target="_blank" rel="noopener noreferrer">后台管理</a>) }] : []),
                   { type: 'divider' as const },
                   { 
                     key: 'logout', 

@@ -203,11 +203,11 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       <div style={{
         borderRadius: 24,
         border: glass ? '1px solid rgba(255,255,255,0.5)' : '1px solid #e1e5e9',
-        backgroundColor: glass ? 'rgba(255,255,255,0.6)' : '#ffffff',
+        backgroundColor: '#ffffff',
         backdropFilter: glass ? 'blur(8px)' as any : undefined,
         WebkitBackdropFilter: glass ? 'blur(8px)' as any : undefined,
         padding: '8px 12px 6px 12px',
-        boxShadow: glass ? '0 4px 24px rgba(15, 23, 42, 0.08)' : '0 2px 12px rgba(0, 0, 0, 0.08)',
+        boxShadow: '0 0 20px rgba(59, 130, 246, 0.15), 0 2px 12px rgba(0, 0, 0, 0.08)',
         transition: 'all 0.2s ease',
         position: 'relative'
       }}>

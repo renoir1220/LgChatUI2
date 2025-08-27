@@ -17,6 +17,7 @@ import { RequirementsModule } from './features/requirements/requirements.module'
 import { SuggestionsModule } from './features/suggestions/suggestions.module';
 import { BugsModule } from './features/bugs/bugs.module';
 import { InfoFeedModule } from './features/infofeed/infofeed.module';
+import { AdminModule } from './features/admin/admin.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { InfoFeedModule } from './features/infofeed/infofeed.module';
     SuggestionsModule,
     BugsModule,
     InfoFeedModule,
+    AdminModule,
   ],
   controllers: [AppController, HealthController],
   providers: [AppService],

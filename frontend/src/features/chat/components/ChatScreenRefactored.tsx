@@ -430,11 +430,7 @@ const ChatScreenRefactored: React.FC = () => {
         flexDirection: 'column',
         minWidth: 0, // 防止flex溢出
         position: 'relative', // 为绝对定位的灯泡图标提供相对定位上下文
-        backgroundImage: isWelcomeMode 
-          ? 'radial-gradient(ellipse at top, #eff6ff 0%, #ffffff 50%, #e0e7ff 100%)'
-          : undefined,
-        // iOS 上 fixed 背景会引发滚动/布局问题，移动端禁用
-        backgroundAttachment: isWelcomeMode && !isMobile ? 'fixed' : undefined,
+        backgroundColor: '#ffffff', // 统一白色背景
       }}>
         {/* 欢迎页面时的信息流图标 */}
         {isNewConversation && (
