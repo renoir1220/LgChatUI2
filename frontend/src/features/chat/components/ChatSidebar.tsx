@@ -227,10 +227,16 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
         {/* 顶部工具栏 - 在折叠状态下显示汉堡菜单 */}
         {isSidebarCollapsed && !isMobile && (
           <div style={{
-            padding: '16px',
+            padding: '0 16px',
             display: 'flex',
             justifyContent: 'center',
-            borderBottom: '1px solid #f0f0f0'
+            alignItems: 'center',
+            borderBottom: '1px solid #f0f0f0',
+            height: 56,
+            boxSizing: 'border-box',
+            paddingTop: 16,
+            paddingBottom: 16,
+            background: '#fff'
           }}>
             <button
               onClick={toggleSidebar}
@@ -260,12 +266,17 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
         {/* Logo区域：移动端打开菜单时也显示 */}
         {(!isSidebarCollapsed || (isMobile && isMobileMenuOpen)) && (
           <div style={{ 
-            padding: '16px', 
+            padding: '0 16px', 
             display: 'flex', 
             alignItems: 'center', 
             gap: 8, 
             borderBottom: '1px solid #f0f0f0',
-            position: 'relative'
+            position: 'relative',
+            height: 56,
+            boxSizing: 'border-box',
+            paddingTop: 16,
+            paddingBottom: 16,
+            background: '#fff'
           }}>
             {/* 折叠按钮 - 仅在桌面端显示 */}
             {!isMobile && (
@@ -309,25 +320,9 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
           </div>
         )}
         
-        {/* 折叠状态下的Logo */}
-        {isSidebarCollapsed && !isMobile && (
-          <div style={{ 
-            padding: '16px', 
-            display: 'flex', 
-            justifyContent: 'center',
-            borderBottom: '1px solid #f0f0f0' 
-          }}>
-            <img
-              src={logoTree}
-              draggable={false}
-              alt="logo"
-              width={24}
-              height={24}
-            />
-          </div>
-        )}
+        {/* 折叠状态下不再重复显示Logo，避免双层顶部栏导致对不齐 */}
 
-        {/* 新建会话按钮：移动端打开菜单时也显示 */}
+        {/* 新建会话 + 使用说明：移动端打开菜单时也显示 */}
         {!isSidebarCollapsed || (isMobile && isMobileMenuOpen) ? (
           <AntdButton
             onClick={handleNewConversation}

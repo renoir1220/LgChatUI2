@@ -95,12 +95,4 @@ export class MessagesRepository {
     return rows.length > 0;
   }
 
-  // 统计会话消息数量
-  async countByConversation(conversationId: string): Promise<number> {
-    const rows = await this.db.query<any>(
-      `SELECT COUNT(*) AS total FROM AI_MESSAGES WHERE CONVERSATION_ID = @p0`,
-      conversationId,
-    );
-    return Number(rows?.[0]?.total ?? 0);
-  }
 }

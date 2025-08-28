@@ -124,13 +124,7 @@ export class ChatHistoryController {
       throw new NotFoundException('Conversation not found');
     }
 
-    // 若尝试修改知识库且会话已开始（已有消息），禁止修改
-    if (body.knowledgeBaseId !== undefined) {
-      const msgCount = await this.messages.countByConversation(id);
-      if (msgCount > 0) {
-        throw new BadRequestException('已开始的对话不能修改知识库');
-      }
-    }
+    // 允许修改知识库（前端已有确认逻辑处理）
 
     // 更新会话信息（允许标题、知识库、后续可扩展 modelId 等）
     await this.conversations.updateConversation(id, body as any);

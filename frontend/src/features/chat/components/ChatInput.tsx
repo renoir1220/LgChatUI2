@@ -17,6 +17,7 @@ import {
   BugOutlined
 } from '@ant-design/icons';
 import type { KnowledgeBase } from '../../knowledge-base/hooks/useKnowledgeBases';
+import { QuickActions } from './QuickActions';
 
 interface ChatInputProps {
   inputValue: string;
@@ -26,7 +27,6 @@ interface ChatInputProps {
   knowledgeBases: KnowledgeBase[];
   currentKnowledgeBase: string | undefined;
   kbLoading: boolean;
-  kbLocked?: boolean;
   canSelectModel?: boolean;
   models?: { id: string; displayName: string }[];
   selectedModelId?: string;
@@ -57,7 +57,6 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   knowledgeBases,
   currentKnowledgeBase,
   kbLoading,
-  kbLocked = false,
   canSelectModel = false,
   models = [],
   selectedModelId,
@@ -209,6 +208,12 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       paddingTop: 8, 
       paddingBottom: 'max(16px, env(safe-area-inset-bottom, 16px))'
     }}>
+      {/* 快捷操作栏 */}
+      <QuickActions
+        visible={true}
+        onAction={onQuickAction || (() => {})}
+      />
+      
       {/* 现代Chat UI布局 */}
       <div className={`chat-input-container ${glass ? 'chat-input-glass' : ''}`}>
         {/* 主输入区域 */}
@@ -332,7 +337,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                         padding: '4px 0'
                       }}>
                         <FileSearchOutlined style={{ fontSize: 16, color: '#666' }} />
-                        <span>Readme查询</span>
+                        <span>readme查询</span>
                       </div>
                     ),
                   },
@@ -347,20 +352,6 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                       }}>
                         <ProjectOutlined style={{ fontSize: 16, color: '#666' }} />
                         <span>需求进展</span>
-                      </div>
-                    ),
-                  },
-                  {
-                    key: 'similar-requirements',
-                    label: (
-                      <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: 8,
-                        padding: '4px 0'
-                      }}>
-                        <SearchOutlined style={{ fontSize: 16, color: '#666' }} />
-                        <span>相似需求</span>
                       </div>
                     ),
                   },
@@ -447,14 +438,35 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               <Skeleton.Button active size="small" />
             ) : (
               <>
-                {kbLocked ? (
+                <Dropdown
+                  trigger={['click']}
+                  menu={{
+                    items: (knowledgeBases || []).map((kb) => ({
+                      key: kb.id,
+                      label: (
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: 8 
+                        }}>
+                          {currentKnowledgeBase === kb.id ? (
+                            <CheckOutlined style={{ color: '#1677ff' }} />
+                          ) : (
+                            <span style={{ width: 14 }} />
+                          )}
+                          <span>{kb.name}</span>
+                        </div>
+                      ),
+                    })),
+                    onClick: ({ key }) => onKnowledgeBaseChange(key as string),
+                  }}
+                >
                   <AntdButton 
                     size="small" 
                     type="text"
-                    disabled
                     style={{ 
                       borderRadius: 14,
-                      color: '#999',
+                      color: '#666',
                       fontSize: 12,
                       height: 24,
                       padding: '0 8px',
@@ -463,52 +475,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                     }}
                   >
                     <DatabaseOutlined style={{ marginRight: 4, fontSize: 12 }} />
-                    {knowledgeBases.find((k) => k.id === currentKnowledgeBase)?.name || '知识库锁定'}
+                    {knowledgeBases.find((k) => k.id === currentKnowledgeBase)?.name || '知识库'}
                     <DownOutlined style={{ marginLeft: 4, fontSize: 10 }} />
                   </AntdButton>
-                ) : (
-                  <Dropdown
-                    trigger={['click']}
-                    menu={{
-                      items: (knowledgeBases || []).map((kb) => ({
-                        key: kb.id,
-                        label: (
-                          <div style={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            gap: 8 
-                          }}>
-                            {currentKnowledgeBase === kb.id ? (
-                              <CheckOutlined style={{ color: '#1677ff' }} />
-                            ) : (
-                              <span style={{ width: 14 }} />
-                            )}
-                            <span>{kb.name}</span>
-                          </div>
-                        ),
-                      })),
-                      onClick: ({ key }) => onKnowledgeBaseChange(key as string),
-                    }}
-                  >
-                    <AntdButton 
-                      size="small" 
-                      type="text"
-                      style={{ 
-                        borderRadius: 14,
-                        color: '#666',
-                        fontSize: 12,
-                        height: 24,
-                        padding: '0 8px',
-                        marginLeft: 8,
-                        border: '1px solid #e1e5e9'
-                      }}
-                    >
-                      <DatabaseOutlined style={{ marginRight: 4, fontSize: 12 }} />
-                      {knowledgeBases.find((k) => k.id === currentKnowledgeBase)?.name || '知识库'}
-                      <DownOutlined style={{ marginLeft: 4, fontSize: 10 }} />
-                    </AntdButton>
-                  </Dropdown>
-                )}
+                </Dropdown>
                 {/* 模型选择器 */}
                 {canSelectModel && (
                   <Dropdown

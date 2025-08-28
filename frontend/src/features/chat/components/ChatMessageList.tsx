@@ -1,6 +1,7 @@
 import React from 'react';
 import { Bubble } from '@ant-design/x';
 import { Space, Spin, message, Divider } from 'antd';
+import WelcomeMarkdown from './WelcomeMarkdown';
 import { Button as AntdButton } from 'antd';
 import { Button } from '../../../components/ui/button';
 import { Copy, RotateCcw } from 'lucide-react';
@@ -197,53 +198,42 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
         </div>
       );
     }
+    // 原始欢迎界面实现 - 简单的用户问候 + markdown内容
     const username = getUsername();
-    // 根据北京时间生成问候语
-    const getBeijingGreeting = () => {
-      const now = new Date();
-      const utc = now.getTime() + now.getTimezoneOffset() * 60000;
-      const beijing = new Date(utc + 8 * 3600000);
-      const h = beijing.getHours();
-      if (h >= 5 && h < 11) return '早晨好';
-      if (h >= 11 && h < 13) return '中午好';
-      if (h >= 13 && h < 18) return '下午好';
-      if (h >= 18 && h < 23) return '晚上好';
-      return '凌晨好';
-    };
-    const greeting = getBeijingGreeting();
-    return (
-      <div className="relative flex-1 h-full overflow-hidden bg-white">
+    const currentHour = new Date().getHours();
+    const greeting = currentHour < 12 ? '早上好' : currentHour < 18 ? '下午好' : '晚上好';
 
-        {/* 欢迎文字与快捷操作：仅将欢迎词垂直居中，按钮独立放在其下方 */}
-        <div className="relative z-10 h-full w-full p-6">
-          {/* 欢迎词绝对垂直居中 */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <h1 className="text-center select-none text-4xl font-bold leading-tight tracking-tight md:text-5xl">
-              <span className="bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(to right, #0EA5E9, #1E40AF)' }}>
-                {greeting}
-                {username ? `，${username}` : ''}
-              </span>
-            </h1>
+    return (
+      <div style={{ 
+        flex: 1, 
+        height: '100%', 
+        overflow: 'auto', 
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px 16px'
+      }}>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          maxWidth: '800px',
+          width: '100%'
+        }}>
+          {/* 用户问候 */}
+          <div style={{ 
+            fontSize: '24px', 
+            fontWeight: 600, 
+            color: '#1f2937', 
+            marginBottom: '24px',
+            textAlign: 'center'
+          }}>
+            {greeting}，{username}！
           </div>
-          {/* 按钮位于欢迎词下方，不影响其垂直居中 */}
-          <div
-            className="absolute left-1/2 -translate-x-1/2 flex flex-wrap items-center justify-center gap-3"
-            style={{ top: 'calc(50% + 64px)' }}
-          >
-            <AntdButton
-              size="large"
-              type="primary"
-              onClick={() => onQuickAction?.('open-infofeed')}
-              style={{
-                borderRadius: 12,
-                padding: '8px 18px',
-                height: 44,
-                fontWeight: 600,
-              }}
-            >
-              使用说明
-            </AntdButton>
-          </div>
+          
+          {/* Markdown内容 */}
+          <WelcomeMarkdown />
         </div>
       </div>
     );

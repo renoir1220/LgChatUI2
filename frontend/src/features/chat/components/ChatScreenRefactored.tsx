@@ -6,9 +6,11 @@ import { useChatState } from '../hooks/useChatState';
 import { useStreamChat } from '../hooks/useStreamChat';
 import { useConversations } from '../hooks/useConversations';
 import { useKnowledgeBases } from '../../knowledge-base/hooks/useKnowledgeBases';
+import { useKnowledgeBaseSwitch } from '../hooks/useKnowledgeBaseSwitch';
 import { ChatSidebar } from './ChatSidebar';
 import { ChatMessageList } from './ChatMessageList';
 import { ChatInput } from './ChatInput';
+import { QuickActions } from './QuickActions';
 import { api, conversationApi } from '../services/chatService';
 import { showApiError } from '../../shared/services/api';
 import { DictionarySelector } from '../../shared/components/DictionarySelector';
@@ -17,7 +19,7 @@ import type { DictionaryItem } from '../../shared/components/DictionarySelector'
 import { SuggestionModal } from '../../suggestions/components/SuggestionModal';
 import { SuggestionListModal } from '../../suggestions/components/SuggestionListModal';
 import { BugReportModal } from '../../bugs/components/BugReportModal';
-import InfoFeedIcon from '../../infofeed/components/InfoFeedIcon';
+import InfoFeedEntry from '../../infofeed/components/InfoFeedEntry';
 
 /**
  * 重构后的聊天界面组件
@@ -99,6 +101,23 @@ const ChatScreenRefactored: React.FC = () => {
   // 模型列表与选择
   const [models, setModels] = useState<{ id: string; displayName: string; modelName?: string; isDefault?: boolean }[]>([]);
   const [selectedModelId, setSelectedModelId] = useState<string | undefined>(undefined);
+
+  // 知识库切换逻辑
+  const { handleKnowledgeBaseSwitch } = useKnowledgeBaseSwitch();
+
+  // 处理知识库切换（从ChatInput调用）
+  const handleKnowledgeBaseChange = async (kbId: string) => {
+    await handleKnowledgeBaseSwitch({
+      currentKnowledgeBase,
+      targetKnowledgeBase: kbId,
+      hasMessages: Array.isArray(messages) && messages.length > 0,
+      knowledgeBases,
+      onCreateNewConversation: async () => {
+        await createNewConversation();
+      },
+      onSwitchKnowledgeBase: setCurrentKnowledgeBase,
+    });
+  };
 
   // 会话管理
   const { 
@@ -282,23 +301,35 @@ const ChatScreenRefactored: React.FC = () => {
   }, [selectedModelId, conversationId, currentKnowledgeBase, knowledgeBases]);
 
   // 快捷操作处理
-  const handleQuickAction = (action: string) => {
+  const handleQuickAction = async (action: string) => {
     // 每个功能分别指定知识库（可按需扩展/修改）
     const QUICK_ACTION_KB_MAP: Record<string, string> = {
       'readme-query': '常见问题与需求',
       'requirement-progress': '常见问题与需求',
-      'similar-requirements': '常见问题与需求',
     };
 
+    // 对于需要延迟切换知识库的操作（如requirement-progress），跳过立即切换
     const targetKbName = QUICK_ACTION_KB_MAP[action];
-    if (targetKbName) {
+    const shouldSwitchImmediately = action !== 'requirement-progress';
+    
+    if (targetKbName && shouldSwitchImmediately) {
       const kb = knowledgeBases.find(k => k.name === targetKbName);
       if (kb) {
         if (currentKnowledgeBase !== kb.id) {
-          setCurrentKnowledgeBase(kb.id);
+          // 使用新的知识库切换逻辑
+          await handleKnowledgeBaseSwitch({
+            currentKnowledgeBase,
+            targetKnowledgeBase: kb.id,
+            hasMessages: Array.isArray(messages) && messages.length > 0,
+            knowledgeBases,
+            onCreateNewConversation: async () => {
+              await createNewConversation();
+            },
+            onSwitchKnowledgeBase: setCurrentKnowledgeBase,
+          });
         }
       } else {
-        message.warning(`未找到“${targetKbName}”知识库`);
+        message.warning(`未找到"${targetKbName}"知识库`);
       }
     }
 
@@ -308,7 +339,7 @@ const ChatScreenRefactored: React.FC = () => {
         navigate('/feeds');
         return;
       case 'readme-query':
-        quickMessage = '查询参数：';
+        quickMessage = '收费时核对蜡块号，查询参数：收费 接口';
         // 设置后将焦点移动到输入末尾，便于继续输入
         // 由于受控输入，先设值再触发聚焦信号
         setTimeout(() => setFocusAtEndSignal((s) => s + 1), 0);
@@ -317,10 +348,6 @@ const ChatScreenRefactored: React.FC = () => {
         // 打开客户字典选择器（优先切换至目标知识库）
         setIsDictionarySelectorOpen(true);
         return;
-      case 'similar-requirements':
-        quickMessage = '查询相似需求';
-        setTimeout(() => setFocusAtEndSignal((s) => s + 1), 0);
-        break;
       case 'suggestion':
         setIsSuggestionModalOpen(true);
         return;
@@ -338,7 +365,28 @@ const ChatScreenRefactored: React.FC = () => {
     const progressMessage = `查询${dictionary.customerName}的需求进展情况`;
     setIsDictionarySelectorOpen(false);
     
-    // 自动发送查询消息
+    // 在发送消息之前，确保切换到正确的知识库
+    const targetKbName = '常见问题与需求';
+    const kb = knowledgeBases.find(k => k.name === targetKbName);
+    if (kb && currentKnowledgeBase !== kb.id) {
+      await handleKnowledgeBaseSwitch({
+        currentKnowledgeBase,
+        targetKnowledgeBase: kb.id,
+        hasMessages: Array.isArray(messages) && messages.length > 0,
+        knowledgeBases,
+        onCreateNewConversation: async () => {
+          await createNewConversation();
+        },
+        onSwitchKnowledgeBase: setCurrentKnowledgeBase,
+        onComplete: async () => {
+          // 知识库切换完成后发送消息
+          await handleSubmit(progressMessage);
+        }
+      });
+      return;
+    }
+    
+    // 如果不需要切换知识库，直接发送查询消息
     await handleSubmit(progressMessage);
   };
 
@@ -440,9 +488,9 @@ const ChatScreenRefactored: React.FC = () => {
     let title = '新对话';
     if (curConversation && curConversation !== 'new') {
       const detail = conversationDetails[curConversation];
-      title = detail?.title
-        || conversations.find((c) => c.key === curConversation)?.label
-        || '对话';
+      title = detail?.title?.trim()
+        || conversations.find((c) => c.key === curConversation)?.label?.trim()
+        || '新对话';
     }
     return title;
   };
@@ -450,7 +498,7 @@ const ChatScreenRefactored: React.FC = () => {
   // 欢迎页模式（无有效会话且无消息）：用于让标题/输入区与欢迎背景有自然过渡
   const isWelcomeMode = (!/^[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$/i.test(curConversation))
     && (!messages || messages.length === 0);
-  const isNewConversation = curConversation === 'new';
+  // 统一顶部栏后，不再依赖是否为新会话来决定标题栏展示
   
 
   return (
@@ -475,14 +523,7 @@ const ChatScreenRefactored: React.FC = () => {
         position: 'relative', // 为绝对定位的灯泡图标提供相对定位上下文
         backgroundColor: '#ffffff', // 统一白色背景
       }}>
-        {/* 欢迎页面时的信息流图标 */}
-        {isNewConversation && (
-          <div className="fixed top-4 right-4 z-[9999]">
-            <InfoFeedIcon onClick={() => navigate('/feeds')} />
-          </div>
-        )}
-        {/* 聊天标题栏（新对话时不显示） */}
-        {!isNewConversation && (
+        {/* 统一标题栏：新对话与常规会话共用 */}
           <div style={{ 
             padding: '0 24px', 
             marginBottom: '12px', 
@@ -506,10 +547,10 @@ const ChatScreenRefactored: React.FC = () => {
             {/* 中间：标题 */}
             <span style={{ fontWeight: 500, textAlign: 'center', flex: 1 }}>{renderChatTitle()}</span>
             
-            {/* 右侧：信息流图标 */}
-            <InfoFeedIcon onClick={() => navigate('/feeds')} />
+            {/* 右侧：信息流入口（幽灵胶囊按钮） */}
+            <InfoFeedEntry onClick={() => navigate('/feeds')} />
           </div>
-        )}
+        
 
         {/* 消息列表 */}
         <ChatMessageList
@@ -532,7 +573,6 @@ const ChatScreenRefactored: React.FC = () => {
           knowledgeBases={knowledgeBases}
           currentKnowledgeBase={currentKnowledgeBase}
           kbLoading={kbLoading}
-          kbLocked={Array.isArray(messages) && messages.length > 0}
           canSelectModel={!!knowledgeBases.find(k => k.id === currentKnowledgeBase)?.canSelectModel}
           models={models.map(m => ({ id: m.id, displayName: m.displayName }))}
           selectedModelId={selectedModelId}
@@ -541,7 +581,7 @@ const ChatScreenRefactored: React.FC = () => {
           onCancel={handleCancel}
           onAttachmentsToggle={() => setAttachmentsOpen(!attachmentsOpen)}
           onFilesChange={setAttachedFiles}
-          onKnowledgeBaseChange={setCurrentKnowledgeBase}
+          onKnowledgeBaseChange={handleKnowledgeBaseChange}
           onModelChange={setSelectedModelId}
           onQuickAction={handleQuickAction}
           onCameraCapture={handleCameraCapture}

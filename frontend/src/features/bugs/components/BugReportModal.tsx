@@ -80,7 +80,7 @@ export const BugReportModal: React.FC<BugReportModalProps> = ({
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
             <BugOutlined className="text-red-500" />
-            <span className="font-medium">提交BUG反馈</span>
+            <span className="font-medium">提交BUG（后端未实现，界面仅供演示！）</span>
           </div>
         </div>
       }
@@ -174,11 +174,11 @@ export const BugReportModal: React.FC<BugReportModalProps> = ({
           <Button
             type="primary"
             htmlType="submit"
-            loading={submitting}
+            disabled={true}
             icon={<BugOutlined />}
-            style={{ height: 32 }}
+            style={{ height: 32, backgroundColor: '#d9d9d9', borderColor: '#d9d9d9', cursor: 'not-allowed' }}
           >
-            {submitting ? '提交中...' : '提交BUG'}
+            后端未实现，仅供演示
           </Button>
         </div>
       </Form>
