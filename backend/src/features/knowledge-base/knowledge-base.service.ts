@@ -29,26 +29,28 @@ export class KnowledgeBaseService {
         username: username || '未指定用户',
       });
 
-      // 将数据库实体转换为API响应格式
+      // 将数据库实体转换为API响应格式（包含 canSelectModel）
       const knowledgeBases: KnowledgeBase[] = entities.map((entity) => ({
         id: entity.kbKey, // 直接使用kbKey作为id
         name: entity.name,
         description: entity.description,
         enabled: entity.enabled,
+        canSelectModel: entity.canSelectModel,
         // 注意：不在API响应中包含敏感的apiKey和apiUrl信息
       }));
 
       // 如果没有找到任何知识库，返回默认配置
       if (knowledgeBases.length === 0) {
         this.logger.warn('未找到任何知识库配置，返回默认配置');
-        return [
-          {
-            id: 'kb-default',
-            name: '默认聊天',
-            description: '普通聊天模式，不使用知识库',
-            enabled: true,
-          },
-        ];
+      return [
+        {
+          id: 'kb-default',
+          name: '默认聊天',
+          description: '普通聊天模式，不使用知识库',
+          enabled: true,
+          canSelectModel: false,
+        },
+      ];
       }
 
       this.logger.log('知识库列表获取成功', { count: knowledgeBases.length });
@@ -108,6 +110,7 @@ export class KnowledgeBaseService {
       name: entity.name,
       description: entity.description,
       enabled: entity.enabled,
+      canSelectModel: entity.canSelectModel,
     };
   }
 }

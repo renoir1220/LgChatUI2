@@ -130,6 +130,8 @@ export class ChatController {
         conversationId,
         body.message,
         body.knowledgeBaseId,
+        body.modelId,
+        req.user?.username,
       );
       this.logger.log('聊天请求处理完成', {
         conversationId,
@@ -154,6 +156,8 @@ export class ChatController {
     conversationId: string,
     userMessage: string,
     knowledgeBaseId?: string,
+    modelId?: string,
+    username?: string,
   ): Promise<{ messageId: string; content: string }> {
     this.logger.debug('开始生成流式响应', {
       conversationId,
@@ -178,6 +182,8 @@ export class ChatController {
         conversationId, // 使用conversationId作为user参数
         knowledgeBaseId,
         existingDifyConversationId || undefined, // 传递Dify对话ID维持记忆（null转换为undefined）
+        modelId,
+        username,
       );
 
       if (!stream) {

@@ -26,12 +26,17 @@ interface ChatInputProps {
   knowledgeBases: KnowledgeBase[];
   currentKnowledgeBase: string | undefined;
   kbLoading: boolean;
+  kbLocked?: boolean;
+  canSelectModel?: boolean;
+  models?: { id: string; displayName: string }[];
+  selectedModelId?: string;
   onInputChange: (value: string) => void;
   onSubmit: (message: string) => void;
   onCancel: () => void;
   onAttachmentsToggle: () => void;
   onFilesChange: (files: UploadFile[]) => void;
   onKnowledgeBaseChange: (kbId: string) => void;
+  onModelChange?: (modelId: string) => void;
   onQuickAction?: (action: string) => void;
   onCameraCapture?: (imageDataUrl: string) => void;
   // 在欢迎页模式下使用玻璃质感，增强渐入过渡
@@ -52,12 +57,17 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   knowledgeBases,
   currentKnowledgeBase,
   kbLoading,
+  kbLocked = false,
+  canSelectModel = false,
+  models = [],
+  selectedModelId,
   onInputChange,
   onSubmit,
   onCancel,
   onAttachmentsToggle,
   onFilesChange,
   onKnowledgeBaseChange,
+  onModelChange,
   onQuickAction,
   onCameraCapture,
   glass = false,
@@ -436,47 +446,114 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             {kbLoading ? (
               <Skeleton.Button active size="small" />
             ) : (
-              <Dropdown
-                trigger={['click']}
-                menu={{
-                  items: (knowledgeBases || []).map((kb) => ({
-                    key: kb.id,
-                    label: (
-                      <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: 8 
-                      }}>
-                        {currentKnowledgeBase === kb.id ? (
-                          <CheckOutlined style={{ color: '#1677ff' }} />
-                        ) : (
-                          <span style={{ width: 14 }} />
-                        )}
-                        <span>{kb.name}</span>
-                      </div>
-                    ),
-                  })),
-                  onClick: ({ key }) => onKnowledgeBaseChange(key as string),
-                }}
-              >
-                <AntdButton 
-                  size="small" 
-                  type="text"
-                  style={{ 
-                    borderRadius: 14,
-                    color: '#666',
-                    fontSize: 12,
-                    height: 24,
-                    padding: '0 8px',
-                    marginLeft: 8,
-                    border: '1px solid #e1e5e9'
-                  }}
-                >
-                  <DatabaseOutlined style={{ marginRight: 4, fontSize: 12 }} />
-                  {knowledgeBases.find((k) => k.id === currentKnowledgeBase)?.name || '知识库'}
-                  <DownOutlined style={{ marginLeft: 4, fontSize: 10 }} />
-                </AntdButton>
-              </Dropdown>
+              <>
+                {kbLocked ? (
+                  <AntdButton 
+                    size="small" 
+                    type="text"
+                    disabled
+                    style={{ 
+                      borderRadius: 14,
+                      color: '#999',
+                      fontSize: 12,
+                      height: 24,
+                      padding: '0 8px',
+                      marginLeft: 8,
+                      border: '1px solid #e1e5e9'
+                    }}
+                  >
+                    <DatabaseOutlined style={{ marginRight: 4, fontSize: 12 }} />
+                    {knowledgeBases.find((k) => k.id === currentKnowledgeBase)?.name || '知识库锁定'}
+                    <DownOutlined style={{ marginLeft: 4, fontSize: 10 }} />
+                  </AntdButton>
+                ) : (
+                  <Dropdown
+                    trigger={['click']}
+                    menu={{
+                      items: (knowledgeBases || []).map((kb) => ({
+                        key: kb.id,
+                        label: (
+                          <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: 8 
+                          }}>
+                            {currentKnowledgeBase === kb.id ? (
+                              <CheckOutlined style={{ color: '#1677ff' }} />
+                            ) : (
+                              <span style={{ width: 14 }} />
+                            )}
+                            <span>{kb.name}</span>
+                          </div>
+                        ),
+                      })),
+                      onClick: ({ key }) => onKnowledgeBaseChange(key as string),
+                    }}
+                  >
+                    <AntdButton 
+                      size="small" 
+                      type="text"
+                      style={{ 
+                        borderRadius: 14,
+                        color: '#666',
+                        fontSize: 12,
+                        height: 24,
+                        padding: '0 8px',
+                        marginLeft: 8,
+                        border: '1px solid #e1e5e9'
+                      }}
+                    >
+                      <DatabaseOutlined style={{ marginRight: 4, fontSize: 12 }} />
+                      {knowledgeBases.find((k) => k.id === currentKnowledgeBase)?.name || '知识库'}
+                      <DownOutlined style={{ marginLeft: 4, fontSize: 10 }} />
+                    </AntdButton>
+                  </Dropdown>
+                )}
+                {/* 模型选择器 */}
+                {canSelectModel && (
+                  <Dropdown
+                    trigger={['click']}
+                    menu={{
+                      items: (models || []).map((m) => ({
+                        key: m.id,
+                        label: (
+                          <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: 8 
+                          }}>
+                            {selectedModelId === m.id ? (
+                              <CheckOutlined style={{ color: '#1677ff' }} />
+                            ) : (
+                              <span style={{ width: 14 }} />
+                            )}
+                            <span>{m.displayName}</span>
+                          </div>
+                        ),
+                      })),
+                      onClick: ({ key }) => onModelChange && onModelChange(key as string),
+                    }}
+                  >
+                    <AntdButton 
+                      size="small" 
+                      type="text"
+                      style={{ 
+                        borderRadius: 14,
+                        color: '#666',
+                        fontSize: 12,
+                        height: 24,
+                        padding: '0 8px',
+                        marginLeft: 8,
+                        border: '1px solid #e1e5e9'
+                      }}
+                    >
+                      <ProjectOutlined style={{ marginRight: 4, fontSize: 12 }} />
+                      {models.find((m) => m.id === selectedModelId)?.displayName || '选择模型'}
+                      <DownOutlined style={{ marginLeft: 4, fontSize: 10 }} />
+                    </AntdButton>
+                  </Dropdown>
+                )}
+              </>
             )}
           </Flex>
           

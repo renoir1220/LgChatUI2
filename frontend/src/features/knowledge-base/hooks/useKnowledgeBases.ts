@@ -4,6 +4,7 @@ import { apiGet, showApiError } from '../../shared/services/api';
 export interface KnowledgeBase {
   id: string;
   name: string;
+  canSelectModel?: boolean;
 }
 
 export function useKnowledgeBases() {

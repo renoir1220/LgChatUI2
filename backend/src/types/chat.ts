@@ -63,6 +63,7 @@ export interface ChatRequest {
   conversationId?: string;
   knowledgeBaseId?: string;
   userId?: string;
+  modelId?: string;
 }
 
 // Streaming event shape aligned with Dify-like responses used in LgChatUI
@@ -101,6 +102,7 @@ export const ChatRequestSchema = z.object({
   conversationId: z.string().optional(),
   knowledgeBaseId: z.string().optional(),
   userId: z.string().optional(),
+  modelId: z.string().optional(),
 });
 
 export const MessageCreateSchema = z.object({
@@ -116,6 +118,7 @@ export const KnowledgeBaseSchema = z.object({
   name: z.string(),
   description: z.string().optional(),
   enabled: z.boolean().default(true),
+  canSelectModel: z.boolean().default(false),
   apiKey: z.string().optional(), // Dify API key
   apiUrl: z.string().optional(), // Dify API URL
 });

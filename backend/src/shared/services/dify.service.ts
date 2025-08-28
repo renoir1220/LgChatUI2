@@ -70,6 +70,8 @@ export class DifyService {
     user: string,
     knowledgeBaseId?: string,
     conversationId?: string,
+    modelId?: string,
+    username?: string,
   ): Promise<NodeJS.ReadableStream | null> {
     console.log('DifyService: 开始处理流式聊天请求');
     console.log('参数: message:', message?.substring(0, 50) + '...');
@@ -85,7 +87,7 @@ export class DifyService {
       throw new Error(errorMsg);
     }
 
-    const { apiKey, apiUrl } = config;
+    const { apiKey, apiUrl } = config as any;
     console.log(
       '解析到的配置: apiKey:',
       apiKey ? `...${apiKey.slice(-4)}` : '未获取',
@@ -100,7 +102,40 @@ export class DifyService {
       ...(conversationId && { conversation_id: conversationId }),
     };
 
+    // 若传入 modelId，则解析并写入 inputs.model_name；否则不设置
+    if (modelId) {
+      const override = await this.resolveModelOverride(modelId, username);
+      if (override) {
+        (requestData.inputs as any).model_name = override.modelName;
+        console.log('[DifyService] 传入 modelId，设置 inputs.model_name', {
+          model: override.modelName,
+          username,
+        });
+      } else {
+        console.log('[DifyService] 传入了 modelId 但未解析到可用模型，忽略', { username });
+      }
+    }
+
+    // 打印入参（已脱敏）
     try {
+      const debugPayload = {
+        inputs: requestData.inputs,
+        queryPreview: message?.slice(0, 60),
+        response_mode: requestData.response_mode,
+        conversation_id: conversationId,
+        user,
+      };
+      console.log('[DifyService] 请求入参（脱敏）', JSON.stringify(debugPayload));
+    } catch {}
+
+    try {
+      // 打印将要发送给 Dify 的“原始请求体 JSON”（不包含敏感 header）
+      try {
+        const rawBody = JSON.stringify(requestData);
+        console.log('[DifyService] RAW POST /chat-messages body:', rawBody);
+        console.log('[DifyService] POST URL:', `${apiUrl}/chat-messages`);
+      } catch {}
+
       const response = await axios.post(
         `${apiUrl}/chat-messages`,
         requestData,
@@ -140,6 +175,8 @@ export class DifyService {
     user: string,
     knowledgeBaseId?: string,
     conversationId?: string,
+    modelId?: string,
+    username?: string,
   ): Promise<DifyChatResponse> {
     console.log('DifyService: 开始处理阻塞式聊天请求');
     console.log('参数: knowledgeBaseId:', knowledgeBaseId);
@@ -166,6 +203,13 @@ export class DifyService {
       user: user,
       ...(conversationId && { conversation_id: conversationId }),
     };
+
+    if (modelId) {
+      const override = await this.resolveModelOverride(modelId, username);
+      if (override) {
+        (requestData.inputs as any).model_name = override.modelName;
+      }
+    }
 
     try {
       const response: AxiosResponse<DifyChatResponse> = await axios.post(
@@ -204,7 +248,7 @@ export class DifyService {
    */
   private async getKnowledgeBaseConfig(
     knowledgeBaseId?: string,
-  ): Promise<{ apiKey: string; apiUrl: string } | null> {
+  ): Promise<{ apiKey: string; apiUrl: string; name: string; CAN_SELECT_MODEL?: boolean } | null> {
     console.log('getKnowledgeBaseConfig: knowledgeBaseId =', knowledgeBaseId);
 
     try {
@@ -216,8 +260,9 @@ export class DifyService {
           API_KEY: string;
           API_URL: string;
           NAME: string;
+          CAN_SELECT_MODEL: boolean;
         }>(
-          `SELECT TOP 1 API_KEY, API_URL, NAME 
+          `SELECT TOP 1 API_KEY, API_URL, NAME, CAN_SELECT_MODEL 
            FROM AI_KNOWLEDGE_BASES 
            WHERE ENABLED = 1 
            ORDER BY SORT_ORDER ASC`,
@@ -230,8 +275,9 @@ export class DifyService {
           API_KEY: string;
           API_URL: string;
           NAME: string;
+          CAN_SELECT_MODEL: boolean;
         }>(
-          `SELECT API_KEY, API_URL, NAME 
+          `SELECT API_KEY, API_URL, NAME, CAN_SELECT_MODEL 
            FROM AI_KNOWLEDGE_BASES 
            WHERE KB_KEY = @p0 AND ENABLED = 1`,
           [knowledgeBaseId],
@@ -250,9 +296,63 @@ export class DifyService {
       return {
         apiKey: config.API_KEY,
         apiUrl: config.API_URL,
-      };
+        name: config.NAME,
+        CAN_SELECT_MODEL: (config as any).CAN_SELECT_MODEL,
+      } as any;
     } catch (error) {
       console.error('获取知识库配置失败:', error.message);
+      return null;
+    }
+  }
+
+  // 解析模型覆盖：优先使用 modelId；否则使用用户可见的默认模型
+  private async resolveModelOverride(
+    modelId?: string,
+    username?: string,
+  ): Promise<{ provider: string; modelName: string } | null> {
+    try {
+      if (modelId) {
+        const rows = await this.db.queryWithErrorHandling<{
+          ID: string; PROVIDER: string; MODEL_NAME: string; AVAILABLE_USERS: string | null; ENABLED: boolean;
+        }>(
+          `SELECT ID, PROVIDER, MODEL_NAME, AVAILABLE_USERS, ENABLED FROM AI_MODEL WHERE ID = @p0`,
+          [modelId],
+          '根据ID获取模型(覆盖)'
+        );
+        const row = rows[0];
+        if (row && row.ENABLED) {
+          if (!row.AVAILABLE_USERS || !username) {
+            return { provider: row.PROVIDER, modelName: row.MODEL_NAME };
+          }
+          const list = row.AVAILABLE_USERS.split(',').map((x) => x.trim());
+          if (list.includes(username)) {
+            return { provider: row.PROVIDER, modelName: row.MODEL_NAME };
+          }
+        }
+      }
+
+      // 无 modelId 或不可用时，回退用户可见默认模型
+      const defaults = await this.db.queryWithErrorHandling<{
+        PROVIDER: string; MODEL_NAME: string; AVAILABLE_USERS: string | null;
+      }>(
+        `SELECT TOP 1 PROVIDER, MODEL_NAME, AVAILABLE_USERS
+         FROM AI_MODEL 
+         WHERE ENABLED = 1 AND IS_DEFAULT = 1
+         ORDER BY SORT_ORDER ASC, PROVIDER ASC, MODEL_NAME ASC`,
+        [],
+        '获取默认模型(覆盖)'
+      );
+      const def = defaults[0];
+      if (!def) return null;
+      if (!def.AVAILABLE_USERS || !username) {
+        return { provider: def.PROVIDER, modelName: def.MODEL_NAME };
+      }
+      const list = def.AVAILABLE_USERS.split(',').map((x) => x.trim());
+      return list.includes(username)
+        ? { provider: def.PROVIDER, modelName: def.MODEL_NAME }
+        : null;
+    } catch (e) {
+      console.error('解析模型覆盖失败:', (e as any)?.message || e);
       return null;
     }
   }

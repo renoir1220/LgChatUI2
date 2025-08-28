@@ -6,6 +6,7 @@ export interface Conversation {
   title: string;
   userId: string;
   knowledgeBaseId?: string; // 关联的知识库ID
+  modelId?: string; // 关联的模型ID
   createdAt: string; // ISO timestamp
   updatedAt?: string; // ISO timestamp
   messageCount?: number;
@@ -18,6 +19,7 @@ export const ConversationSchema = z.object({
   title: z.string(),
   userId: z.string(),
   knowledgeBaseId: z.string().optional(),
+  modelId: z.string().optional(),
   createdAt: z.string(),
   updatedAt: z.string().optional(),
   messageCount: z.number().optional(),
@@ -33,8 +35,8 @@ export const CreateConversationRequestSchema = z.object({
 export const UpdateConversationRequestSchema = z.object({
   title: z.string().min(1, '标题不能为空').optional(),
   knowledgeBaseId: z.string().optional(),
+  modelId: z.string().optional(),
 });
 
 export type CreateConversationRequest = z.infer<typeof CreateConversationRequestSchema>;
 export type UpdateConversationRequest = z.infer<typeof UpdateConversationRequestSchema>;
-

@@ -9,7 +9,7 @@ import { useKnowledgeBases } from '../../knowledge-base/hooks/useKnowledgeBases'
 import { ChatSidebar } from './ChatSidebar';
 import { ChatMessageList } from './ChatMessageList';
 import { ChatInput } from './ChatInput';
-import { conversationApi } from '../services/chatService';
+import { api, conversationApi } from '../services/chatService';
 import { showApiError } from '../../shared/services/api';
 import { DictionarySelector } from '../../shared/components/DictionarySelector';
 import { useCustomerDict } from '../../shared/hooks/useCustomerDict';
@@ -96,6 +96,9 @@ const ChatScreenRefactored: React.FC = () => {
 
   // 流式聊天处理
   const { sendMessage, abortRequest } = useStreamChat();
+  // 模型列表与选择
+  const [models, setModels] = useState<{ id: string; displayName: string; modelName?: string; isDefault?: boolean }[]>([]);
+  const [selectedModelId, setSelectedModelId] = useState<string | undefined>(undefined);
 
   // 会话管理
   const { 
@@ -125,10 +128,13 @@ const ChatScreenRefactored: React.FC = () => {
     setLoading(true);
 
     try {
+      const kb = knowledgeBases.find(k => k.id === currentKnowledgeBase);
+      const effectiveModelId = kb?.canSelectModel ? selectedModelId : undefined;
       await sendMessage(
         val,
         conversationId,
         currentKnowledgeBase,
+        effectiveModelId,
         messages,
         setMessages,
         async (newConversationId: string) => {
@@ -168,10 +174,13 @@ const ChatScreenRefactored: React.FC = () => {
         setMessages(truncatedMessages);
         
         // 重新发送用户消息以生成新回复
+        const kb = knowledgeBases.find(k => k.id === currentKnowledgeBase);
+        const effectiveModelId = kb?.canSelectModel ? selectedModelId : undefined;
         await sendMessage(
           userMessage,
           conversationId,
           currentKnowledgeBase,
+          effectiveModelId,
           truncatedMessages,
           setMessages,
           async (newConversationId: string) => {
@@ -238,6 +247,39 @@ const ChatScreenRefactored: React.FC = () => {
     // 仅在首次挂载时执行
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // 初始加载模型列表
+  useEffect(() => {
+    void (async () => {
+      try {
+        const list = await api.models.getModels();
+        setModels(list.map(m => ({ id: m.id, displayName: m.displayName, modelName: m.modelName, isDefault: m.isDefault })));
+      } catch (e) {
+        if (process.env.NODE_ENV === 'development') console.warn('加载模型列表失败', e);
+      }
+    })();
+  }, []);
+
+  // KB 切换时，若允许选择模型而尚未选择，则设默认模型；否则清空
+  useEffect(() => {
+    const kb = knowledgeBases.find(k => k.id === currentKnowledgeBase);
+    if (kb?.canSelectModel) {
+      if (!selectedModelId) {
+        const def = models.find(m => m.isDefault) || models[0];
+        if (def) setSelectedModelId(def.id);
+      }
+    } else {
+      if (selectedModelId) setSelectedModelId(undefined);
+    }
+  }, [currentKnowledgeBase, knowledgeBases, models]);
+
+  // 持久化模型到会话
+  useEffect(() => {
+    const kb = knowledgeBases.find(k => k.id === currentKnowledgeBase);
+    if (conversationId && kb?.canSelectModel && selectedModelId) {
+      void conversationApi.updateConversation(conversationId, { modelId: selectedModelId }).catch(() => {});
+    }
+  }, [selectedModelId, conversationId, currentKnowledgeBase, knowledgeBases]);
 
   // 快捷操作处理
   const handleQuickAction = (action: string) => {
@@ -490,12 +532,17 @@ const ChatScreenRefactored: React.FC = () => {
           knowledgeBases={knowledgeBases}
           currentKnowledgeBase={currentKnowledgeBase}
           kbLoading={kbLoading}
+          kbLocked={Array.isArray(messages) && messages.length > 0}
+          canSelectModel={!!knowledgeBases.find(k => k.id === currentKnowledgeBase)?.canSelectModel}
+          models={models.map(m => ({ id: m.id, displayName: m.displayName }))}
+          selectedModelId={selectedModelId}
           onInputChange={setInputValue}
           onSubmit={handleSubmit}
           onCancel={handleCancel}
           onAttachmentsToggle={() => setAttachmentsOpen(!attachmentsOpen)}
           onFilesChange={setAttachedFiles}
           onKnowledgeBaseChange={setCurrentKnowledgeBase}
+          onModelChange={setSelectedModelId}
           onQuickAction={handleQuickAction}
           onCameraCapture={handleCameraCapture}
           glass={isWelcomeMode}

@@ -9,6 +9,7 @@ export interface KnowledgeBaseEntity {
   apiKey: string;
   apiUrl: string;
   availableUsers?: string; // 可用用户列表，逗号分隔
+  canSelectModel: boolean; // 是否允许选择模型
   enabled: boolean;
   sortOrder: number;
   createdAt: string;
@@ -31,12 +32,13 @@ export class KnowledgeBaseRepository {
       API_KEY: string;
       API_URL: string;
       AVAILABLE_USERS: string;
+      CAN_SELECT_MODEL: boolean;
       ENABLED: boolean;
       SORT_ORDER: number;
       CREATED_AT: Date;
       UPDATED_AT: Date;
     }>(
-      `SELECT ID, KB_KEY, NAME, DESCRIPTION, API_KEY, API_URL, AVAILABLE_USERS, ENABLED, SORT_ORDER, CREATED_AT, UPDATED_AT
+      `SELECT ID, KB_KEY, NAME, DESCRIPTION, API_KEY, API_URL, AVAILABLE_USERS, CAN_SELECT_MODEL, ENABLED, SORT_ORDER, CREATED_AT, UPDATED_AT
        FROM AI_KNOWLEDGE_BASES 
        WHERE ENABLED = 1 
        ORDER BY SORT_ORDER ASC, NAME ASC`,
@@ -70,6 +72,7 @@ export class KnowledgeBaseRepository {
         apiKey: row.API_KEY,
         apiUrl: row.API_URL,
         availableUsers: row.AVAILABLE_USERS || undefined,
+        canSelectModel: !!row.CAN_SELECT_MODEL,
         enabled: row.ENABLED,
         sortOrder: row.SORT_ORDER,
         createdAt: row.CREATED_AT.toISOString(),
@@ -89,12 +92,13 @@ export class KnowledgeBaseRepository {
       API_KEY: string;
       API_URL: string;
       AVAILABLE_USERS: string;
+      CAN_SELECT_MODEL: boolean;
       ENABLED: boolean;
       SORT_ORDER: number;
       CREATED_AT: Date;
       UPDATED_AT: Date;
     }>(
-      `SELECT ID, KB_KEY, NAME, DESCRIPTION, API_KEY, API_URL, AVAILABLE_USERS, ENABLED, SORT_ORDER, CREATED_AT, UPDATED_AT
+      `SELECT ID, KB_KEY, NAME, DESCRIPTION, API_KEY, API_URL, AVAILABLE_USERS, CAN_SELECT_MODEL, ENABLED, SORT_ORDER, CREATED_AT, UPDATED_AT
        FROM AI_KNOWLEDGE_BASES 
        WHERE ENABLED = 1 
        ORDER BY SORT_ORDER ASC, NAME ASC`,
@@ -110,6 +114,7 @@ export class KnowledgeBaseRepository {
       apiKey: row.API_KEY,
       apiUrl: row.API_URL,
       availableUsers: row.AVAILABLE_USERS || undefined,
+      canSelectModel: !!row.CAN_SELECT_MODEL,
       enabled: row.ENABLED,
       sortOrder: row.SORT_ORDER,
       createdAt: row.CREATED_AT.toISOString(),
@@ -129,12 +134,13 @@ export class KnowledgeBaseRepository {
       API_KEY: string;
       API_URL: string;
       AVAILABLE_USERS: string;
+      CAN_SELECT_MODEL: boolean;
       ENABLED: boolean;
       SORT_ORDER: number;
       CREATED_AT: Date;
       UPDATED_AT: Date;
     }>(
-      `SELECT ID, KB_KEY, NAME, DESCRIPTION, API_KEY, API_URL, AVAILABLE_USERS, ENABLED, SORT_ORDER, CREATED_AT, UPDATED_AT
+      `SELECT ID, KB_KEY, NAME, DESCRIPTION, API_KEY, API_URL, AVAILABLE_USERS, CAN_SELECT_MODEL, ENABLED, SORT_ORDER, CREATED_AT, UPDATED_AT
        FROM AI_KNOWLEDGE_BASES 
        WHERE KB_KEY = @p0`,
       [kbKey],
@@ -154,6 +160,7 @@ export class KnowledgeBaseRepository {
       apiKey: row.API_KEY,
       apiUrl: row.API_URL,
       availableUsers: row.AVAILABLE_USERS || undefined,
+      canSelectModel: !!row.CAN_SELECT_MODEL,
       enabled: row.ENABLED,
       sortOrder: row.SORT_ORDER,
       createdAt: row.CREATED_AT.toISOString(),

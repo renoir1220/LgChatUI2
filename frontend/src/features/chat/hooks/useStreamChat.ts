@@ -19,6 +19,7 @@ export function useStreamChat() {
     message: string,
     conversationId: string | undefined,
     currentKnowledgeBase: string | undefined,
+    modelId: string | undefined,
     messages: BubbleDataType[],
     setMessages: React.Dispatch<React.SetStateAction<BubbleDataType[]>>,
     onConversationUpdate?: (newConversationId: string) => void,
@@ -28,7 +29,7 @@ export function useStreamChat() {
     abortController.current?.abort();
     abortController.current = new AbortController();
 
-    const baseBody = { message, knowledgeBaseId: currentKnowledgeBase };
+    const baseBody = { message, knowledgeBaseId: currentKnowledgeBase, ...(modelId ? { modelId } : {}) } as any;
     const sentConvId = isValidUUID(conversationId) ? conversationId : undefined;
     const makeBody = (withConv: boolean) => JSON.stringify(
       withConv && sentConvId ? { ...baseBody, conversationId: sentConvId } : baseBody

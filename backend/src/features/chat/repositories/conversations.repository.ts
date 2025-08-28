@@ -51,6 +51,7 @@ export class ConversationsRepository {
       `SELECT CONVERT(varchar(36), CONVERSATION_ID) AS id,
              TITLE as title,
              KNOWLEDGE_BASE_ID as knowledgeBaseId,
+             CONVERT(varchar(36), MODEL_ID) as modelId,
              DIFY_CONVERSATION_ID as difyConversationId,
              CONVERT(varchar(33), CREATED_AT, 126) AS createdAt
       FROM AI_CONVERSATIONS
@@ -91,6 +92,7 @@ export class ConversationsRepository {
     updates: {
       title?: string;
       knowledgeBaseId?: string;
+      modelId?: string;
       difyConversationId?: string;
     },
   ): Promise<void> {
@@ -108,6 +110,14 @@ export class ConversationsRepository {
       setParts.push(`KNOWLEDGE_BASE_ID = @p${paramIndex}`);
       params.push(updates.knowledgeBaseId);
       paramIndex++;
+    }
+
+    if (updates.modelId !== undefined) {
+      setParts.push(`MODEL_ID = ${updates.modelId ? `CONVERT(uniqueidentifier, @p${paramIndex})` : 'NULL'}`);
+      if (updates.modelId) {
+        params.push(updates.modelId);
+        paramIndex++;
+      }
     }
 
     if (updates.difyConversationId !== undefined) {

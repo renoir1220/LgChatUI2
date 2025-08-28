@@ -7,6 +7,7 @@ import type {
   ChatRequest,
   UpdateConversationRequest
 } from "@types";
+import type { AIModel } from '@types';
 import type { CreateConversationRequest } from '../../shared/types/api';
 
 // 会话相关API
@@ -203,10 +204,18 @@ export const knowledgeBaseApi = {
   },
 };
 
+// 模型相关API
+export const modelsApi = {
+  getModels: async (): Promise<AIModel[]> => {
+    return apiGet<AIModel[]>(`/api/models`);
+  },
+};
+
 // 导出所有API
 export const api = {
   conversation: conversationApi,
   message: messageApi,
   chat: chatApi,
   knowledgeBase: knowledgeBaseApi,
+  models: modelsApi,
 };
