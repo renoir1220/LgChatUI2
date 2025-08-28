@@ -10,6 +10,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { RefreshCw, Download } from 'lucide-react';
+import { configService } from '@/features/shared/services/configService';
 
 /**
  * PWA更新提示组件
@@ -35,6 +36,27 @@ export const UpdatePrompt: React.FC = () => {
       // 静默处理
     },
   });
+
+  // 版本变更自动触发更新：当 config.js 的 VERSION 变化时，主动尝试更新 SW
+  useEffect(() => {
+    let canceled = false;
+    (async () => {
+      try {
+        const cfg = await configService.getConfig();
+        const key = 'APP_CONFIG_VERSION';
+        const prev = localStorage.getItem(key);
+        if (cfg?.VERSION && cfg.VERSION !== prev) {
+          localStorage.setItem(key, cfg.VERSION);
+          // 尝试更新 SW（若没有新 SW，则此调用安全无害），避免用户感知
+          await updateServiceWorker(true);
+        }
+      } catch {
+        // 静默失败，不影响主流程
+      }
+      if (canceled) return;
+    })();
+    return () => { canceled = true; };
+  }, [updateServiceWorker]);
 
   // 当需要刷新时显示对话框
   useEffect(() => {

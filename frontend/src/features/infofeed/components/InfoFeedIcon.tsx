@@ -20,7 +20,7 @@ const InfoFeedIcon: React.FC<InfoFeedIconProps> = ({
 }) => {
   return (
     <button 
-      className={`relative rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 border-none bg-transparent cursor-pointer flex items-center justify-center ${className}`}
+      className={`relative rounded-full hover:bg-gray-100 transition-colors duration-200 border-none bg-transparent cursor-pointer flex items-center justify-center ${className}`}
       onClick={onClick}
       aria-label="信息流"
       style={{
@@ -43,7 +43,7 @@ const InfoFeedIcon: React.FC<InfoFeedIconProps> = ({
 
       {/* 未读提示红点 */}
       {hasUnread && (
-        <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white dark:border-gray-800 animate-pulse" />
+        <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse" />
       )}
     </button>
   );

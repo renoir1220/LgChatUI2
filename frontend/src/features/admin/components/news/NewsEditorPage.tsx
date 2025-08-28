@@ -183,7 +183,7 @@ const NewsEditorPage: React.FC = () => {
             </div>
             <div>
               <div className="text-sm text-muted-foreground mb-2">预览</div>
-              <div className="prose prose-slate dark:prose-invert max-w-none feed-markdown border rounded-md p-4">
+              <div className="prose prose-slate max-w-none feed-markdown border rounded-md p-4">
                 <ReactMarkdown>{content || '（内容预览）'}</ReactMarkdown>
               </div>
             </div>

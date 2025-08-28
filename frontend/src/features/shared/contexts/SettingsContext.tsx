@@ -3,7 +3,6 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 // 用户设置接口
 export interface UserSettings {
   // 外观设置
-  theme: 'light' | 'dark' | 'auto';
   fontSize: 'small' | 'medium' | 'large';
   
   // 聊天设置
@@ -28,7 +27,6 @@ export interface UserSettings {
 
 // 默认设置
 const defaultSettings: UserSettings = {
-  theme: 'auto',
   fontSize: 'medium',
   autoScroll: true,
   sendOnEnter: true,
@@ -141,37 +139,11 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     loadSettings();
   }, [loadSettings]);
   
-  // 应用主题设置
+  // 强制使用light主题
   useEffect(() => {
-    const applyTheme = () => {
-      const root = document.documentElement;
-      
-      if (settings.theme === 'dark') {
-        root.classList.add('dark');
-      } else if (settings.theme === 'light') {
-        root.classList.remove('dark');
-      } else { // auto
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        if (prefersDark) {
-          root.classList.add('dark');
-        } else {
-          root.classList.remove('dark');
-        }
-      }
-    };
-    
-    applyTheme();
-    
-    // 监听系统主题变化
-    if (settings.theme === 'auto') {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      mediaQuery.addEventListener('change', applyTheme);
-      
-      return () => {
-        mediaQuery.removeEventListener('change', applyTheme);
-      };
-    }
-  }, [settings.theme]);
+    const root = document.documentElement;
+    root.classList.remove('dark');
+  }, []);
   
   // 应用字体大小设置
   useEffect(() => {

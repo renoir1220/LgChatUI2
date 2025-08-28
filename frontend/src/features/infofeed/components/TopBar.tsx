@@ -10,7 +10,7 @@ interface TopBarProps {
 
 const TopBar: React.FC<TopBarProps> = ({ title, right, className = '', withDivider = true, dense = false }) => {
   return (
-    <div className={`flex-shrink-0 ${withDivider ? 'border-b border-gray-200 dark:border-gray-800' : ''} ${className}`} style={{ height: 60 }}>
+    <div className={`flex-shrink-0 ${withDivider ? 'border-b border-gray-200' : ''} ${className}`} style={{ height: 60 }}>
       <div className={`h-full ${dense ? 'px-2 md:px-4' : 'px-4 md:px-6'}`}>
         <div className="mx-auto max-w-3xl h-full flex items-center justify-between">
           <div className="min-w-0 flex-1">

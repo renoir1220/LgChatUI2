@@ -291,7 +291,7 @@ const InfoFeedDetail: React.FC<InfoFeedDetailProps> = ({
   };
 
   return (
-    <div className={`relative bg-white dark:bg-gray-800 ${className}`}>
+    <div className={`relative bg-white ${className}`}>
 
       {/* 内容区域 */}
       <div
@@ -308,7 +308,7 @@ const InfoFeedDetail: React.FC<InfoFeedDetailProps> = ({
             <div
               key={item.id}
               ref={(el) => { itemRefs.current[idx] = el; }}
-              className="px-4 md:px-6 py-6 border-b border-gray-200 dark:border-gray-700"
+              className="px-4 md:px-6 py-6 border-b border-gray-200"
             >
               <div className="mx-auto max-w-3xl">
               {/* 标签位于标题上方 */}
@@ -388,7 +388,7 @@ const InfoFeedDetail: React.FC<InfoFeedDetailProps> = ({
               {/* 互动区域精简后已并入元信息行 */}
 
               {/* 评论区域 */}
-              <div className="mt-2 border-t border-gray-200 dark:border-gray-700">
+              <div className="mt-2 border-t border-gray-200">
                 <InfoFeedComments feedId={item.id} />
               </div>
               </div>

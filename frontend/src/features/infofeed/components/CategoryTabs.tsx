@@ -100,7 +100,7 @@ const CategoryTabs: React.FC<CategoryTabsProps> = ({
                         更多
                       </button>
                     </DropdownMenu.Trigger>
-                    <DropdownMenu.Content className="min-w-[160px] rounded-md border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-1 shadow-md">
+                    <DropdownMenu.Content className="min-w-[160px] rounded-md border border-gray-200 bg-white p-1 shadow-md">
                       {CATEGORY_CONFIGS.map((cfg) => (
                         <DropdownMenu.Item
                           key={cfg.key}

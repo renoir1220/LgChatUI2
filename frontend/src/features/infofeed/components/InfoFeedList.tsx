@@ -52,7 +52,7 @@ const InfoFeedList: React.FC<InfoFeedListProps> = ({
   if (loading && feeds.length === 0) {
     return (
       <div className={`max-w-3xl mx-auto ${className}`}>
-      <div className="divide-y divide-gray-200 dark:divide-gray-700">
+      <div className="divide-y divide-gray-200">
           {[...Array(4)].map((_, index) => (
             <div key={index} className="px-4 py-4">
               <div className="flex flex-col md:flex-row gap-3 md:gap-4">
@@ -118,7 +118,7 @@ const InfoFeedList: React.FC<InfoFeedListProps> = ({
       onScroll={handleScroll}
     >
       {/* 信息流列表（单列，分隔线） */}
-      <div className="divide-y divide-gray-200 dark:divide-gray-700">
+      <div className="divide-y divide-gray-200">
         {feeds.map((feed, index) => (
           <div key={feed.id} className="px-4 py-4">
             <InfoFeedItem

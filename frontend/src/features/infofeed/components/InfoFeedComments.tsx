@@ -148,7 +148,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
                     }
                   }}
                   placeholder="写下你的回复..."
-                  className="w-full px-3 py-1.5 text-[13px] border border-gray-300 dark:border-gray-600 rounded-md resize-none overflow-hidden focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
+                  className="w-full px-3 py-1.5 text-[13px] border border-gray-300 rounded-md resize-none overflow-hidden focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   rows={1}
                   style={{}}
                 />
@@ -176,7 +176,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
 
           {/* 子评论/回复 */}
           {comment.replies && comment.replies.length > 0 && (
-            <div className="mt-3 space-y-2.5 pl-3 border-l border-gray-200 dark:border-gray-600">
+            <div className="mt-3 space-y-2.5 pl-3 border-l border-gray-200">
               {comment.replies.map((reply) => (
                 <CommentItem
                   key={reply.id}
@@ -279,7 +279,7 @@ const InfoFeedComments: React.FC<InfoFeedCommentsProps> = ({
                   }
                 }}
                 placeholder="写下你的看法..."
-                className="flex-1 px-3 py-1.5 text-[13px] border border-gray-300 dark:border-gray-600 rounded-md resize-none overflow-hidden focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
+                className="flex-1 px-3 py-1.5 text-[13px] border border-gray-300 rounded-md resize-none overflow-hidden focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 rows={1}
                 style={{}}
               />
@@ -294,8 +294,8 @@ const InfoFeedComments: React.FC<InfoFeedCommentsProps> = ({
           </div>
         </div>
       ) : (
-        <div className="mb-6 text-center py-6 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-          <p className="text-gray-600 dark:text-gray-400">
+        <div className="mb-6 text-center py-6 bg-gray-50/50 rounded-lg">
+          <p className="text-gray-600">
             请先登录后再参与讨论
           </p>
         </div>
@@ -306,23 +306,23 @@ const InfoFeedComments: React.FC<InfoFeedCommentsProps> = ({
         <div className="space-y-4">
           {[...Array(3)].map((_, index) => (
             <div key={index} className="flex space-x-3 animate-pulse">
-              <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full" />
+              <div className="w-8 h-8 bg-gray-200 rounded-full" />
               <div className="flex-1 space-y-2">
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4" />
-                <div className="h-16 bg-gray-200 dark:bg-gray-700 rounded" />
-                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16" />
+                <div className="h-4 bg-gray-200 rounded w-1/4" />
+                <div className="h-16 bg-gray-200 rounded" />
+                <div className="h-3 bg-gray-200 rounded w-16" />
               </div>
             </div>
           ))}
         </div>
       ) : error ? (
         <div className="text-center py-8">
-          <p className="text-red-500 dark:text-red-400">{error}</p>
+          <p className="text-red-500">{error}</p>
         </div>
       ) : comments.length === 0 ? (
         <div className="text-center py-8">
           <div className="text-gray-400 text-4xl mb-2">💬</div>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-gray-600">
             还没有评论，来发表第一个吧！
           </p>
         </div>
@@ -345,7 +345,7 @@ const InfoFeedComments: React.FC<InfoFeedCommentsProps> = ({
               <button
                 onClick={loadMore}
                 disabled={loading}
-                className="px-3 py-1.5 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 disabled:opacity-50"
+                className="px-3 py-1.5 text-sm text-blue-600 hover:text-blue-800 disabled:opacity-50"
               >
                 {loading ? '加载中...' : '查看更多评论'}
               </button>
