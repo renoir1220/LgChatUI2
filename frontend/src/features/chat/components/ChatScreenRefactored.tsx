@@ -20,6 +20,8 @@ import { SuggestionModal } from '../../suggestions/components/SuggestionModal';
 import { SuggestionListModal } from '../../suggestions/components/SuggestionListModal';
 import { BugReportModal } from '../../bugs/components/BugReportModal';
 import InfoFeedEntry from '../../infofeed/components/InfoFeedEntry';
+import { isValidUUID } from '../../shared/utils/uuid';
+import { QUICK_ACTION_KB_NAME_MAP, KB_NAME_REQUIREMENTS } from '../constants';
 
 /**
  * 重构后的聊天界面组件
@@ -29,9 +31,8 @@ const ChatScreenRefactored: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   // 从URL获取初始会话ID，避免刷新时闪烁
   const initialConversationFromUrl = useMemo(() => {
-    const c = searchParams.get('c');
-    const isValid = !!c && /^[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$/.test(c);
-    return isValid ? c : undefined;
+    const c = searchParams.get('c') || undefined;
+    return isValidUUID(c) ? c : undefined;
   }, [searchParams]);
 
   // 响应式状态管理
@@ -231,7 +232,6 @@ const ChatScreenRefactored: React.FC = () => {
     await switchConversation(conversationKey);
     setMessagesLoading(false);
     // 将当前会话同步到URL，便于刷新/分享
-    const isValidUUID = (s?: string) => !!s && /^[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$/.test(s);
     const next = new URLSearchParams(searchParams);
     if (isValidUUID(conversationKey)) {
       next.set('c', conversationKey);
@@ -293,20 +293,21 @@ const ChatScreenRefactored: React.FC = () => {
   }, [currentKnowledgeBase, knowledgeBases, models]);
 
   // 持久化模型到会话
+  // 模型更新：增加简单去抖，避免频繁PUT
   useEffect(() => {
     const kb = knowledgeBases.find(k => k.id === currentKnowledgeBase);
     if (conversationId && kb?.canSelectModel && selectedModelId) {
-      void conversationApi.updateConversation(conversationId, { modelId: selectedModelId }).catch(() => {});
+      const timer = setTimeout(() => {
+        void conversationApi.updateConversation(conversationId, { modelId: selectedModelId }).catch(() => {});
+      }, 400);
+      return () => clearTimeout(timer);
     }
   }, [selectedModelId, conversationId, currentKnowledgeBase, knowledgeBases]);
 
   // 快捷操作处理
   const handleQuickAction = async (action: string) => {
     // 每个功能分别指定知识库（可按需扩展/修改）
-    const QUICK_ACTION_KB_MAP: Record<string, string> = {
-      'readme-query': '常见问题与需求',
-      'requirement-progress': '常见问题与需求',
-    };
+    const QUICK_ACTION_KB_MAP = QUICK_ACTION_KB_NAME_MAP;
 
     // 对于需要延迟切换知识库的操作（如requirement-progress），跳过立即切换
     const targetKbName = QUICK_ACTION_KB_MAP[action];
@@ -366,7 +367,7 @@ const ChatScreenRefactored: React.FC = () => {
     setIsDictionarySelectorOpen(false);
     
     // 在发送消息之前，确保切换到正确的知识库
-    const targetKbName = '常见问题与需求';
+    const targetKbName = KB_NAME_REQUIREMENTS;
     const kb = knowledgeBases.find(k => k.name === targetKbName);
     if (kb && currentKnowledgeBase !== kb.id) {
       await handleKnowledgeBaseSwitch({
@@ -437,40 +438,34 @@ const ChatScreenRefactored: React.FC = () => {
     await handleSubmit(message);
   };
 
-  // 监听知识库变化，自动更新当前会话的知识库ID
+  // 监听知识库变化，自动更新当前会话的知识库ID（增加去抖）
   useEffect(() => {
-    const updateConversationKnowledgeBase = async () => {
-      // 只有在真实会话（有conversationId）且知识库存在时才更新
-      if (conversationId && currentKnowledgeBase) {
-        try {
-          const conversationDetail = conversationDetails[conversationId];
-          // 如果当前会话的知识库ID与选择的不同，或者会话还没有知识库ID，则更新
-          const currentKbId = conversationDetail?.knowledgeBaseId;
-          const needsUpdate = currentKbId !== currentKnowledgeBase;
-          
-          if (needsUpdate) {
-            await conversationApi.updateConversation(conversationId, {
-              knowledgeBaseId: currentKnowledgeBase
+    // 只有在真实会话（有conversationId）且知识库存在时才更新
+    if (conversationId && currentKnowledgeBase) {
+      const conversationDetail = conversationDetails[conversationId];
+      const currentKbId = conversationDetail?.knowledgeBaseId;
+      const needsUpdate = currentKbId !== currentKnowledgeBase;
+      if (needsUpdate) {
+        const timer = setTimeout(() => {
+          void conversationApi
+            .updateConversation(conversationId, { knowledgeBaseId: currentKnowledgeBase })
+            .then(() => {
+              setConversationDetails(prev => ({
+                ...prev,
+                [conversationId]: {
+                  ...prev[conversationId],
+                  knowledgeBaseId: currentKnowledgeBase,
+                },
+              }));
+            })
+            .catch((error) => {
+              console.error('更新会话知识库失败:', error);
+              showApiError(error, '保存会话设置失败');
             });
-            
-            // 更新本地会话详情
-            setConversationDetails(prev => ({
-              ...prev,
-              [conversationId]: {
-                ...prev[conversationId],
-                knowledgeBaseId: currentKnowledgeBase
-              }
-            }));
-          }
-        } catch (error) {
-          console.error('更新会话知识库失败:', error);
-          // 对于知识库更新失败，显示错误提示
-          showApiError(error, '保存会话设置失败');
-        }
+        }, 400);
+        return () => clearTimeout(timer);
       }
-    };
-
-    updateConversationKnowledgeBase();
+    }
   }, [currentKnowledgeBase, conversationId, conversationDetails, setConversationDetails]);
 
   // 保存消息历史到本地状态
@@ -557,7 +552,7 @@ const ChatScreenRefactored: React.FC = () => {
           messages={messages}
           loading={loading}
           currentKnowledgeBase={currentKnowledgeBase}
-          showWelcome={!/^[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$/.test(curConversation)}
+          showWelcome={!isValidUUID(curConversation)}
           messagesLoading={messagesLoading}
           onSubmit={handleSubmit}
           onRegenerate={handleRegenerate}

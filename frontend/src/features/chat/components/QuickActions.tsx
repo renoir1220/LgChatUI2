@@ -5,6 +5,7 @@ import {
   BulbOutlined,
   BugOutlined
 } from '@ant-design/icons';
+import { QUICK_ACTIONS } from '../constants';
 
 interface QuickAction {
   key: string;
@@ -24,37 +25,7 @@ interface QuickActionsProps {
  * 快捷操作栏组件
  * 显示在输入框上方，提供常用功能的快速访问
  */
-export const QuickActions: React.FC<QuickActionsProps> = ({
-  visible,
-  onAction,
-}) => {
-  const actions: QuickAction[] = [
-    {
-      key: 'readme-query',
-      label: 'readme查询',
-      icon: <FileSearchOutlined style={{ fontSize: 14, color: '#666' }} />,
-      color: '#666'
-    },
-    {
-      key: 'requirement-progress',
-      label: '需求进展',
-      icon: <ProjectOutlined style={{ fontSize: 14, color: '#666' }} />,
-      color: '#666'
-    },
-    {
-      key: 'suggestion',
-      label: '提建议',
-      icon: <BulbOutlined style={{ fontSize: 14, color: '#f5a623' }} />,
-      color: '#f5a623'
-    },
-    {
-      key: 'bug-report',
-      label: '提BUG',
-      icon: <BugOutlined style={{ fontSize: 14, color: '#ff4d4f' }} />,
-      color: '#ff4d4f'
-    },
-  ];
-
+export const QuickActions: React.FC<QuickActionsProps> = ({ visible, onAction }) => {
   if (!visible) {
     return null;
   }
@@ -70,7 +41,15 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
       position: 'relative',
       zIndex: 10,
     }}>
-      {actions.map((action) => (
+      {QUICK_ACTIONS.map((action) => {
+        const icon = action.key === 'readme-query'
+          ? <FileSearchOutlined style={{ fontSize: 14, color: action.color || '#666' }} />
+          : action.key === 'requirement-progress'
+            ? <ProjectOutlined style={{ fontSize: 14, color: action.color || '#666' }} />
+            : action.key === 'suggestion'
+              ? <BulbOutlined style={{ fontSize: 14, color: action.color || '#666' }} />
+              : <BugOutlined style={{ fontSize: 14, color: action.color || '#666' }} />;
+        return (
         <button
           key={action.key}
           onClick={() => onAction(action.key)}
@@ -102,10 +81,11 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
             target.style.borderColor = '#e1e4e8';
           }}
         >
-          {action.icon}
+          {icon}
           <span style={{ color: action.color }}>{action.label}</span>
         </button>
-      ))}
+        );
+      })}
     </div>
   );
 };

@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Button } from '../../../components/ui/button';
 import { Volume2, VolumeX, Loader2 } from 'lucide-react';
+import { api } from '../services/chatService';
 
 interface VoicePlayerProps {
   text: string;
@@ -41,26 +42,8 @@ export const VoicePlayer: React.FC<VoicePlayerProps> = ({
         return;
       }
 
-      // 请求TTS服务
-      const response = await fetch('/api/tts/synthesize', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          text,
-          voiceType,
-          encoding,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: '语音合成失败' }));
-        throw new Error(errorData.message || '语音合成失败');
-      }
-
-      // 获取音频数据
-      const audioBlob = await response.blob();
+      // 请求统一 TTS 服务
+      const audioBlob = await api.tts.synthesize({ text, voiceType, encoding });
       const audioUrl = URL.createObjectURL(audioBlob);
 
       // 创建新的音频对象

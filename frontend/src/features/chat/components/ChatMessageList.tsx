@@ -5,8 +5,7 @@ import WelcomeMarkdown from './WelcomeMarkdown';
 import { Button as AntdButton } from 'antd';
 import { Button } from '../../../components/ui/button';
 import { Copy, RotateCcw } from 'lucide-react';
-import MarkdownIt from 'markdown-it';
-import DOMPurify from 'dompurify';
+import { parseThinkMarkup, renderMarkdown } from '../../shared/utils/markdown';
 import 'github-markdown-css/github-markdown.css';
 import './ChatMessage.css';
 import { CitationList } from '../../knowledge-base/components/CitationList';
@@ -18,50 +17,7 @@ import { getUsername } from '../../auth/utils/auth';
 import { FileSearchOutlined, ProjectOutlined, SearchOutlined, BulbOutlined } from '@ant-design/icons';
 import type { BubbleDataType } from '../hooks/useChatState';
 
-// 初始化 markdown-it 渲染器
-const md = new MarkdownIt({
-  html: false,
-  breaks: true,
-  linkify: true,
-  typographer: true
-});
-
-// 解析 <think>...</think> 标签（deepseek-r1 等模型）
-const parseThinkMarkup = (raw: string) => {
-  if (!raw) return { hasThink: false, closed: false, thinkText: '', finalText: '', previewText: '' };
-  const openIdx = raw.search(/<think>/i);
-  const closeIdx = raw.search(/<\/think>/i);
-  const hasOpen = openIdx !== -1;
-  const hasClose = closeIdx !== -1;
-  if (!hasOpen) {
-    return { hasThink: false, closed: false, thinkText: '', finalText: raw, previewText: raw };
-  }
-  if (hasOpen && !hasClose) {
-    // 流式阶段：出现了 <think> 但尚未闭合，隐藏其后的内容
-    const previewText = raw.slice(0, openIdx).trimEnd();
-    return { hasThink: true, closed: false, thinkText: '', finalText: '', previewText };
-  }
-  // 完整闭合：抽取思考文本，并移除后得到最终可见文本
-  const thinkRegex = /<think>[\s\S]*?<\/think>/gi;
-  const firstThink = /<think>([\s\S]*?)<\/think>/i.exec(raw);
-  const thinkText = firstThink?.[1] ?? '';
-  const finalText = raw.replace(thinkRegex, '').trimStart();
-  return { hasThink: true, closed: true, thinkText, finalText, previewText: finalText };
-};
-
-// Markdown 渲染函数
-const renderMarkdown = (content: string, isUser = false) => {
-  const renderedHTML = md.render(content || '');
-  const sanitizedHTML = DOMPurify.sanitize(renderedHTML);
-  
-  return (
-    <div 
-      className={`markdown-body chat-markdown-body ${isUser ? 'user-message' : ''}`}
-      style={{ backgroundColor: 'transparent' }}
-      dangerouslySetInnerHTML={{ __html: sanitizedHTML }}
-    />
-  );
-};
+// 解析与渲染逻辑迁移至 shared/utils/markdown，避免重复与安全隐患
 
 // 采用登录页一致的渐变风格欢迎界面
 
@@ -93,6 +49,36 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
   messagesLoading = false,
   onQuickAction,
 }) => {
+  // 自动滚动到最新（带“用户上滑暂停”阈值）
+  const containerRef = React.useRef<HTMLDivElement | null>(null);
+  const bottomRef = React.useRef<HTMLDivElement | null>(null);
+  const [isNearBottom, setIsNearBottom] = React.useState(true);
+
+  const SCROLL_THRESHOLD = 96; // px，距离底部小于该值认为在底部附近
+
+  const updateIsNearBottom = React.useCallback(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const distance = el.scrollHeight - (el.scrollTop + el.clientHeight);
+    setIsNearBottom(distance <= SCROLL_THRESHOLD);
+  }, []);
+
+  React.useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const onScroll = () => updateIsNearBottom();
+    el.addEventListener('scroll', onScroll, { passive: true });
+    // 初始化一次
+    updateIsNearBottom();
+    return () => el.removeEventListener('scroll', onScroll);
+  }, [updateIsNearBottom]);
+
+  React.useEffect(() => {
+    // 仅当用户在底部附近时才自动滚动，避免打断阅读
+    if (isNearBottom) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+  }, [messages?.length, loading, isNearBottom]);
   // 折叠面板：思考过程（每条消息独立控制）
   const ThinkBlock: React.FC<{ text: string }> = ({ text }) => {
     const [open, setOpen] = React.useState(false);
@@ -241,7 +227,7 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
 
   // 渲染消息列表
   return (
-    <div style={{ 
+    <div ref={containerRef} style={{ 
       flex: 1, 
       height: '100%', 
       overflow: 'auto', 
@@ -416,6 +402,32 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
           },
         }}
       />
+      {/* 底部锚点 */}
+      <div ref={bottomRef} />
+      {/* 返回底部按钮（用户上滑时显示） */}
+      {!isNearBottom && (
+        <button
+          type="button"
+          onClick={() => bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })}
+          style={{
+            position: 'sticky',
+            float: 'right',
+            bottom: 16,
+            marginTop: -48,
+            right: 16,
+            alignSelf: 'flex-end',
+            background: '#1677ff',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 16,
+            padding: '6px 10px',
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.12)'
+          }}
+        >
+          回到底部
+        </button>
+      )}
     </div>
   );
 };

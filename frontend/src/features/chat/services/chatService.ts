@@ -9,6 +9,7 @@ import type {
 } from "@types";
 import type { AIModel } from '@types';
 import type { CreateConversationRequest } from '../../shared/types/api';
+import { ApiError, getErrorMessage, apiFetch } from '../../shared/services/api';
 
 // 会话相关API
 export const conversationApi = {
@@ -211,6 +212,21 @@ export const modelsApi = {
   },
 };
 
+// 语音合成 API（TTS）
+export const ttsApi = {
+  synthesize: async (params: { text: string; voiceType?: string; encoding?: string }): Promise<Blob> => {
+    const resp = await apiFetch(`/api/tts`, {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+    if (!resp.ok) {
+      const msg = await getErrorMessage(resp);
+      throw new ApiError(resp.status, msg, '/api/tts');
+    }
+    return await resp.blob();
+  },
+};
+
 // 导出所有API
 export const api = {
   conversation: conversationApi,
@@ -218,4 +234,5 @@ export const api = {
   chat: chatApi,
   knowledgeBase: knowledgeBaseApi,
   models: modelsApi,
+  tts: ttsApi,
 };

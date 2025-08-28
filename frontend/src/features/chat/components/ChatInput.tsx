@@ -18,6 +18,7 @@ import {
 } from '@ant-design/icons';
 import type { KnowledgeBase } from '../../knowledge-base/hooks/useKnowledgeBases';
 import { QuickActions } from './QuickActions';
+import { QUICK_ACTIONS } from '../constants';
 
 interface ChatInputProps {
   inputValue: string;
@@ -309,83 +310,24 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               placement="topLeft"
               menu={{
                 items: [
-                  // 暂时隐藏上传文件功能
-                  // {
-                  //   key: 'upload-file',
-                  //   label: (
-                  //     <div style={{ 
-                  //       display: 'flex', 
-                  //       alignItems: 'center', 
-                  //       gap: 8,
-                  //       padding: '4px 0'
-                  //     }}>
-                  //       <PaperClipOutlined style={{ fontSize: 16, color: '#666' }} />
-                  //       <span>上传文件</span>
-                  //     </div>
-                  //   ),
-                  // },
-                  // {
-                  //   type: 'divider',
-                  // },
-                  {
-                    key: 'readme-query',
+                  // 由统一常量生成菜单项
+                  ...QUICK_ACTIONS.map((a) => ({
+                    key: a.key,
                     label: (
-                      <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: 8,
-                        padding: '4px 0'
-                      }}>
-                        <FileSearchOutlined style={{ fontSize: 16, color: '#666' }} />
-                        <span>readme查询</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0' }}>
+                        {a.key === 'readme-query' ? (
+                          <FileSearchOutlined style={{ fontSize: 16, color: a.color || '#666' }} />
+                        ) : a.key === 'requirement-progress' ? (
+                          <ProjectOutlined style={{ fontSize: 16, color: a.color || '#666' }} />
+                        ) : a.key === 'suggestion' ? (
+                          <BulbOutlined style={{ fontSize: 16, color: a.color || '#666' }} />
+                        ) : (
+                          <BugOutlined style={{ fontSize: 16, color: a.color || '#666' }} />
+                        )}
+                        <span style={{ color: a.color, fontWeight: a.color ? 500 : 'normal' }}>{a.label}</span>
                       </div>
                     ),
-                  },
-                  {
-                    key: 'requirement-progress',
-                    label: (
-                      <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: 8,
-                        padding: '4px 0'
-                      }}>
-                        <ProjectOutlined style={{ fontSize: 16, color: '#666' }} />
-                        <span>需求进展</span>
-                      </div>
-                    ),
-                  },
-                  {
-                    type: 'divider',
-                  },
-                  {
-                    key: 'suggestion',
-                    label: (
-                      <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: 8,
-                        padding: '4px 0'
-                      }}>
-                        <BulbOutlined style={{ fontSize: 16, color: '#f5a623' }} />
-                        <span style={{ color: '#f5a623', fontWeight: 500 }}>提建议</span>
-                      </div>
-                    ),
-                  },
-                  {
-                    key: 'bug-report',
-                    label: (
-                      <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: 8,
-                        padding: '4px 0'
-                      }}>
-                        <BugOutlined style={{ fontSize: 16, color: '#ff4d4f' }} />
-                        <span style={{ color: '#ff4d4f', fontWeight: 500 }}>提BUG</span>
-                      </div>
-                    ),
-                  },
+                  })),
                 ],
                 onClick: ({ key }) => {
                   // 暂时隐藏上传文件功能

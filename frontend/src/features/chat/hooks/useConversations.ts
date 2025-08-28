@@ -2,9 +2,9 @@ import { useEffect } from 'react';
 import { apiGet, showApiError } from '../../shared/services/api';
 import { getCitationsFromCache, cleanupExpiredCache } from '../utils/messageCache';
 import type { ConversationItem, ConversationDetail, MessageRecord, BubbleDataType, Citation } from './useChatState';
+import { isValidUUID } from '../../shared/utils/uuid';
 
-// UUID验证函数
-const isValidUUID = (s?: string) => !!s && /^[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$/.test(s);
+// 使用统一的 UUID 校验工具
 
 /**
  * 会话管理Hook
