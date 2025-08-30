@@ -80,7 +80,7 @@ export class CrmCustomerRepository {
     const query = `
       SELECT TOP 1 c.CUSTOMER_ID as customerId
       FROM base_customer c
-      WHERE c.CUSTOMER_NAME = @p0
+      WHERE c.NAME = @p0
     `;
 
     const rows = await this.db.queryWithErrorHandling<{
@@ -110,4 +110,5 @@ export class CrmCustomerRepository {
     // 使用客户ID查询站点信息
     return this.findSitesByCustomerId(customerId);
   }
+
 }

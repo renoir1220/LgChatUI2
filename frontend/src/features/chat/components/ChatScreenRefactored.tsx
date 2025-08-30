@@ -41,6 +41,8 @@ const ChatScreenRefactored: React.FC = () => {
   
   // 客户字典状态
   const [isDictionarySelectorOpen, setIsDictionarySelectorOpen] = useState(false);
+  // 客户站点查询字典选择器状态
+  const [isCustomerSitesDictOpen, setIsCustomerSitesDictOpen] = useState(false);
   const { dictionaries } = useCustomerDict();
   
   // 建议模态框状态
@@ -350,6 +352,10 @@ const ChatScreenRefactored: React.FC = () => {
         // 打开客户字典选择器（优先切换至目标知识库）
         setIsDictionarySelectorOpen(true);
         return;
+      case 'customer-sites':
+        // 打开客户站点查询的字典选择器
+        setIsCustomerSitesDictOpen(true);
+        return;
       case 'suggestion':
         setIsSuggestionModalOpen(true);
         return;
@@ -390,6 +396,21 @@ const ChatScreenRefactored: React.FC = () => {
     
     // 如果不需要切换知识库，直接发送查询消息
     await handleSubmit(progressMessage);
+  };
+
+  // 客户站点查询字典选择处理
+  const handleCustomerSitesDictionarySelect = (dictionary: DictionaryItem) => {
+    setIsCustomerSitesDictOpen(false);
+    
+    // 跳转到客户信息页面，默认打开站点菜单
+    const params = new URLSearchParams({
+      customerName: dictionary.customerName,
+      defaultTab: 'sites',
+      defaultSubTab: 'summary'
+    });
+    
+    // 使用navigate跳转，参考信息流的跳转方式
+    navigate(`/customer?${params.toString()}`);
   };
 
   // 删除会话处理
@@ -598,6 +619,15 @@ const ChatScreenRefactored: React.FC = () => {
         onSelect={handleDictionarySelect}
         onClose={() => setIsDictionarySelectorOpen(false)}
         title="选择客户"
+      />
+
+      {/* 客户站点查询字典选择器 */}
+      <DictionarySelector
+        dictionaries={dictionaries}
+        isOpen={isCustomerSitesDictOpen}
+        onSelect={handleCustomerSitesDictionarySelect}
+        onClose={() => setIsCustomerSitesDictOpen(false)}
+        title="选择客户（查看站点信息）"
       />
       
       {/* 建议模态框 */}

@@ -19,6 +19,7 @@ export interface QuickActionDef {
 export const QUICK_ACTIONS: QuickActionDef[] = [
   { key: 'readme-query', label: 'readme查询' },
   { key: 'requirement-progress', label: '需求进展' },
+  { key: 'customer-sites', label: '客户站点查询' },
   { key: 'suggestion', label: '提建议', color: '#f5a623' },
   { key: 'bug-report', label: '提BUG', color: '#ff4d4f' },
 ];

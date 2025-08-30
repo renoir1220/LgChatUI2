@@ -3,7 +3,8 @@ import {
   FileSearchOutlined,
   ProjectOutlined,
   BulbOutlined,
-  BugOutlined
+  BugOutlined,
+  BuildOutlined
 } from '@ant-design/icons';
 import { QUICK_ACTIONS } from '../constants';
 
@@ -46,9 +47,11 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ visible, onAction })
           ? <FileSearchOutlined style={{ fontSize: 14, color: action.color || '#666' }} />
           : action.key === 'requirement-progress'
             ? <ProjectOutlined style={{ fontSize: 14, color: action.color || '#666' }} />
-            : action.key === 'suggestion'
-              ? <BulbOutlined style={{ fontSize: 14, color: action.color || '#666' }} />
-              : <BugOutlined style={{ fontSize: 14, color: action.color || '#666' }} />;
+            : action.key === 'customer-sites'
+              ? <BuildOutlined style={{ fontSize: 14, color: action.color || '#666' }} />
+              : action.key === 'suggestion'
+                ? <BulbOutlined style={{ fontSize: 14, color: action.color || '#666' }} />
+                : <BugOutlined style={{ fontSize: 14, color: action.color || '#666' }} />;
         return (
         <button
           key={action.key}
