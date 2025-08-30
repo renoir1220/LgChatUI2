@@ -100,6 +100,18 @@ body {
   background: rgba(156, 163, 175, 0.5);
 }
 
+/* 隐藏滚动条但保持滚动功能 */
+.scrollbar-hide {
+  /* 隐藏 webkit 滚动条 */
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
 /* iOS PWA全屏模式样式调整 - 优化版本 */
 @media (display-mode: standalone) {
   /* iOS PWA独立模式下的根容器适配 */

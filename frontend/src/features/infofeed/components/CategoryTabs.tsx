@@ -13,6 +13,8 @@ interface CategoryTabsProps {
   selectedCategory: InfoFeedCategory;
   onCategoryChange: (category: InfoFeedCategory) => void;
   className?: string;
+  showBackButton?: boolean;
+  onBackClick?: () => void;
 }
 
 // 分类配置
@@ -52,24 +54,42 @@ const CATEGORY_CONFIGS: InfoFeedCategoryConfig[] = [
 const CategoryTabs: React.FC<CategoryTabsProps> = ({
   selectedCategory,
   onCategoryChange,
-  className = ''
+  className = '',
+  showBackButton = false,
+  onBackClick
 }) => {
   return (
     <div className={`relative ${className}`}>
-      {/* Mobile: 最多显示3个分类，第4个为“更多” */}
+      {/* Mobile: 显示返回按钮和分类 */}
       <div className="md:hidden px-4 w-full">
-        {(() => {
-          const all = CATEGORY_CONFIGS.map(c => c.key);
-          // 计算可见分类（确保选中项一定包含）
-          const visible: InfoFeedCategory[] = [];
-          if (!visible.includes(selectedCategory)) visible.push(selectedCategory);
-          for (const k of all) {
-            if (visible.length >= 3) break;
-            if (!visible.includes(k)) visible.push(k);
-          }
-          const hidden = all.filter(k => !visible.includes(k));
-          return (
-            <div className="grid grid-cols-4 gap-2">
+        <div className="flex items-center justify-between">
+          {/* 返回按钮 */}
+          {showBackButton && onBackClick && (
+            <button
+              onClick={onBackClick}
+              className="flex items-center justify-center w-10 h-10 hover:bg-muted rounded-md transition-colors touch-manipulation"
+              aria-label="返回聊天"
+            >
+              <svg className="w-5 h-5 text-foreground/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+          )}
+          
+          {/* 分类标签 */}
+          <div className="flex-1 ml-2">
+            {(() => {
+              const all = CATEGORY_CONFIGS.map(c => c.key);
+              // 计算可见分类（确保选中项一定包含）
+              const visible: InfoFeedCategory[] = [];
+              if (!visible.includes(selectedCategory)) visible.push(selectedCategory);
+              for (const k of all) {
+                if (visible.length >= 3) break;
+                if (!visible.includes(k)) visible.push(k);
+              }
+              const hidden = all.filter(k => !visible.includes(k));
+              return (
+                <div className="grid grid-cols-4 gap-2">
               {visible.map((k) => {
                 const cfg = CATEGORY_CONFIGS.find(c => c.key === k)!;
                 const isSelected = selectedCategory === k;
@@ -100,7 +120,7 @@ const CategoryTabs: React.FC<CategoryTabsProps> = ({
                         更多
                       </button>
                     </DropdownMenu.Trigger>
-                    <DropdownMenu.Content className="min-w-[160px] rounded-md border border-gray-200 bg-white p-1 shadow-md">
+                    <DropdownMenu.Content className="min-w-[160px] rounded-md border border-gray-200 bg-white p-1 shadow-lg z-50 backdrop-blur-sm">
                       {CATEGORY_CONFIGS.map((cfg) => (
                         <DropdownMenu.Item
                           key={cfg.key}
@@ -115,12 +135,27 @@ const CategoryTabs: React.FC<CategoryTabsProps> = ({
                 )}
               </div>
             </div>
-          );
-        })()}
+            );
+          })()}
+          </div>
+        </div>
       </div>
 
       {/* Desktop: 横向滚动展示全部分类 */}
       <div className="hidden md:flex items-center px-4 md:px-6 w-full overflow-hidden min-w-0">
+        {/* 返回按钮 */}
+        {showBackButton && onBackClick && (
+          <button
+            onClick={onBackClick}
+            className="flex items-center justify-center w-10 h-10 mr-4 hover:bg-muted rounded-md transition-colors touch-manipulation flex-shrink-0"
+            aria-label="返回聊天"
+          >
+            <svg className="w-5 h-5 text-foreground/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+        )}
+        
         {/* 横向可滚动标签（原生滚动） */}
         <div
           className="w-full overflow-x-auto overflow-y-hidden scroll-smooth whitespace-nowrap min-w-0"
