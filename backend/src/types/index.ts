@@ -9,3 +9,4 @@ export * from './requirement';
 export * from './suggestion';
 export * from './bug';
 export * from './infofeed';
+export * from './site';

@@ -62,6 +62,7 @@ src/
 │   ├── suggestions/           # 建议管理模块
 │   ├── infofeed/              # 信息流模块
 │   ├── requirements/          # 需求管理模块
+│   ├── crm-customer/          # CRM客户信息模块
 │   └── files/                 # 文件处理模块
 │
 ├── shared/                    # 共享基础设施
@@ -115,6 +116,13 @@ src/
 - 富文本内容展示，支持图片和链接
 - **重要：使用LgChatUI数据库服务**
 - 响应式设计，适配PC和移动端
+
+### CRM客户信息模块 (crm-customer/)
+- 提供CRM客户相关信息查询功能
+- 根据客户ID查询站点列表（装机信息汇总）
+- 使用CRM数据库服务访问客户数据
+- 支持完整的站点信息（产品类别、装机状态、时间等）
+- Feature模块化架构（Controller、Repository）
 
 ### 共享服务 (shared/)
 - 结构化日志系统（AppLoggerService）
@@ -187,6 +195,9 @@ GET  /api/infofeed/:id/comments  # 获取评论列表
 POST /api/infofeed/:id/comments  # 添加评论（需要登录）
 POST /api/infofeed/comments/:comment_id/like   # 评论点赞/取消点赞（需要登录）
 POST /api/infofeed/comments/:comment_id/reply  # 回复评论（需要登录）
+
+# CRM客户信息API（使用CRM数据库）
+GET  /api/crm-customer/sites/:customerId  # 根据客户ID获取站点列表（装机信息汇总）
 ```
 
 ## 开发规范

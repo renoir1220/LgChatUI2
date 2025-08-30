@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import LoginScreen from './features/auth/components/LoginScreen'
 import ChatScreenRefactored from './features/chat/components/ChatScreenRefactored'
 import InfoFeedPage from './features/infofeed/pages/InfoFeedPage'
+import CustomerInfoPage from './features/customer/pages/CustomerInfoPage'
 import AdminApp from './features/admin/components/AdminApp'
 import RequireAuth from './features/auth/components/RequireAuth'
 import { NotificationProvider } from './features/shared/contexts/NotificationContext'
@@ -57,6 +58,16 @@ function App() {
                   <div className="h-full flex-1">
                     <RequireAuth>
                       <InfoFeedPage />
+                    </RequireAuth>
+                  </div>
+                }
+              />
+              <Route 
+                path="/customer" 
+                element={
+                  <div className="h-full flex-1">
+                    <RequireAuth>
+                      <CustomerInfoPage />
                     </RequireAuth>
                   </div>
                 }

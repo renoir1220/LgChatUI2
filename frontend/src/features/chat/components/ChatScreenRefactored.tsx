@@ -20,6 +20,7 @@ import { SuggestionModal } from '../../suggestions/components/SuggestionModal';
 import { SuggestionListModal } from '../../suggestions/components/SuggestionListModal';
 import { BugReportModal } from '../../bugs/components/BugReportModal';
 import InfoFeedEntry from '../../infofeed/components/InfoFeedEntry';
+import CustomerInfoEntry from '../../customer/components/CustomerInfoEntry';
 import { isValidUUID } from '../../shared/utils/uuid';
 import { QUICK_ACTION_KB_NAME_MAP, KB_NAME_REQUIREMENTS } from '../constants';
 
@@ -542,8 +543,11 @@ const ChatScreenRefactored: React.FC = () => {
             {/* 中间：标题 */}
             <span style={{ fontWeight: 500, textAlign: 'center', flex: 1 }}>{renderChatTitle()}</span>
             
-            {/* 右侧：信息流入口（幽灵胶囊按钮） */}
-            <InfoFeedEntry onClick={() => navigate('/feeds')} />
+            {/* 右侧：功能入口按钮组 */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <CustomerInfoEntry onClick={() => navigate('/customer')} />
+              <InfoFeedEntry onClick={() => navigate('/feeds')} />
+            </div>
           </div>
         
 
