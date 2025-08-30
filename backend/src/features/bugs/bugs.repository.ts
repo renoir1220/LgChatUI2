@@ -27,7 +27,7 @@ export class BugsRepository {
       )
       VALUES (
         @id, @p0, @p1, @p2, @p3,
-        0, @p4, GETUTCDATE(), GETUTCDATE()
+        0, @p4, GETDATE(), GETDATE()
       );
       
       SELECT 
@@ -41,8 +41,8 @@ export class BugsRepository {
         0 AS status,
         @p4 AS images,
         NULL AS developerReply,
-        CONVERT(varchar(33), GETUTCDATE(), 126) AS createdAt,
-        CONVERT(varchar(33), GETUTCDATE(), 126) AS updatedAt;
+        CONVERT(varchar(33), GETDATE(), 126) AS createdAt,
+        CONVERT(varchar(33), GETDATE(), 126) AS updatedAt;
     `;
 
     try {
@@ -339,7 +339,7 @@ export class BugsRepository {
       return;
     }
 
-    setParts.push(`UPDATED_AT = GETUTCDATE()`);
+    setParts.push(`UPDATED_AT = GETDATE()`);
     params.push(bugId);
 
     const sql = `

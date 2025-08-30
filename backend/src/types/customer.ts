@@ -23,6 +23,18 @@ export interface CustomerDictResponse {
 }
 
 /**
+ * 客户字典选择器响应（支持更多数据标识）
+ */
+export interface CustomerDictSelectorResponse {
+  /** 客户字典列表 */
+  customers: CustomerDictItem[];
+  /** 总数 */
+  total: number;
+  /** 是否还有更多数据 */
+  hasMore: boolean;
+}
+
+/**
  * 客户字典项的Zod Schema
  */
 export const CustomerDictItemSchema = z.object({

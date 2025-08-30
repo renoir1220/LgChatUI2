@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Modal, Input, List, Empty } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
+import { smartFilterCustomers } from '../utils/smartFilter';
 
 export interface DictionaryItem {
   customerId: string;
@@ -26,19 +27,10 @@ export const DictionarySelector: React.FC<DictionarySelectorProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredDictionaries = useMemo(() => {
-    if (!searchTerm.trim()) {
-      return dictionaries;
-    }
-    
-    const term = searchTerm.toLowerCase().trim();
-    
-    return dictionaries.filter(dictionary => {
-      const name = dictionary.customerName.toLowerCase();
-      const pinyin = dictionary.pyCode.toLowerCase();
-      
-      // 支持中文名称和拼音的模糊匹配
-      return name.includes(term) || pinyin.includes(term);
-    });
+    // 使用智能匹配函数，支持优先级排序和高级匹配
+    // 初始状态显示5条，搜索时显示20条
+    const maxResults = searchTerm.trim() ? 20 : 5;
+    return smartFilterCustomers(dictionaries, searchTerm, maxResults);
   }, [dictionaries, searchTerm]);
 
   const handleSelect = (dictionary: DictionaryItem) => {
@@ -99,16 +91,16 @@ export const DictionarySelector: React.FC<DictionarySelectorProps> = ({
         />
       </div>
       
-      <div style={{ maxHeight: 240, overflow: 'auto' }}>
+      <div style={{ maxHeight: 320, overflow: 'auto' }}>
         {filteredDictionaries.length === 0 ? (
           <Empty 
-            description={searchTerm ? '未找到匹配的字典' : '暂无字典数据'}
+            description={searchTerm ? '未找到匹配的客户' : '暂无客户数据'}
             image={Empty.PRESENTED_IMAGE_SIMPLE}
           />
         ) : (
           <List
             size="small"
-            dataSource={filteredDictionaries.slice(0, 6)}
+            dataSource={filteredDictionaries}
             renderItem={(dictionary) => (
               <List.Item
                 onClick={() => handleSelect(dictionary)}
@@ -127,22 +119,35 @@ export const DictionarySelector: React.FC<DictionarySelectorProps> = ({
                 }}
               >
                 <div style={{ fontSize: 13 }}>
-                  {dictionary.customerName}
+                  <div>{dictionary.customerName}</div>
+                  {searchTerm.trim() && (
+                    <div style={{ 
+                      fontSize: 11, 
+                      color: '#999', 
+                      marginTop: 2 
+                    }}>
+                      {dictionary.pyCode}
+                    </div>
+                  )}
                 </div>
               </List.Item>
             )}
           />
         )}
         
-        {filteredDictionaries.length > 6 && (
+        {filteredDictionaries.length > 0 && (
           <div style={{ 
             textAlign: 'center', 
             padding: '8px 16px', 
             fontSize: 12, 
-            color: '#999',
-            borderTop: '1px solid #f0f0f0'
+            color: '#666',
+            borderTop: '1px solid #f0f0f0',
+            backgroundColor: '#fafafa'
           }}>
-            还有 {filteredDictionaries.length - 6} 个结果，请输入更具体的搜索词
+            {searchTerm.trim() 
+              ? `显示前 ${Math.min(filteredDictionaries.length, 20)} 个最佳匹配`
+              : `显示前 ${Math.min(filteredDictionaries.length, 5)} 个客户`
+            }
           </div>
         )}
       </div>

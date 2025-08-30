@@ -62,12 +62,12 @@ export class MessagesRepository {
     }>(
       `DECLARE @id uniqueidentifier = NEWID();
        INSERT INTO AI_MESSAGES (MESSAGE_ID, CONVERSATION_ID, ROLE, CONTENT, CREATED_AT)
-       VALUES (@id, @p0, @p1, @p2, GETUTCDATE());
+       VALUES (@id, @p0, @p1, @p2, GETDATE());
        SELECT CONVERT(varchar(36), @id) AS id,
               CONVERT(varchar(36), @p0) AS conversationId,
               @p1 AS role,
               @p2 AS content,
-              CONVERT(varchar(33), GETUTCDATE(), 126) AS createdAt;`,
+              CONVERT(varchar(33), GETDATE(), 126) AS createdAt;`,
       conversationId,
       dbRole,
       content,

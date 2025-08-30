@@ -30,7 +30,7 @@ export class SuggestionsRepository {
       )
       VALUES (
         @id, @p0, @p1, @p2,
-        0, GETUTCDATE(), GETUTCDATE()
+        0, GETDATE(), GETDATE()
       );
       
       SELECT 
@@ -40,8 +40,8 @@ export class SuggestionsRepository {
         @p2 AS content,
         NULL AS developerReply,
         0 AS status,
-        CONVERT(varchar(33), GETUTCDATE(), 126) AS createdAt,
-        CONVERT(varchar(33), GETUTCDATE(), 126) AS updatedAt;
+        CONVERT(varchar(33), GETDATE(), 126) AS createdAt,
+        CONVERT(varchar(33), GETDATE(), 126) AS updatedAt;
     `;
 
     try {
@@ -225,7 +225,7 @@ export class SuggestionsRepository {
       return;
     }
 
-    setParts.push(`UPDATED_AT = GETUTCDATE()`);
+    setParts.push(`UPDATED_AT = GETDATE()`);
     params.push(suggestionId);
 
     const sql = `

@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import {
   CustomerDictResponse,
+  CustomerDictSelectorResponse,
   CustomerDictQuerySchema,
   CustomerDictItem,
 } from '../../types';
@@ -57,24 +58,43 @@ export class CustomerDictController {
   }
 
   /**
-   * 获取所有客户字典（用于选择器）
-   * GET /api/customer-dict/all
+   * 获取客户字典（用于选择器，支持搜索和分页）
+   * GET /api/customer-dict/all?keyword=xxx&page=1&pageSize=20
    */
   @Get('all')
   @HttpCode(HttpStatus.OK)
-  async getAllCustomerDict(): Promise<{ customers: CustomerDictItem[] }> {
-    this.logger.log('接收获取所有客户字典请求');
+  async getAllCustomerDict(
+    @Query(new ZodValidationPipe(CustomerDictQuerySchema))
+    query: CustomerDictQuery,
+  ): Promise<CustomerDictSelectorResponse> {
+    // 为选择器设置合适的默认值
+    const { keyword, page = 1, pageSize = 20 } = query;
+    
+    this.logger.log('接收获取选择器客户字典请求', {
+      keyword: keyword || '无',
+      page,
+      pageSize,
+    });
 
     try {
-      const result = await this.customerDictService.getAllCustomerDict();
+      const result = await this.customerDictService.getAllCustomerDict(
+        keyword,
+        page,
+        pageSize,
+      );
 
-      this.logger.log('获取所有客户字典成功', {
+      this.logger.log('获取选择器客户字典成功', {
         count: result.customers.length,
+        total: result.total,
+        hasMore: result.hasMore,
       });
 
       return result;
     } catch (error) {
-      this.logger.error('获取所有客户字典失败', error.stack, {
+      this.logger.error('获取选择器客户字典失败', error.stack, {
+        keyword: keyword || '无',
+        page,
+        pageSize,
         errorMessage: error.message,
       });
       throw error;
@@ -98,6 +118,32 @@ export class CustomerDictController {
       return result;
     } catch (error) {
       this.logger.error('客户字典统计信息查询失败', error.stack, {
+        errorMessage: error.message,
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * 获取全量客户字典（用于前端缓存）
+   * GET /api/customer-dict/cache
+   */
+  @Get('cache')
+  @HttpCode(HttpStatus.OK)
+  async getAllCustomersForCache(): Promise<CustomerDictResponse> {
+    this.logger.log('接收获取全量客户字典请求（用于缓存）');
+
+    try {
+      const result = await this.customerDictService.getAllCustomersForCache();
+
+      this.logger.log('获取全量客户字典成功', {
+        count: result.customers.length,
+        total: result.total,
+      });
+
+      return result;
+    } catch (error) {
+      this.logger.error('获取全量客户字典失败', error.stack, {
         errorMessage: error.message,
       });
       throw error;

@@ -1,5 +1,6 @@
 import { Injectable, LoggerService, Scope } from '@nestjs/common';
 import { LogContext } from '../../types';
+import { getCurrentLocalDateTime } from '../utils/date.util';
 
 @Injectable({ scope: Scope.TRANSIENT })
 export class AppLoggerService implements LoggerService {
@@ -15,7 +16,7 @@ export class AppLoggerService implements LoggerService {
     context?: LogContext,
     trace?: string,
   ): string {
-    const timestamp = new Date().toISOString();
+    const timestamp = getCurrentLocalDateTime();
     const ctx = this.context || 'Application';
 
     const logEntry = {

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CrmDatabaseService } from '../../../shared/database/database.service';
 import { User } from '../../../types';
+import { getCurrentLocalDateTime } from '../../../shared/utils/date.util';
 
 @Injectable()
 export class UsersRepository {
@@ -36,7 +37,7 @@ export class UsersRepository {
       id: `user_${r.username}`, // 使用用户名生成ID
       username: r.username,
       displayName: r.username,
-      createdAt: new Date().toISOString(),
+      createdAt: getCurrentLocalDateTime(),
     };
   }
 

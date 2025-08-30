@@ -30,9 +30,9 @@ export class ConversationsRepository {
     const rows = await this.db.queryWithErrorHandling<Conversation>(
       `DECLARE @id uniqueidentifier = NEWID();
        INSERT INTO AI_CONVERSATIONS (CONVERSATION_ID, TITLE, CREATED_AT)
-       VALUES (@id, @p0, GETUTCDATE());
+       VALUES (@id, @p0, GETDATE());
        SELECT CONVERT(varchar(36), @id) AS id, @p0 AS title,
-              CONVERT(varchar(33), GETUTCDATE(), 126) AS createdAt;`,
+              CONVERT(varchar(33), GETDATE(), 126) AS createdAt;`,
       [title],
       '创建新会话',
     );
@@ -74,12 +74,12 @@ export class ConversationsRepository {
     const rows = await this.db.queryWithErrorHandling<any>(
       `DECLARE @id uniqueidentifier = NEWID();
        INSERT INTO AI_CONVERSATIONS (CONVERSATION_ID, USER_ID, TITLE, KNOWLEDGE_BASE_ID, CREATED_AT)
-       VALUES (@id, @p0, @p1, @p2, GETUTCDATE());
+       VALUES (@id, @p0, @p1, @p2, GETDATE());
        SELECT CONVERT(varchar(36), @id) AS id, 
               @p1 AS title,
               @p0 AS userId,
               @p2 AS knowledgeBaseId,
-              CONVERT(varchar(33), GETUTCDATE(), 126) AS createdAt;`,
+              CONVERT(varchar(33), GETDATE(), 126) AS createdAt;`,
       [userId, title, knowledgeBaseId],
       '创建用户会话',
     );

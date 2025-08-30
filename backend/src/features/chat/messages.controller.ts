@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { ChatRole, ChatRequest } from '../../types';
+import { getCurrentLocalDateTime } from '../../shared/utils/date.util';
 
 @Controller('messages')
 export class MessagesController {
@@ -11,7 +12,7 @@ export class MessagesController {
       userId: 'demo-user',
       role: ChatRole.User,
       content: 'Hello from backend (../../types)!',
-      createdAt: new Date().toISOString(),
+      createdAt: getCurrentLocalDateTime(),
     };
   }
 
@@ -29,7 +30,7 @@ export class MessagesController {
       userId: 'u-1',
       role,
       content,
-      createdAt: new Date().toISOString(),
+      createdAt: getCurrentLocalDateTime(),
     };
   }
 }

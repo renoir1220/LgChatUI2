@@ -1,5 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { CrmDatabaseService } from './shared/database/database.service';
+import { getCurrentLocalDateTime } from './shared/utils/date.util';
 
 @Controller('health')
 export class HealthController {
@@ -9,7 +10,7 @@ export class HealthController {
   health() {
     return {
       status: 'ok',
-      timestamp: new Date().toISOString(),
+      timestamp: getCurrentLocalDateTime(),
       uptime: process.uptime(),
       environment: process.env.NODE_ENV || 'development',
     };

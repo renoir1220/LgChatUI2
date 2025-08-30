@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { LgChatUIDatabaseService } from '../../shared/database/database.service';
+import { formatLocalDateTime } from '../../shared/utils/date.util';
 
 export interface AIModelEntity {
   id: string;
@@ -56,8 +57,8 @@ export class ModelsRepository {
         availableUsers: row.AVAILABLE_USERS || undefined,
         enabled: !!row.ENABLED,
         sortOrder: row.SORT_ORDER,
-        createdAt: row.CREATED_AT.toISOString(),
-        updatedAt: row.UPDATED_AT.toISOString(),
+        createdAt: formatLocalDateTime(row.CREATED_AT),
+        updatedAt: formatLocalDateTime(row.UPDATED_AT),
       }));
   }
 
@@ -96,8 +97,8 @@ export class ModelsRepository {
       availableUsers: row.AVAILABLE_USERS || undefined,
       enabled: !!row.ENABLED,
       sortOrder: row.SORT_ORDER,
-      createdAt: row.CREATED_AT.toISOString(),
-      updatedAt: row.UPDATED_AT.toISOString(),
+      createdAt: formatLocalDateTime(row.CREATED_AT),
+      updatedAt: formatLocalDateTime(row.UPDATED_AT),
     };
   }
 }

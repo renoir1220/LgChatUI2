@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { StandardErrorResponse } from '../../types';
+import { getCurrentLocalDateTime } from '../utils/date.util';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -62,7 +63,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       statusCode: status,
       message,
       error,
-      timestamp: new Date().toISOString(),
+      timestamp: getCurrentLocalDateTime(),
       path: request.url,
       ...(requestId && { requestId }),
     };

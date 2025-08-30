@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { LgChatUIDatabaseService } from '../../shared/database/database.service';
+import { formatLocalDateTime } from '../../shared/utils/date.util';
 
 export interface KnowledgeBaseEntity {
   id: string;
@@ -75,8 +76,8 @@ export class KnowledgeBaseRepository {
         canSelectModel: !!row.CAN_SELECT_MODEL,
         enabled: row.ENABLED,
         sortOrder: row.SORT_ORDER,
-        createdAt: row.CREATED_AT.toISOString(),
-        updatedAt: row.UPDATED_AT.toISOString(),
+        createdAt: formatLocalDateTime(row.CREATED_AT),
+        updatedAt: formatLocalDateTime(row.UPDATED_AT),
       }));
   }
 
@@ -117,8 +118,8 @@ export class KnowledgeBaseRepository {
       canSelectModel: !!row.CAN_SELECT_MODEL,
       enabled: row.ENABLED,
       sortOrder: row.SORT_ORDER,
-      createdAt: row.CREATED_AT.toISOString(),
-      updatedAt: row.UPDATED_AT.toISOString(),
+      createdAt: formatLocalDateTime(row.CREATED_AT),
+      updatedAt: formatLocalDateTime(row.UPDATED_AT),
     }));
   }
 
@@ -163,8 +164,8 @@ export class KnowledgeBaseRepository {
       canSelectModel: !!row.CAN_SELECT_MODEL,
       enabled: row.ENABLED,
       sortOrder: row.SORT_ORDER,
-      createdAt: row.CREATED_AT.toISOString(),
-      updatedAt: row.UPDATED_AT.toISOString(),
+      createdAt: formatLocalDateTime(row.CREATED_AT),
+      updatedAt: formatLocalDateTime(row.UPDATED_AT),
     };
   }
 }
