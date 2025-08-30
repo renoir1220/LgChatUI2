@@ -1,6 +1,8 @@
 import React from 'react';
 import MarkdownIt from 'markdown-it';
 import DOMPurify from 'dompurify';
+import { parseActionButtons, removeButtonCodes, hasActionButtons } from './actionButtonParser';
+import ActionButtons from '../components/ActionButtons';
 
 // 统一的 Markdown 渲染与 think 标签解析工具
 // 注意：仅提供纯逻辑与安全处理，样式类名保持与现有实现一致
@@ -47,14 +49,38 @@ export const renderMarkdown = (
   content: string,
   options?: boolean | { isUser?: boolean }
 ) => {
-  const renderedHTML = md.render(content || '');
-  const sanitizedHTML = DOMPurify.sanitize(renderedHTML);
+  const cleanContent = content || '';
   const isUser = typeof options === 'boolean' ? options : !!options?.isUser;
+  
+  // 检查是否包含按钮代码
+  const hasButtons = hasActionButtons(cleanContent);
+  let markdownContent = cleanContent;
+  let buttons: ReturnType<typeof parseActionButtons> = [];
+  
+  if (hasButtons && !isUser) {
+    // 仅对AI消息处理按钮（用户消息不处理按钮）
+    buttons = parseActionButtons(cleanContent);
+    markdownContent = removeButtonCodes(cleanContent);
+  }
+  
+  const renderedHTML = md.render(markdownContent);
+  const sanitizedHTML = DOMPurify.sanitize(renderedHTML);
+  
   return (
-    <div
-      className={`markdown-body chat-markdown-body ${isUser ? 'user-message' : ''}`}
-      style={{ backgroundColor: 'transparent' }}
-      dangerouslySetInnerHTML={{ __html: sanitizedHTML }}
-    />
+    <div>
+      <div
+        className={`markdown-body chat-markdown-body ${isUser ? 'user-message' : ''}`}
+        style={{ backgroundColor: 'transparent' }}
+        dangerouslySetInnerHTML={{ __html: sanitizedHTML }}
+      />
+      {buttons.length > 0 && (
+        <div className="border-t border-gray-100 pt-3 mt-3">
+          <ActionButtons 
+            buttons={buttons} 
+            className="justify-start" 
+          />
+        </div>
+      )}
+    </div>
   );
 };
