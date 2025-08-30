@@ -7,13 +7,31 @@ import { useSites } from '../hooks/useSites';
 interface SitesSummaryProps {
   customerId?: string;
   customerName?: string;
+  /** 是否显示内部标题（默认为false，由外部显示在CurrentCustomerBar中） */
+  showTitle?: boolean;
+  /** 当有数据时的右侧内容渲染回调 */
+  onRenderRightContent?: (rightContent: React.ReactNode) => void;
 }
 
 export const SitesSummary: React.FC<SitesSummaryProps> = ({
   customerId,
   customerName,
+  showTitle = false,
+  onRenderRightContent
 }) => {
   const { summaryData, loading, error } = useSites(customerId, customerName);
+
+  // 当数据加载成功时，通知父组件右侧内容
+  React.useEffect(() => {
+    if (!loading && !error && summaryData.length > 0 && onRenderRightContent) {
+      const rightContent = (
+        <Badge variant="secondary">{summaryData.length} 种配置</Badge>
+      );
+      onRenderRightContent(rightContent);
+    } else if (onRenderRightContent) {
+      onRenderRightContent(null);
+    }
+  }, [loading, error, summaryData, onRenderRightContent]);
 
   if (loading) {
     return (
@@ -42,10 +60,12 @@ export const SitesSummary: React.FC<SitesSummaryProps> = ({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">站点信息汇总</h2>
-        <Badge variant="secondary">{summaryData.length} 种配置</Badge>
-      </div>
+      {showTitle && (
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">站点信息汇总</h2>
+          <Badge variant="secondary">{summaryData.length} 种配置</Badge>
+        </div>
+      )}
 
       <Card>
         <CardContent className="p-0">

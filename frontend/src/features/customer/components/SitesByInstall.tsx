@@ -9,13 +9,31 @@ import { useSites } from '../hooks/useSites';
 interface SitesByInstallProps {
   customerId?: string;
   customerName?: string;
+  /** 是否显示内部标题（默认为false，由外部显示在CurrentCustomerBar中） */
+  showTitle?: boolean;
+  /** 当有数据时的右侧内容渲染回调 */
+  onRenderRightContent?: (rightContent: React.ReactNode) => void;
 }
 
 export const SitesByInstall: React.FC<SitesByInstallProps> = ({
   customerId,
   customerName,
+  showTitle = false,
+  onRenderRightContent
 }) => {
   const { installGroups, loading, error } = useSites(customerId, customerName);
+  
+  // 当数据加载成功时，通知父组件右侧内容
+  React.useEffect(() => {
+    if (!loading && !error && installGroups.length > 0 && onRenderRightContent) {
+      const rightContent = (
+        <Badge variant="secondary">{installGroups.length} 个装机单</Badge>
+      );
+      onRenderRightContent(rightContent);
+    } else if (onRenderRightContent) {
+      onRenderRightContent(null);
+    }
+  }, [loading, error, installGroups, onRenderRightContent]);
   
   // 控制展开状态，默认只有一个装机单时展开，多个时都折叠
   const [openStates, setOpenStates] = useState<Record<string, boolean>>(() => {
@@ -69,10 +87,12 @@ export const SitesByInstall: React.FC<SitesByInstallProps> = ({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">按装机单展示</h2>
-        <Badge variant="secondary">{installGroups.length} 个装机单</Badge>
-      </div>
+      {showTitle && (
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">按装机单展示</h2>
+          <Badge variant="secondary">{installGroups.length} 个装机单</Badge>
+        </div>
+      )}
 
       <Card>
         <CardContent className="p-0">

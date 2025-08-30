@@ -44,6 +44,8 @@ export interface TabsFrameworkProps {
   onBackClick?: () => void;
   /** 返回按钮文本 */
   backButtonLabel?: string;
+  /** 顶部额外内容（显示在菜单下方、内容区域上方） */
+  headerContent?: React.ReactNode;
   /** 内容渲染函数 */
   children: (activeTab: string, activeSubTab?: string) => React.ReactNode;
   /** 额外的CSS类名 */
@@ -58,11 +60,30 @@ const TabsFramework: React.FC<TabsFrameworkProps> = ({
   onSubTabChange,
   onBackClick,
   backButtonLabel = '返回',
+  headerContent,
   children,
   className = ''
 }) => {
   const activeMenuItem = menuItems.find(item => item.key === activeTab);
   const hasSubMenu = activeMenuItem?.subItems && activeMenuItem.subItems.length > 0;
+
+  // 处理ESC键返回
+  React.useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && onBackClick) {
+        event.preventDefault();
+        onBackClick();
+      }
+    };
+
+    // 添加键盘事件监听器
+    document.addEventListener('keydown', handleKeyDown);
+
+    // 清理监听器
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onBackClick]);
 
   return (
     <div className={cn("w-full min-h-screen bg-white flex flex-col", className)}>
@@ -89,15 +110,15 @@ const TabsFramework: React.FC<TabsFrameworkProps> = ({
               <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
                 {/* 移动端：隐藏滚动条的水平滚动 */}
                 <div className="overflow-x-auto scrollbar-hide">
-                  <TabsList className="w-max min-w-full h-10 bg-transparent p-0">
+                  <TabsList className="w-max min-w-full h-10 bg-transparent p-0 border-b border-gray-200">
                     {menuItems.map((item) => (
                       <TabsTrigger
                         key={item.key}
                         value={item.key}
-                        className="flex items-center gap-2 px-4 py-2 rounded-full data-[state=active]:bg-muted"
+                        className="relative flex items-center gap-2 px-4 py-2 bg-transparent border-b-2 border-transparent text-gray-500 hover:text-gray-700 data-[state=active]:text-gray-900 data-[state=active]:border-blue-500 transition-colors"
                       >
                         {item.icon && <span className="text-base">{item.icon}</span>}
-                        <span className="whitespace-nowrap">{item.label}</span>
+                        <span className="whitespace-nowrap font-medium">{item.label}</span>
                       </TabsTrigger>
                     ))}
                   </TabsList>
@@ -109,19 +130,19 @@ const TabsFramework: React.FC<TabsFrameworkProps> = ({
 
         {/* 二级菜单栏（可选） */}
         {hasSubMenu && activeMenuItem && activeMenuItem.subItems && (
-          <div className="px-4 md:px-6 h-[44px] border-t border-gray-100">
+          <div className="px-4 md:px-6 h-[40px] bg-gray-50/50">
             <div className="mx-auto max-w-3xl h-full flex items-center">
               <Tabs value={activeSubTab} onValueChange={onSubTabChange} className="w-full">
                 <div className="overflow-x-auto scrollbar-hide">
-                  <TabsList className="w-max min-w-full h-9 bg-transparent p-0">
+                  <TabsList className="w-max min-w-full h-8 bg-transparent p-0 border-b border-gray-200">
                     {activeMenuItem.subItems.map((subItem) => (
                       <TabsTrigger
                         key={subItem.key}
                         value={subItem.key}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-full data-[state=active]:bg-muted/60"
+                        className="relative flex items-center gap-1.5 px-3 py-1.5 text-sm bg-transparent border-b-2 border-transparent text-gray-400 hover:text-gray-600 data-[state=active]:text-gray-700 data-[state=active]:border-blue-400 transition-colors"
                       >
                         {subItem.icon && <span className="text-sm">{subItem.icon}</span>}
-                        <span className="whitespace-nowrap">{subItem.label}</span>
+                        <span className="whitespace-nowrap font-medium">{subItem.label}</span>
                       </TabsTrigger>
                     ))}
                   </TabsList>
@@ -130,10 +151,28 @@ const TabsFramework: React.FC<TabsFrameworkProps> = ({
             </div>
           </div>
         )}
+
+        {/* 固定的头部内容（如客户信息条等） */}
+        {headerContent && (
+          <div className="px-4 md:px-6">
+            <div className="mx-auto max-w-3xl">
+              {headerContent}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* 顶部占位空间，避免内容被固定菜单遮挡 */}
-      <div className={hasSubMenu ? "h-[88px]" : "h-[44px]"}></div>
+      {/* 动态计算占位空间高度 */}
+      <div 
+        className="flex-shrink-0"
+        style={{ 
+          height: `${
+            44 + // 主菜单高度
+            (hasSubMenu ? 40 : 0) + // 二级菜单高度（更新为40px）
+            (headerContent ? 42 : 0) // 头部内容高度（大约）
+          }px` 
+        }}
+      ></div>
 
       {/* 内容区域 */}
       <div className="flex-1 overflow-hidden">

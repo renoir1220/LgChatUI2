@@ -3,6 +3,10 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { TabsFramework, type MenuItem } from '../../shared/components/TabsFramework';
 import { SitesSummary } from '../components/SitesSummary';
 import { SitesByInstall } from '../components/SitesByInstall';
+import { CurrentCustomerBar } from '../components/CurrentCustomerBar';
+import { DictionarySelector } from '../../shared/components/DictionarySelector';
+import { useCustomerDict } from '../../shared/hooks/useCustomerDict';
+import type { DictionaryItem } from '../../shared/components/DictionarySelector';
 
 // 客户信息菜单配置
 const CUSTOMER_MENU_ITEMS: MenuItem[] = [
@@ -54,6 +58,28 @@ const CustomerInfoPage: React.FC<CustomerInfoPageProps> = ({
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [activeSubTab, setActiveSubTab] = useState<string | undefined>(defaultSubTab);
   const [currentCustomerName, setCurrentCustomerName] = useState<string | undefined>(customerName);
+  const [isCustomerSelectorOpen, setIsCustomerSelectorOpen] = useState(false);
+  const [rightContent, setRightContent] = useState<React.ReactNode>(null);
+  
+  // 使用客户字典Hook
+  const { dictionaries } = useCustomerDict();
+
+  // 获取当前页面标题 - 一级标题 | 二级标题（若有）
+  const getPageTitle = (tab: string, subTab?: string): string => {
+    const menuItem = CUSTOMER_MENU_ITEMS.find(item => item.key === tab);
+    if (!menuItem) return '';
+
+    let title = menuItem.label;
+    
+    if (subTab && menuItem.subItems) {
+      const subMenuItem = menuItem.subItems.find(sub => sub.key === subTab);
+      if (subMenuItem) {
+        title += ` | ${subMenuItem.label}`;
+      }
+    }
+    
+    return title;
+  };
 
   // 处理URL参数和初始化
   useEffect(() => {
@@ -93,6 +119,78 @@ const CustomerInfoPage: React.FC<CustomerInfoPageProps> = ({
     setActiveSubTab(subTabKey);
   };
 
+  // 处理右侧内容清空（非站点页面）
+  useEffect(() => {
+    if (activeTab !== 'sites') {
+      setRightContent(null);
+    }
+  }, [activeTab, activeSubTab]);
+
+  // 处理客户选择
+  const handleSelectCustomer = () => {
+    setIsCustomerSelectorOpen(true);
+  };
+
+  // 处理客户字典选择
+  const handleCustomerDictionarySelect = (dictionary: DictionaryItem) => {
+    setIsCustomerSelectorOpen(false);
+    setCurrentCustomerName(dictionary.customerName);
+    
+    // 更新URL参数
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.set('customerName', dictionary.customerName);
+    window.history.replaceState({}, '', newUrl.toString());
+  };
+
+  // 如果没有选择客户，则不显示内容，提示选择客户
+  if (!currentCustomerName) {
+    return (
+      <>
+        <TabsFramework
+          menuItems={CUSTOMER_MENU_ITEMS}
+          activeTab={activeTab}
+          activeSubTab={activeSubTab}
+          onTabChange={handleTabChange}
+          onSubTabChange={handleSubTabChange}
+          onBackClick={() => navigate('/')}
+          headerContent={
+            <CurrentCustomerBar 
+              customerName={undefined}
+              onSelectCustomer={handleSelectCustomer}
+              pageTitle={getPageTitle(activeTab, activeSubTab)}
+              rightContent={rightContent}
+            />
+          }
+        >
+          {() => (
+            <div className="flex flex-col items-center justify-center py-16">
+              <div className="text-6xl mb-4">🏢</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">选择客户查看信息</h3>
+              <p className="text-gray-500 text-center mb-6 max-w-md">
+                请先选择一个客户，然后查看该客户的相关信息和数据
+              </p>
+              <button
+                onClick={handleSelectCustomer}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                选择客户
+              </button>
+            </div>
+          )}
+        </TabsFramework>
+
+        {/* 客户字典选择器 */}
+        <DictionarySelector
+          dictionaries={dictionaries}
+          isOpen={isCustomerSelectorOpen}
+          onSelect={handleCustomerDictionarySelect}
+          onClose={() => setIsCustomerSelectorOpen(false)}
+          title="选择客户"
+        />
+      </>
+    );
+  }
+
   // 渲染内容区域
   const renderContent = (activeTab: string, activeSubTab?: string) => {
     switch (activeTab) {
@@ -100,7 +198,6 @@ const CustomerInfoPage: React.FC<CustomerInfoPageProps> = ({
         return (
           <div className="space-y-6">
             <div className="bg-white p-6 rounded-lg border shadow-sm">
-              <h3 className="text-lg font-medium mb-4 text-gray-900">客户动态</h3>
               <div className="text-gray-500 text-center py-8">
                 <div className="text-4xl mb-4">📊</div>
                 <p>客户动态内容开发中...</p>
@@ -111,79 +208,93 @@ const CustomerInfoPage: React.FC<CustomerInfoPageProps> = ({
         );
 
       case 'sites':
-        // 如果有客户名称，使用客户名称查询；否则使用测试客户ID
-        const displayCustomerName = currentCustomerName || '北京大学第三医院';
+        // 如果有客户名称，使用客户名称查询；否则使用测试客户ID  
         const testCustomerId = 'E36139FE-FA92-4F9C-BCA0-8D88A6C5AAF9';
-        
-        // 站点信息页面的客户信息显示
-        const customerInfoHeader = (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex items-center gap-2">
-              <span className="text-blue-600 font-medium">当前客户：</span>
-              <span className="text-blue-800 font-semibold">{displayCustomerName}</span>
-            </div>
-          </div>
-        );
 
         switch (activeSubTab) {
           case 'summary':
             return (
-              <div className="p-6">
-                {customerInfoHeader}
+              <div className="space-y-6">
                 {currentCustomerName ? (
-                  <SitesSummary customerName={currentCustomerName} />
+                  <SitesSummary 
+                    customerName={currentCustomerName} 
+                    onRenderRightContent={setRightContent}
+                  />
                 ) : (
-                  <SitesSummary customerId={testCustomerId} />
+                  <SitesSummary 
+                    customerId={testCustomerId} 
+                    onRenderRightContent={setRightContent}
+                  />
                 )}
               </div>
             );
           case 'by-install':
             return (
-              <div className="p-6">
-                {customerInfoHeader}
+              <div className="space-y-6">
                 {currentCustomerName ? (
-                  <SitesByInstall customerName={currentCustomerName} />
+                  <SitesByInstall 
+                    customerName={currentCustomerName}
+                    onRenderRightContent={setRightContent}
+                  />
                 ) : (
-                  <SitesByInstall customerId={testCustomerId} />
+                  <SitesByInstall 
+                    customerId={testCustomerId}
+                    onRenderRightContent={setRightContent}
+                  />
                 )}
               </div>
             );
           default:
             return (
-              <div className="p-6">
-                {customerInfoHeader}
+              <div className="space-y-6">
                 {currentCustomerName ? (
-                  <SitesSummary customerName={currentCustomerName} />
+                  <SitesSummary 
+                    customerName={currentCustomerName}
+                    onRenderRightContent={setRightContent}
+                  />
                 ) : (
-                  <SitesSummary customerId={testCustomerId} />
+                  <SitesSummary 
+                    customerId={testCustomerId}
+                    onRenderRightContent={setRightContent}
+                  />
                 )}
               </div>
             );
         }
 
       case 'workorders':
+        // 根据子菜单类型渲染不同内容
+        const getWorkorderContent = () => {
+          switch (activeSubTab) {
+            case 'implementation':
+              return {
+                icon: '🔧',
+                title: '实施工单内容开发中...',
+                description: '这里将显示项目实施工单、进度跟踪、任务分配等'
+              };
+            case 'interface':
+              return {
+                icon: '🔌',
+                title: '接口工单内容开发中...',
+                description: '这里将显示接口对接工单、API调用记录、错误日志等'
+              };
+            default:
+              return {
+                icon: '📋',
+                title: '工单管理开发中...',
+                description: '这里将显示工单管理相关功能'
+              };
+          }
+        };
+
+        const content = getWorkorderContent();
         return (
           <div className="space-y-6">
             <div className="bg-white p-6 rounded-lg border shadow-sm">
-              <h3 className="text-lg font-medium mb-4 text-gray-900">
-                工单管理 - {activeSubTab === 'implementation' ? '实施' : '接口'}
-              </h3>
               <div className="text-gray-500 text-center py-8">
-                <div className="text-4xl mb-4">
-                  {activeSubTab === 'implementation' ? '🔧' : '🔌'}
-                </div>
-                <p>
-                  {activeSubTab === 'implementation' 
-                    ? '实施工单内容开发中...' 
-                    : '接口工单内容开发中...'
-                  }
-                </p>
-                <p className="text-sm mt-2">
-                  {activeSubTab === 'implementation'
-                    ? '这里将显示项目实施工单、进度跟踪、任务分配等'
-                    : '这里将显示接口对接工单、API调用记录、错误日志等'
-                  }
-                </p>
+                <div className="text-4xl mb-4">{content.icon}</div>
+                <p>{content.title}</p>
+                <p className="text-sm mt-2">{content.description}</p>
               </div>
             </div>
           </div>
@@ -199,16 +310,35 @@ const CustomerInfoPage: React.FC<CustomerInfoPageProps> = ({
   };
 
   return (
-    <TabsFramework
-      menuItems={CUSTOMER_MENU_ITEMS}
-      activeTab={activeTab}
-      activeSubTab={activeSubTab}
-      onTabChange={handleTabChange}
-      onSubTabChange={handleSubTabChange}
-      onBackClick={() => navigate('/')}
-    >
-      {renderContent}
-    </TabsFramework>
+    <>
+      <TabsFramework
+        menuItems={CUSTOMER_MENU_ITEMS}
+        activeTab={activeTab}
+        activeSubTab={activeSubTab}
+        onTabChange={handleTabChange}
+        onSubTabChange={handleSubTabChange}
+        onBackClick={() => navigate('/')}
+        headerContent={
+          <CurrentCustomerBar 
+            customerName={currentCustomerName}
+            onSelectCustomer={handleSelectCustomer}
+            pageTitle={getPageTitle(activeTab, activeSubTab)}
+            rightContent={rightContent}
+          />
+        }
+      >
+        {renderContent}
+      </TabsFramework>
+
+      {/* 客户字典选择器 */}
+      <DictionarySelector
+        dictionaries={dictionaries}
+        isOpen={isCustomerSelectorOpen}
+        onSelect={handleCustomerDictionarySelect}
+        onClose={() => setIsCustomerSelectorOpen(false)}
+        title="选择客户"
+      />
+    </>
   );
 };
 
