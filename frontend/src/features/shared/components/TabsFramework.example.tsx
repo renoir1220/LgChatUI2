@@ -5,7 +5,7 @@
  */
 
 import React, { useState } from 'react';
-import { TabsFramework, MenuItem } from './TabsFramework';
+import { TabsFramework, type MenuItem } from './TabsFramework';
 import { useNavigate } from 'react-router-dom';
 
 // 示例1：信息流页面（无二级菜单）

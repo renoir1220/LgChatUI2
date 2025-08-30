@@ -55,6 +55,8 @@ export interface StandardErrorResponse {
 export interface JwtPayload {
   sub: string;
   username: string;
+  type?: string; // 'external_service' 等类型标识
+  generated_at?: string; // 生成时间
   iat?: number;
   exp?: number;
 }

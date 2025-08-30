@@ -78,4 +78,35 @@ export class AuthService {
   async getUserByUsername(username: string) {
     return this.usersRepository.findByUsername(username);
   }
+
+  /**
+   * 为外部服务（如Dify）生成长期有效的固定token
+   * @param username 用户名
+   * @param expiresIn 过期时间，默认10年
+   */
+  async generateFixedToken(username: string, expiresIn: string = '10y'): Promise<string> {
+    // 验证用户存在
+    const user = await this.validateUser(username);
+    if (!user) {
+      throw new UnauthorizedException(`用户 ${username} 不存在`);
+    }
+
+    // 生成长期有效的JWT token
+    const payload = { 
+      sub: user.id, 
+      username: user.username,
+      type: 'external_service', // 标记为外部服务token
+      generated_at: new Date().toISOString()
+    };
+    
+    const token = this.jwtService.sign(payload, { expiresIn });
+    
+    this.logger.log(`为外部服务生成固定token`, { 
+      username, 
+      expiresIn,
+      tokenLength: token.length 
+    });
+
+    return token;
+  }
 }

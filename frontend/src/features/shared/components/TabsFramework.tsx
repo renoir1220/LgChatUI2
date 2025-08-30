@@ -153,5 +153,4 @@ export { TabsFramework };
 // 默认导出
 export default TabsFramework;
 
-// 显式导出所有类型，确保可以正确导入
-export type { MenuItem, SubMenuItem, TabsFrameworkProps };
+// 类型已通过 export interface 导出，无需重复导出

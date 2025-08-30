@@ -29,7 +29,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       }
       return { userId: payload.sub, username: payload.username };
     } catch (error) {
-      console.error('JWT验证失败:', error);
       throw new UnauthorizedException('JWT验证失败');
     }
   }

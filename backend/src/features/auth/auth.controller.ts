@@ -7,6 +7,7 @@ import {
   UseGuards,
   Get,
   Request,
+  Query,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginRequestSchema, LoginResponse } from '../../types';
@@ -43,6 +44,32 @@ export class AuthController {
       username: user?.username,
       displayName: user?.displayName,
       roles: user?.roles || [],
+    };
+  }
+
+  /**
+   * 为外部服务生成固定token
+   * POST /api/auth/generate-fixed-token?username=xxx&expiresIn=10y
+   */
+  @Post('generate-fixed-token')
+  @HttpCode(HttpStatus.OK)
+  async generateFixedToken(
+    @Query('username') username: string,
+    @Query('expiresIn') expiresIn?: string,
+  ) {
+    if (!username) {
+      throw new UnauthorizedException('用户名不能为空');
+    }
+
+    const token = await this.authService.generateFixedToken(username, expiresIn);
+    
+    return {
+      access_token: token,
+      username: username,
+      type: 'external_service',
+      expires_in: expiresIn || '10y',
+      generated_at: new Date().toISOString(),
+      usage: 'Use this token in Authorization header: Bearer <token>'
     };
   }
 }
