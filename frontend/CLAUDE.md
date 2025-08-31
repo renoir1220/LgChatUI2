@@ -3,8 +3,17 @@
 此文件为 Claude Code 开发前端时提供的指导文档。
 
 ## 开发要求
-- 当你要大量写css时，首先考虑是否应该复用已创建的标准样式，其次考虑是否应该用tailwind或shadcn的默认样式
-- 当你要必须创建组件、样式或行为时，思考它是否应该是共享、可复用的，如果是，那么创建可复用的内容，促进代码标准的统一。同时在frontend\claude.md中增加对复用内容的使用说明和要求
+
+### 样式系统规范
+- **复用优先**: 优先使用已创建的标准样式和TailwindCSS/shadcn默认样式
+- **组件化**: 创建共享、可复用的组件促进代码标准统一
+- **架构原则**: 遵循职责分离、组件组合等现代React最佳实践
+
+### 组件设计标准
+- **单一职责**: 每个组件只负责一个明确的功能 
+- **组合模式**: 使用组合而非继承，提高组件灵活性
+- **性能优化**: 合理使用React.memo、useMemo等优化手段
+- **类型安全**: 严格的TypeScript类型定义和接口设计
 
 ## 项目概览
 
@@ -103,10 +112,11 @@ src/
 - 开发者回复查看
 
 ### 共享模块 (shared/)
-- 智能图片展示和预览
-- 全局消息提示系统
-- 统一的HTTP请求处理
-- PWA相关功能（Service Worker、更新提示等）
+- **TabsFramework架构**: 组合式Tabs组件系统（TabsNavigator + LayoutManager + FrameworkConstants）
+- **设计系统**: 统一的常量管理和样式规范
+- **智能组件**: 图片展示、预览和消息提示系统
+- **HTTP客户端**: 统一的API请求处理
+- **PWA功能**: Service Worker、离线缓存和更新提示
 
 ### 类型系统 (types/)
 - 前端独立的TypeScript类型定义
@@ -139,10 +149,12 @@ src/
 - 与TailwindCSS无缝集成
 
 ### 组件开发规范
-- 明确的Props接口定义
-- 使用forwardRef进行ref传递
-- React.memo优化性能
-- 错误边界处理
+- **接口设计**: 明确的Props接口定义和类型约束
+- **Ref传递**: 使用forwardRef进行组件ref传递
+- **性能优化**: React.memo、useMemo、useCallback合理使用
+- **错误处理**: 错误边界和异常情况处理
+- **职责分离**: 遵循单一职责原则，组件功能聚焦
+- **组合优于继承**: 使用组合模式提高组件复用性
 
 ## 样式系统
 
@@ -174,17 +186,44 @@ src/
 - 错误恢复机制
 - 连接状态监控
 
+## 架构重构成果
+
+### TabsFramework组件系统重构（2025-08-31）
+
+**重构背景**：原TabsFramework组件违反单一职责原则，200+行代码混合了导航、布局、逻辑处理等多种职责。
+
+**重构成果**：
+- **职责分离**: 拆分为3个专职组件
+  - `FrameworkConstants.ts` - 设计系统常量中心化管理
+  - `TabsNavigator.tsx` - 导航逻辑和菜单处理
+  - `LayoutManager.tsx` - 布局管理和高度计算
+- **性能优化**: 添加useMemo缓存，避免不必要的重渲染
+- **代码简化**: 主组件从200+行精简到100行
+- **架构清晰**: 采用组合模式，提高可测试性和可维护性
+
+**技术特色**：
+```typescript
+// 组合式架构示例
+const TabsFramework = (props) => {
+  const navigationContent = <TabsNavigator {...navProps} />;
+  
+  return (
+    <LayoutManager 
+      navigationContent={navigationContent}
+      headerContent={headerContent}
+      hasSubMenu={hasSubMenu}
+    >
+      {children(activeTab, activeSubTab)}
+    </LayoutManager>
+  );
+};
+```
+
 ## 代码示例
 
-详细的代码示例和最佳实践请参考：
-
-- **React模式**: `../examples/frontend/react-patterns.tsx`
-- **样式系统**: `../examples/frontend/styling-patterns.tsx`
-- **API集成**: `../examples/frontend/api-integration.ts`
-
-这些文件包含了完整的实现示例，涵盖：
+详细的代码示例和最佳实践请参考 `../examples/frontend/` 目录，包含：
 - 组件设计和状态管理的最佳实践
-- TailwindCSS和响应式设计模式
+- TailwindCSS和响应式设计模式  
 - HTTP客户端和SSE流式处理
 - 错误处理和性能优化技巧
 
