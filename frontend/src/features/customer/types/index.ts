@@ -19,6 +19,8 @@ export interface CrmSite {
   completeDate: string | null;
   /** 验收时间 */
   acceptanceDate: string | null;
+  /** 申请日期（后端 b.create_time） */
+  createTime?: string | null;
   /** 商务类型 */
   businessType: string | null;
   /** 数量 */
@@ -48,6 +50,8 @@ export interface InstallGroup {
   projectSummary: string | null;
   /** 单据状态 */
   documentStatus: string;
+  /** 申请日期（来自 BUS_INSTALL_MAIN.create_time） */
+  createTime?: string | null;
   /** 完成时间 */
   completeDate: string | null;
   /** 验收时间 */

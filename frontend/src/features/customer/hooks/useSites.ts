@@ -74,6 +74,7 @@ export const useSites = (customerId?: string, customerName?: string) => {
         installCode: site.installCode,
         projectSummary: site.projectSummary,
         documentStatus: site.documentStatus,
+        createTime: (site as any).createTime ?? (site as any).create_time ?? null,
         completeDate: site.completeDate,
         acceptanceDate: site.acceptanceDate,
         sites: [site],

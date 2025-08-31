@@ -105,36 +105,35 @@ export const SitesByInstall: React.FC<SitesByInstallProps> = ({
           >
             <div className="rounded-lg border overflow-hidden">
               <CollapsibleTrigger asChild>
-                <div className="p-3 cursor-pointer">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-start gap-2 min-w-0">
-                      <Button variant="ghost" size="sm" className="p-0 h-auto w-6 mt-0.5">
+                <div className="p-3 cursor-pointer bg-muted/50 hover:bg-muted/60 border-l-4 border-primary/40">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Button variant="ghost" size="sm" className="p-0 h-auto w-6">
                         {openStates[group.installCode] ? (
                           <ChevronDown className="h-4 w-4" />
                         ) : (
                           <ChevronRight className="h-4 w-4" />
                         )}
                       </Button>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="text-sm font-medium truncate">{group.installCode}</span>
-                          {group.projectSummary && (
-                            <span className="text-sm font-medium text-primary/80 truncate">· {group.projectSummary}</span>
-                          )}
-                          <Badge 
-                            variant={group.documentStatus === '已验收' ? 'default' : 'secondary'}
-                            className="text-xs shrink-0"
-                          >
-                            {group.documentStatus}
-                          </Badge>
-                        </div>
-                        <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                          <span>完成: {formatDate(group.completeDate)}</span>
-                          {group.acceptanceDate && <span>验收: {formatDate(group.acceptanceDate)}</span>}
-                          <Badge variant="outline" className="text-xs">{group.sites.length} 项</Badge>
-                        </div>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-sm font-medium truncate">{group.installCode}</span>
+                        {group.projectSummary && (
+                          <span className="text-sm font-medium text-primary/80 truncate">· {group.projectSummary}</span>
+                        )}
+                        <Badge 
+                          variant={group.documentStatus === '已验收' ? 'default' : 'secondary'}
+                          className="text-xs shrink-0"
+                        >
+                          {group.documentStatus}
+                        </Badge>
                       </div>
                     </div>
+                    <Badge variant="outline" className="text-xs shrink-0">{group.sites.length} 项</Badge>
+                  </div>
+                  <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                    <span>申请: {formatDate((group as any).createTime || null)}</span>
+                    <span>完成: {formatDate(group.completeDate)}</span>
+                    <span>验收: {formatDate(group.acceptanceDate)}</span>
                   </div>
                 </div>
               </CollapsibleTrigger>
@@ -145,7 +144,7 @@ export const SitesByInstall: React.FC<SitesByInstallProps> = ({
                     <div key={`${site.installId}-${index}`} className="rounded-md bg-muted/30 p-2 flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="text-sm font-medium truncate">{site.siteName}</div>
-                        <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                           <Badge variant="outline" className="text-xs">{site.productSubcategory}</Badge>
                           {site.businessType ? (
                             <Badge variant="secondary" className="text-[10px]">{site.businessType}</Badge>
@@ -177,32 +176,35 @@ export const SitesByInstall: React.FC<SitesByInstallProps> = ({
                           onOpenChange={() => toggleOpen(group.installCode)}
                         >
                           <CollapsibleTrigger asChild>
-                            <div className="flex items-center justify-between px-4 py-3 cursor-pointer">
-                              <div className="flex items-center gap-3">
-                                <Button variant="ghost" size="sm" className="p-0 h-auto w-6">
-                                  {openStates[group.installCode] ? (
-                                    <ChevronDown className="h-4 w-4" />
-                                  ) : (
-                                    <ChevronRight className="h-4 w-4" />
-                                  )}
-                                </Button>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm font-medium">{group.installCode}</span>
-                                  {group.projectSummary && (
-                                    <span className="text-sm font-medium text-primary/80 max-w-72 truncate">· {group.projectSummary}</span>
-                                  )}
-                                  <Badge 
-                                    variant={group.documentStatus === '已验收' ? 'default' : 'secondary'}
-                                    className="text-xs"
-                                  >
-                                    {group.documentStatus}
-                                  </Badge>
+                            <div className="px-4 py-3 cursor-pointer bg-muted/60 hover:bg-muted/70 border-l-4 border-primary/40">
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                  <Button variant="ghost" size="sm" className="p-0 h-auto w-6">
+                                    {openStates[group.installCode] ? (
+                                      <ChevronDown className="h-4 w-4" />
+                                    ) : (
+                                      <ChevronRight className="h-4 w-4" />
+                                    )}
+                                  </Button>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm font-medium">{group.installCode}</span>
+                                    {group.projectSummary && (
+                                      <span className="text-sm font-medium text-primary/80 max-w-72 truncate">· {group.projectSummary}</span>
+                                    )}
+                                    <Badge 
+                                      variant={group.documentStatus === '已验收' ? 'default' : 'secondary'}
+                                      className="text-xs"
+                                    >
+                                      {group.documentStatus}
+                                    </Badge>
+                                  </div>
                                 </div>
-                              </div>
-                              <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                <span>完成: {formatDate(group.completeDate)}</span>
-                                {group.acceptanceDate && <span>验收: {formatDate(group.acceptanceDate)}</span>}
                                 <Badge variant="outline" className="text-xs">{group.sites.length} 项</Badge>
+                              </div>
+                              <div className="mt-1 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+                                <span>申请: {formatDate((group as any).createTime || null)}</span>
+                                <span>完成: {formatDate(group.completeDate)}</span>
+                                <span>验收: {formatDate(group.acceptanceDate)}</span>
                               </div>
                             </div>
                           </CollapsibleTrigger>

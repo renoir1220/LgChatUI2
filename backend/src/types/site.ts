@@ -22,6 +22,8 @@ export interface CrmSite {
   completeDate: Date | null;
   /** 验收时间 */
   acceptanceDate: Date | null;
+  /** 申请日期（b.create_time） */
+  createTime: Date | null;
   /** 商务类型 */
   businessType: string | null;
   /** 数量 */

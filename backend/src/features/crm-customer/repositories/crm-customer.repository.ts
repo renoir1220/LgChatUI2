@@ -22,6 +22,7 @@ export class CrmCustomerRepository {
           a.CP_DL as productCategory,
           a.CP_XL as productSubcategory,
           a.CP_MK as siteName,
+          b.CREATE_TIME as createTime,
           b.COMPLETE_DATE as completeDate,
           b.ACCEPTANCE_DATE as acceptanceDate,
           (select d.DICT_NAME from FWK_DICT d where convert(varchar,b.BUSINESS_TYPE)=d.DICT_CODE and d.DICTTYPE_ID =
@@ -37,7 +38,7 @@ export class CrmCustomerRepository {
       GROUP BY a.INSTALL_ID,a.INSTALL_CODE,
           b.STATUS,b.PROJECT_SUMMARY,b.IS_ENABLE,
           a.CP_DL,a.CP_XL,a.CP_MK,
-          b.COMPLETE_DATE,b.ACCEPTANCE_DATE,b.BUSINESS_TYPE,b.BUSINESS_TYPE_INIT,a.CP_DL_SORT_NUMBER,a.CP_XL_SORT_NUMBER,a.CP_MK_SORT_NUMBER,a.TYPE
+          b.CREATE_TIME,b.COMPLETE_DATE,b.ACCEPTANCE_DATE,b.BUSINESS_TYPE,b.BUSINESS_TYPE_INIT,a.CP_DL_SORT_NUMBER,a.CP_XL_SORT_NUMBER,a.CP_MK_SORT_NUMBER,a.TYPE
       ORDER BY a.INSTALL_CODE,a.CP_DL_SORT_NUMBER,a.CP_XL_SORT_NUMBER,a.CP_MK_SORT_NUMBER,a.TYPE,a.CP_DL,a.CP_XL,a.CP_MK
     `;
 
@@ -49,6 +50,7 @@ export class CrmCustomerRepository {
       productCategory: string;
       productSubcategory: string;
       siteName: string;
+      createTime: Date | null;
       completeDate: Date | null;
       acceptanceDate: Date | null;
       businessType: string | null;
@@ -64,6 +66,7 @@ export class CrmCustomerRepository {
       productCategory: row.productCategory,
       productSubcategory: row.productSubcategory,
       siteName: row.siteName,
+      createTime: row.createTime,
       completeDate: row.completeDate,
       acceptanceDate: row.acceptanceDate,
       businessType: row.businessType,
