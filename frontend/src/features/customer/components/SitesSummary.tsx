@@ -1,6 +1,7 @@
 import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '../../../components/ui/card';
+import { Card, CardContent } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
+import { Table, TableRow, TableBody, TableCell, TableCaption, TableHeader, TableHead } from '../../../components/ui/table';
 import { Loader2 } from 'lucide-react';
 import { useSites } from '../hooks/useSites';
 
@@ -20,6 +21,8 @@ export const SitesSummary: React.FC<SitesSummaryProps> = ({
   onRenderRightContent
 }) => {
   const { summaryData, loading, error } = useSites(customerId, customerName);
+
+  // 汇总页仅使用单层表格展示，不做分组/折叠
 
   // 当数据加载成功时，通知父组件右侧内容
   React.useEffect(() => {
@@ -67,31 +70,55 @@ export const SitesSummary: React.FC<SitesSummaryProps> = ({
         </div>
       )}
 
-      <Card>
-        <CardContent className="p-0">
-          <div className="divide-y divide-border">
-            {summaryData.map((item, index) => (
-              <div 
-                key={index} 
-                className="flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <Badge variant="outline" className="text-xs shrink-0">
-                    {item.productSubcategory}
-                  </Badge>
-                  <span className="font-medium text-sm">{item.siteName}</span>
-                </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  <span className="text-base font-semibold text-primary">
-                    {item.totalQuantity}
-                  </span>
-                  <span className="text-xs text-muted-foreground">个</span>
-                </div>
-              </div>
-            ))}
+      {/* Mobile: card list */}
+      <div className="md:hidden space-y-2" aria-hidden={false}>
+        {summaryData.map((item, index) => (
+          <div key={index} className="rounded-lg border p-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="font-medium truncate">{item.siteName}</div>
+              <div className="shrink-0 text-base font-semibold text-primary">{item.totalQuantity}</div>
+            </div>
+            <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="shrink-0">小类</span>
+              <Badge variant="outline" className="text-xs">{item.productSubcategory}</Badge>
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        ))}
+        <div className="text-xs text-muted-foreground">共 {summaryData.length} 条配置汇总</div>
+      </div>
+
+      {/* Desktop: table */}
+      <div className="hidden md:block" aria-hidden={false}>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-44">产品小类</TableHead>
+                  <TableHead>站点名称</TableHead>
+                  <TableHead className="w-24 text-right">数量</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {summaryData.map((item, index) => (
+                  <TableRow key={index}>
+                    <TableCell className="align-middle w-44">
+                      <Badge variant="outline" className="text-xs">
+                        {item.productSubcategory}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="font-medium">{item.siteName}</TableCell>
+                    <TableCell className="text-right w-24">
+                      <span className="text-base font-semibold text-primary">{item.totalQuantity}</span>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+              <TableCaption>共 {summaryData.length} 条配置汇总</TableCaption>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

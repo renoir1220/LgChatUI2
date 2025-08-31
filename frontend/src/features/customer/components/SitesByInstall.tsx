@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '../../../components/ui/card';
+import { Card, CardContent } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../../../components/ui/collapsible';
-import { ChevronDown, ChevronRight, Loader2, Calendar, CheckCircle } from 'lucide-react';
+import { Table, TableRow, TableBody, TableCell, TableHeader, TableHead } from '../../../components/ui/table';
+import { ChevronDown, ChevronRight, Loader2 } from 'lucide-react';
 import { useSites } from '../hooks/useSites';
 
 interface SitesByInstallProps {
@@ -94,92 +95,166 @@ export const SitesByInstall: React.FC<SitesByInstallProps> = ({
         </div>
       )}
 
-      <Card>
-        <CardContent className="p-0">
-          <div className="divide-y divide-border">
-            {installGroups.map((group) => (
-              <Collapsible 
-                key={group.installCode}
-                open={openStates[group.installCode] || false}
-                onOpenChange={() => toggleOpen(group.installCode)}
-              >
-                <CollapsibleTrigger asChild>
-                  <div className="flex items-center justify-between px-4 py-3 hover:bg-muted/30 cursor-pointer transition-colors">
-                    <div className="flex items-center gap-3">
-                      <Button variant="ghost" size="sm" className="p-0 h-auto">
+      {/* Mobile: card list with collapsible groups */}
+      <div className="md:hidden space-y-2" aria-hidden={false}>
+        {installGroups.map((group) => (
+          <Collapsible
+            key={group.installCode}
+            open={openStates[group.installCode] || false}
+            onOpenChange={() => toggleOpen(group.installCode)}
+          >
+            <div className="rounded-lg border overflow-hidden">
+              <CollapsibleTrigger asChild>
+                <div className="p-3 cursor-pointer">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-2 min-w-0">
+                      <Button variant="ghost" size="sm" className="p-0 h-auto w-6 mt-0.5">
                         {openStates[group.installCode] ? (
-                          <ChevronDown className="h-3 w-3" />
+                          <ChevronDown className="h-4 w-4" />
                         ) : (
-                          <ChevronRight className="h-3 w-3" />
+                          <ChevronRight className="h-4 w-4" />
                         )}
                       </Button>
-                      
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">
-                          {group.installCode}
-                        </span>
-                        <Badge 
-                          variant={group.documentStatus === '已验收' ? 'default' : 'secondary'}
-                          className="text-xs"
-                        >
-                          {group.documentStatus}
-                        </Badge>
-                        {group.projectSummary && (
-                          <span className="text-xs text-muted-foreground max-w-40 truncate">
-                            {group.projectSummary}
-                          </span>
-                        )}
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="text-sm font-medium truncate">{group.installCode}</span>
+                          {group.projectSummary && (
+                            <span className="text-sm font-medium text-primary/80 truncate">· {group.projectSummary}</span>
+                          )}
+                          <Badge 
+                            variant={group.documentStatus === '已验收' ? 'default' : 'secondary'}
+                            className="text-xs shrink-0"
+                          >
+                            {group.documentStatus}
+                          </Badge>
+                        </div>
+                        <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                          <span>完成: {formatDate(group.completeDate)}</span>
+                          {group.acceptanceDate && <span>验收: {formatDate(group.acceptanceDate)}</span>}
+                          <Badge variant="outline" className="text-xs">{group.sites.length} 项</Badge>
+                        </div>
                       </div>
                     </div>
-
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                      <span>完成: {formatDate(group.completeDate)}</span>
-                      {group.acceptanceDate && (
-                        <span>验收: {formatDate(group.acceptanceDate)}</span>
-                      )}
-                      <Badge variant="outline" className="text-xs">
-                        {group.sites.length} 项
-                      </Badge>
-                    </div>
                   </div>
-                </CollapsibleTrigger>
+                </div>
+              </CollapsibleTrigger>
 
-                <CollapsibleContent>
-                  <div className="px-4 pb-3">
-                    <div className="ml-6 pl-3 border-l-2 border-muted space-y-1">
-                      {group.sites.map((site, index) => (
-                        <div 
-                          key={`${site.installId}-${index}`} 
-                          className="flex items-center justify-between py-2 px-3 rounded hover:bg-muted/20 transition-colors"
-                        >
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-xs">
-                              {site.productSubcategory}
-                            </Badge>
-                            <span className="text-sm">{site.siteName}</span>
-                            {site.businessType && (
-                              <Badge variant="secondary" className="text-xs">
-                                {site.businessType}
-                              </Badge>
-                            )}
-                          </div>
-                          
-                          <div className="flex items-center gap-1">
-                            <span className="text-sm font-semibold text-primary">
-                              {site.quantity}
-                            </span>
-                            <span className="text-xs text-muted-foreground">个</span>
-                          </div>
+              <CollapsibleContent>
+                <div className="px-3 pb-3 space-y-2">
+                  {group.sites.map((site, index) => (
+                    <div key={`${site.installId}-${index}`} className="rounded-md bg-muted/30 p-2 flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium truncate">{site.siteName}</div>
+                        <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                          <Badge variant="outline" className="text-xs">{site.productSubcategory}</Badge>
+                          {site.businessType ? (
+                            <Badge variant="secondary" className="text-[10px]">{site.businessType}</Badge>
+                          ) : null}
                         </div>
-                      ))}
+                      </div>
+                      <div className="shrink-0 text-sm font-semibold text-primary">{site.quantity}</div>
                     </div>
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+                  ))}
+                </div>
+              </CollapsibleContent>
+            </div>
+          </Collapsible>
+        ))}
+      </div>
+
+      {/* Desktop: table with expandable groups */}
+      <div className="hidden md:block" aria-hidden={false}>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableBody>
+                {installGroups.map((group) => (
+                  <React.Fragment key={group.installCode}>
+                    <TableRow className="bg-muted/40 hover:bg-muted/40">
+                      <TableCell colSpan={5} className="p-0">
+                        <Collapsible 
+                          open={openStates[group.installCode] || false}
+                          onOpenChange={() => toggleOpen(group.installCode)}
+                        >
+                          <CollapsibleTrigger asChild>
+                            <div className="flex items-center justify-between px-4 py-3 cursor-pointer">
+                              <div className="flex items-center gap-3">
+                                <Button variant="ghost" size="sm" className="p-0 h-auto w-6">
+                                  {openStates[group.installCode] ? (
+                                    <ChevronDown className="h-4 w-4" />
+                                  ) : (
+                                    <ChevronRight className="h-4 w-4" />
+                                  )}
+                                </Button>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-medium">{group.installCode}</span>
+                                  {group.projectSummary && (
+                                    <span className="text-sm font-medium text-primary/80 max-w-72 truncate">· {group.projectSummary}</span>
+                                  )}
+                                  <Badge 
+                                    variant={group.documentStatus === '已验收' ? 'default' : 'secondary'}
+                                    className="text-xs"
+                                  >
+                                    {group.documentStatus}
+                                  </Badge>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                <span>完成: {formatDate(group.completeDate)}</span>
+                                {group.acceptanceDate && <span>验收: {formatDate(group.acceptanceDate)}</span>}
+                                <Badge variant="outline" className="text-xs">{group.sites.length} 项</Badge>
+                              </div>
+                            </div>
+                          </CollapsibleTrigger>
+
+                          <CollapsibleContent>
+                            <div className="px-2 pb-3">
+                              <Table>
+                                <TableHeader>
+                                  <TableRow className="bg-muted/20">
+                                    <TableHead className="w-8"></TableHead>
+                                    <TableHead className="w-44 text-xs text-muted-foreground">产品小类</TableHead>
+                                    <TableHead className="text-xs text-muted-foreground">站点名称</TableHead>
+                                    <TableHead className="w-32 text-xs text-muted-foreground">商务类型</TableHead>
+                                    <TableHead className="w-24 text-right text-xs text-muted-foreground">数量</TableHead>
+                                  </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                  {group.sites.map((site, index) => (
+                                    <TableRow key={`${site.installId}-${index}`} className="hover:bg-transparent">
+                                      <TableCell className="w-8"></TableCell>
+                                      <TableCell>
+                                        <Badge variant="outline" className="text-xs">
+                                          {site.productSubcategory}
+                                        </Badge>
+                                      </TableCell>
+                                      <TableCell className="font-medium">{site.siteName}</TableCell>
+                                      <TableCell>
+                                        {site.businessType ? (
+                                          <Badge variant="secondary" className="text-xs">{site.businessType}</Badge>
+                                        ) : (
+                                          <span className="text-xs text-muted-foreground">-</span>
+                                        )}
+                                      </TableCell>
+                                      <TableCell className="text-right">
+                                        <span className="text-sm font-semibold text-primary">{site.quantity}</span>
+                                      </TableCell>
+                                    </TableRow>
+                                  ))}
+                                </TableBody>
+                              </Table>
+                            </div>
+                          </CollapsibleContent>
+                        </Collapsible>
+                      </TableCell>
+                    </TableRow>
+                  </React.Fragment>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
