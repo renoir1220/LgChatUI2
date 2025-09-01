@@ -4,6 +4,7 @@
  */
 
 import { message } from 'antd';
+import { navigateTo } from './navigation';
 
 /** 命令处理函数签名 */
 export type CommandHandler = (params: Record<string, string>) => void | Promise<void>;
@@ -25,9 +26,9 @@ const commandHandlers: Record<string, CommandHandler> = {
     const encodedCustomerName = encodeURIComponent(customerName);
     const targetUrl = `/customer?customerName=${encodedCustomerName}&defaultTab=sites&defaultSubTab=summary`;
     
-    // 在新标签页打开
-    window.open(targetUrl, '_blank');
-    message.success(`正在跳转到${customerName}的站点汇总页面`);
+    // 单页应用导航（保持路由历史，支持 Esc/后退返回）
+    navigateTo(targetUrl);
+    // 不提示成功 toast，避免干扰跳转
   },
 
   /**
@@ -45,8 +46,7 @@ const commandHandlers: Record<string, CommandHandler> = {
     const encodedCustomerName = encodeURIComponent(customerName);
     const targetUrl = `/customer?customerName=${encodedCustomerName}&defaultTab=dynamic`;
     
-    window.open(targetUrl, '_blank');
-    message.success(`正在跳转到${customerName}的详情页面`);
+    navigateTo(targetUrl);
   },
 
   /**
@@ -113,7 +113,12 @@ const commandHandlers: Record<string, CommandHandler> = {
     if (newTab === 'true') {
       window.open(url, '_blank');
     } else {
-      window.location.href = url;
+      // 对站内相对路径使用 SPA 导航
+      if (url.startsWith('/')) {
+        navigateTo(url);
+      } else {
+        window.location.href = url;
+      }
     }
   },
 

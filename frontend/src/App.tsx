@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import React from 'react'
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import LoginScreen from './features/auth/components/LoginScreen'
 import ChatScreenRefactored from './features/chat/components/ChatScreenRefactored'
 import InfoFeedPage from './features/infofeed/pages/InfoFeedPage'
@@ -8,6 +9,15 @@ import RequireAuth from './features/auth/components/RequireAuth'
 import { NotificationProvider } from './features/shared/contexts/NotificationContext'
 import { SettingsProvider } from './features/shared/contexts/SettingsContext'
 import UpdatePrompt from './components/UpdatePrompt'
+import { setNavigator } from './features/shared/services/navigation'
+
+function NavBinder() {
+  const navigate = useNavigate();
+  // Bind global navigator once
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  React.useEffect(() => { setNavigator(navigate); }, [navigate]);
+  return null;
+}
 
 function App() {
   return (
@@ -15,6 +25,7 @@ function App() {
       <NotificationProvider>
         <div className="h-full flex flex-col">
           <Router>
+            <NavBinder />
             <Routes>
               <Route 
                 path="/login" 

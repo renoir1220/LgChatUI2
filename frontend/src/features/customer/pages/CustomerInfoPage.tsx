@@ -152,7 +152,13 @@ const CustomerInfoPage: React.FC<CustomerInfoPageProps> = ({
           activeSubTab={activeSubTab}
           onTabChange={handleTabChange}
           onSubTabChange={handleSubTabChange}
-          onBackClick={() => navigate('/')}
+          onBackClick={() => {
+            if (window.history.length > 1) {
+              window.history.back();
+            } else {
+              navigate('/');
+            }
+          }}
           headerContent={
             <CurrentCustomerBar 
               customerName={undefined}
@@ -317,7 +323,13 @@ const CustomerInfoPage: React.FC<CustomerInfoPageProps> = ({
         activeSubTab={activeSubTab}
         onTabChange={handleTabChange}
         onSubTabChange={handleSubTabChange}
-        onBackClick={() => navigate('/')}
+        onBackClick={() => {
+          if (window.history.length > 1) {
+            window.history.back();
+          } else {
+            navigate('/');
+          }
+        }}
         headerContent={
           <CurrentCustomerBar 
             customerName={currentCustomerName}
