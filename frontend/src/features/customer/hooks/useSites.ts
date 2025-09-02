@@ -93,7 +93,18 @@ export const useSites = (customerId?: string, customerName?: string) => {
         return a.siteName.localeCompare(b.siteName);
       })
     }))
-    .sort((a, b) => b.installCode.localeCompare(a.installCode)); // 按装机单号倒序
+    .sort((a, b) => {
+      // 按申请时间由近到远排序（最新的在前面）
+      const aTime = a.createTime ? new Date(a.createTime).getTime() : 0;
+      const bTime = b.createTime ? new Date(b.createTime).getTime() : 0;
+      
+      // 如果时间相同或都为空，则按装机单号倒序作为次要排序
+      if (aTime === bTime) {
+        return b.installCode.localeCompare(a.installCode);
+      }
+      
+      return bTime - aTime; // 时间倒序，最新的在前
+    });
 
   return {
     sites,

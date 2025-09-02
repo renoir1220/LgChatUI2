@@ -540,7 +540,12 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
             boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            // 确保按钮完全固定，不随页面滚动
+            transform: 'translate3d(0, 0, 0)', // 启用硬件加速
+            backfaceVisibility: 'hidden', // 优化渲染性能
+            WebkitBackfaceVisibility: 'hidden',
+            willChange: 'transform', // 提示浏览器这个元素会变化
           }}
         >
           <MenuOutlined />

@@ -75,7 +75,10 @@ export const RenameConversationDialog: React.FC<RenameConversationDialogProps> =
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent 
+        className="max-w-md" 
+        style={{ zIndex: 10000 }}
+      >
         <DialogHeader>
           <DialogTitle>重命名会话</DialogTitle>
           <DialogDescription>
