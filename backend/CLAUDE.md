@@ -156,74 +156,7 @@ GET  /api/requirements/search    # 需求多关键词搜索
 GET  /api/admin/*                # 后台管理（AdminGuard保护）
 ```
 
-### 需求搜索API详细文档
-
-#### GET /api/requirements/search
-
-根据关键词搜索需求列表，支持多关键词组合查询。
-
-**请求参数**：
-- `keywords` (string, 必选): 搜索关键词，支持空格或逗号分割的多个关键词
-- `page` (number, 可选): 页码，默认为1
-- `pageSize` (number, 可选): 每页数量，默认为10，最大100
-
-**搜索字段**：
-- `requirementName`: 需求名称
-- `content`: 内容描述
-- `requirementEvaluation`: 需求评估
-- `designContent`: 设计内容  
-- `productDescription`: 产品描述
-- `developmentDescription`: 开发描述
-
-**搜索逻辑**：
-- 多关键词时，所有关键词都必须匹配（AND关系）
-- 每个关键词可以在任意搜索字段中出现（OR关系）
-- 不限制关键词在字段中的出现顺序
-
-**使用示例**：
-```bash
-# 单个关键词搜索
-GET /api/requirements/search?keywords=医院
-
-# 多关键词搜索（空格分割）
-GET /api/requirements/search?keywords=医院 系统
-
-# 多关键词搜索（逗号分割）
-GET /api/requirements/search?keywords=医院,系统,升级
-
-# 带分页的搜索
-GET /api/requirements/search?keywords=平台 接口&page=2&pageSize=20
-```
-
-**返回格式**：
-```json
-{
-  "requirements": [
-    {
-      "requirementCode": "XQ_250707011",
-      "siteName": "",
-      "product": "区域病理送检平台", 
-      "requirementName": "区域送检平台支持外院条码",
-      "currentStage": "现场更新",
-      "content": "需求描述内容...",
-      "requirementEvaluation": "先有接口文档再开发",
-      "designContent": "设计方案...",
-      "productDescription": "产品描述...",
-      "developmentDescription": "开发说明...",
-      "creator": "创建人",
-      "customerName": "客户名称",
-      "versionName": "版本信息",
-      "createDate": "2025-07-07",
-      "lastUpdateDate": "2025-08-18"
-    }
-  ],
-  "total": 35
-}
-```
-
-**错误处理**：
-- 400: 参数验证失败（如keywords为空）
-- 500: 服务器内部错误（如数据库连接失败）
+> 📖 **API详细文档**: 完整的API使用说明请参考 [`../docs/REQUIREMENTS_API.md`](../docs/REQUIREMENTS_API.md)
 
 ## 开发规范
 
