@@ -39,6 +39,30 @@ export class ConversationsRepository {
     return rows[0];
   }
 
+  // 获取单个会话的关键信息（用于继续对话时回填KB/模型等）
+  async getById(conversationId: string): Promise<{
+    id: string;
+    title: string;
+    knowledgeBaseId: string | null;
+    modelId: string | null;
+    difyConversationId: string | null;
+    createdAt: string;
+  } | null> {
+    const rows = await this.db.queryWithErrorHandling<any>(
+      `SELECT CONVERT(varchar(36), CONVERSATION_ID) AS id,
+              TITLE as title,
+              KNOWLEDGE_BASE_ID as knowledgeBaseId,
+              CONVERT(varchar(36), MODEL_ID) as modelId,
+              DIFY_CONVERSATION_ID as difyConversationId,
+              CONVERT(varchar(33), CREATED_AT, 126) AS createdAt
+       FROM AI_CONVERSATIONS
+       WHERE CONVERSATION_ID = @p0`,
+      [conversationId],
+      '获取会话详情'
+    );
+    return rows.length > 0 ? (rows[0] as any) : null;
+  }
+
   // 列出与指定用户相关的会话（根据 USER_ID 字段关联）
   async listByUser(
     userId: string,

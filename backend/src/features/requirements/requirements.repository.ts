@@ -42,8 +42,9 @@ export class RequirementsRepository {
         ISNULL(YFFP_VERSION_NAME,'') AS versionName,
         CONVERT(varchar,create_time,23) AS createDate,
         CONVERT(varchar,LAST_UPDATE_TIME,23) AS lastUpdateDate
-      FROM [LogeneCrm].[dbo].[BUS_XQ]
-      WHERE CUSTOMER_NAME = @p0
+      FROM [BUS_XQ] xq 
+	      inner join BASE_CUSTOMER c on xq.CUSTOMER_ID=c.CUSTOMER_ID
+      WHERE c.Name = @p0
       ORDER BY XQ_CODE DESC
       OFFSET @p1 ROWS
       FETCH NEXT @p2 ROWS ONLY
@@ -163,7 +164,7 @@ export class RequirementsRepository {
         ISNULL(YFFP_VERSION_NAME,'') AS versionName,
         CONVERT(varchar,create_time,23) AS createDate,
         CONVERT(varchar,LAST_UPDATE_TIME,23) AS lastUpdateDate
-      FROM [LogeneCrm].[dbo].[BUS_XQ]
+      FROM [dbo].[BUS_XQ]
       WHERE ${whereClause}
       ORDER BY XQ_CODE DESC
       OFFSET @p${parameters.length} ROWS
@@ -265,7 +266,7 @@ export class RequirementsRepository {
 
     const query = `
       SELECT COUNT(*) as total
-      FROM [LogeneCrm].[dbo].[BUS_XQ]
+      FROM [BUS_XQ]
       WHERE ${whereClause}
     `;
 
@@ -302,8 +303,9 @@ export class RequirementsRepository {
   async countByCustomerName(customerName: string): Promise<number> {
     const query = `
       SELECT COUNT(*) as total
-      FROM [LogeneCrm].[dbo].[BUS_XQ]
-      WHERE CUSTOMER_NAME = @p0
+      FROM [BUS_XQ] xq 
+	      inner join BASE_CUSTOMER c on xq.CUSTOMER_ID=c.CUSTOMER_ID
+      WHERE c.Name = @p0
     `;
 
     try {

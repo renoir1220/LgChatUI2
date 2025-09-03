@@ -150,20 +150,21 @@ export class DifyService {
 
       return response.data as NodeJS.ReadableStream;
     } catch (error) {
-      console.error('Dify API error:', error);
-      // 打印详细的错误信息
+      // 收集详细错误信息，并以可读方式返回给上层
+      let details = '';
       if (error && typeof error === 'object' && 'response' in error) {
         const axiosError = error as {
-          response: { status: number; headers: unknown; data: unknown };
+          response: { status: number; statusText?: string; headers: any; data: any };
         };
-        console.error('Dify API response status:', axiosError.response.status);
-        console.error(
-          'Dify API response headers:',
-          axiosError.response.headers,
-        );
-        console.error('Dify API response data:', axiosError.response.data);
+        const { status, statusText, data } = axiosError.response || {} as any;
+        const dataStr = typeof data === 'string' ? data : JSON.stringify(data);
+        details = `[${status || 'UNKNOWN'}${statusText ? ' ' + statusText : ''}] ${dataStr || ''}`;
+        console.error('Dify API error:', details);
+      } else {
+        details = (error as any)?.message || String(error);
+        console.error('Dify API error:', details);
       }
-      throw new Error('Failed to call Dify API');
+      throw new Error(`Failed to call Dify API: ${details}`);
     }
   }
 

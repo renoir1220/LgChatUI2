@@ -3,8 +3,13 @@
  * 处理AI消息中按钮的各种命令，如页面跳转、数据导出等
  */
 
+import React from 'react';
+import { createRoot } from 'react-dom/client';
 import { message } from 'antd';
 import { navigateTo } from './navigation';
+import { apiGet } from './api';
+import { ReadmeDetailModal } from '../components/ReadmeDetailModal';
+import type { ReadmeApiResponse } from '@types';
 
 /** 命令处理函数签名 */
 export type CommandHandler = (params: Record<string, string>) => void | Promise<void>;
@@ -165,6 +170,68 @@ const commandHandlers: Record<string, CommandHandler> = {
     } catch (error) {
       console.error('复制失败:', error);
       message.error('复制失败');
+    }
+  },
+
+  /**
+   * 显示README配置信息
+   * 参数: readmeId - README记录的ID
+   */
+  showReadme: async (params) => {
+    const { readmeId } = params;
+    if (!readmeId) {
+      message.error('缺少README ID参数');
+      return;
+    }
+
+    // 显示加载提示
+    const loadingMessage = message.loading('正在加载README内容...', 0);
+
+    try {
+      // 调用后端API获取README详情
+      const response = await apiGet<ReadmeApiResponse>(`/api/readme-search/${readmeId}`);
+      
+      // 关闭加载提示
+      loadingMessage();
+
+      if (!response.success || !response.data) {
+        message.error('获取README内容失败');
+        return;
+      }
+
+      const readme = response.data;
+      
+      // 获取鼠标点击位置
+      const clickPosition = (window as any).lastClickPosition || { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+
+      // 创建模态框容器
+      const modalContainer = document.createElement('div');
+      modalContainer.id = 'readme-modal-container';
+      document.body.appendChild(modalContainer);
+
+      // 创建React根并渲染组件
+      const root = createRoot(modalContainer);
+      
+      const handleClose = () => {
+        root.unmount();
+        document.body.removeChild(modalContainer);
+      };
+
+      root.render(
+        React.createElement(ReadmeDetailModal, {
+          readme: readme,
+          visible: true,
+          onClose: handleClose,
+          position: clickPosition
+        })
+      );
+
+    } catch (error) {
+      // 关闭加载提示
+      loadingMessage();
+      
+      console.error('获取README失败:', error);
+      message.error('获取README内容失败，请重试');
     }
   }
 };

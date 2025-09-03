@@ -8,13 +8,23 @@ AI消息操作按钮功能允许在AI回答中嵌入可交互的按钮，用户�
 
 ### 基本语法
 ```
-[BUTTON:按钮名称|命令|参数1=值1&参数2=值2]
+[BUTTON:按钮名称|命令|业务参数|样式参数]
 ```
 
 ### 参数说明
 - **按钮名称**: 在页面上显示的按钮文本
 - **命令**: 要执行的操作命令
-- **参数**: 传递给命令的参数，使用URL查询参数格式
+- **业务参数**: 传递给命令的业务参数，使用URL查询参数格式
+- **样式参数**: 控制按钮显示样式的UI参数（可选）
+
+### 样式控制
+通过第四段的样式参数控制按钮显示样式：
+- `style=button` 或省略样式参数: 显示为标准按钮样式
+- `style=link`: 显示为行内超链样式（蓝色下划线文字）
+
+### 格式兼容性
+- **四段式格式**（推荐）: `[BUTTON:名称|命令|业务参数|样式参数]`
+- **三段式格式**（向后兼容）: `[BUTTON:名称|命令|业务参数]`
 
 ## 使用示例
 
@@ -23,7 +33,7 @@ AI消息操作按钮功能允许在AI回答中嵌入可交互的按钮，用户�
 ```
 无锡市人民医院目前有12个RPT站点，分布在不同的科室和楼层。
 
-[BUTTON:查看详情|navigate_customer_sites|customerName=无锡市人民医院]
+[BUTTON:查看详情|navigate_customer_sites|customerName=无锡市人民医院|]
 ```
 
 ### 2. 多个操作按钮
@@ -34,16 +44,43 @@ AI消息操作按钮功能允许在AI回答中嵌入可交互的按钮，用户�
 - MRI站点：8个
 - CT站点：12个
 
-[BUTTON:查看详情|navigate_customer_sites|customerName=北京大学第三医院]
-[BUTTON:导出数据|export_customer_sites|customerName=北京大学第三医院&format=excel]
-[BUTTON:添加站点|navigate_add_site|customerName=北京大学第三医院&type=rpt]
+[BUTTON:查看详情|navigate_customer_sites|customerName=北京大学第三医院|]
+[BUTTON:导出数据|export_customer_sites|customerName=北京大学第三医院&format=excel|]
+[BUTTON:添加站点|navigate_add_site|customerName=北京大学第三医院&type=rpt|]
 ```
 
 ### 3. 通用页面跳转
 ```
 相关信息可以在后台管理系统中查看。
 
-[BUTTON:打开后台|navigate|url=/admin/dashboard&newTab=true]
+[BUTTON:打开后台|navigate|url=/admin/dashboard&newTab=true|]
+```
+
+### 4. 链接样式按钮
+```
+更多详细信息可以查看官方文档。
+
+[BUTTON:查看文档|navigate|url=/docs/api|style=link]
+[BUTTON:联系客服|show_message|text=请联系客服获取帮助&type=info|style=link]
+```
+
+### 5. 混合样式按钮
+```
+北京大学第三医院的站点分析如下：
+- RPT站点：15个
+- MRI站点：8个  
+- CT站点：12个
+
+[BUTTON:查看详情|navigate_customer_sites|customerName=北京大学第三医院|]
+[BUTTON:快速导出|export_customer_sites|customerName=北京大学第三医院&format=excel|style=link]
+```
+
+### 6. README配置详情查看
+```
+找到相关的README配置信息，记录ID为: 12345
+
+[BUTTON:查看配置详情|showReadme|readmeId=12345|]
+[BUTTON:查看详细信息|showReadme|readmeId=67890|style=link]
 ```
 
 ## 可用命令列表
@@ -95,6 +132,12 @@ AI消息操作按钮功能允许在AI回答中嵌入可交互的按钮，用户�
   - `text` (必需): 提示文本
   - `type` (可选): 消息类型（success, info, warning, error），默认 info
 
+#### showReadme
+显示README配置详情弹出层
+- **参数**:
+  - `readmeId` (必需): README记录的ID
+- **功能**: 调用后端API获取README详细信息，在弹出层中展示
+
 ## 技术实现
 
 ### 前端组件结构
@@ -132,11 +175,29 @@ frontend/src/features/shared/
 
 ## 按钮样式
 
-### 自动样式选择
-系统会根据命令类型自动选择合适的按钮样式：
-- **主要操作** (`navigate_customer_*`, `export_*`): 默认样式（蓝色背景）
-- **次要操作** (`add_*`, `copy_*`): 轮廓样式（透明背景，蓝色边框）
-- **其他操作**: 幽灵样式（透明背景，悬停时变色）
+### 样式类型
+系统支持两种按钮显示样式：
+
+#### 1. 标准按钮样式 (button)
+- **外观**: 带背景色和边框的传统按钮样式
+- **使用场景**: 重要操作、主要功能入口
+- **自动样式选择**: 系统会根据命令类型自动选择合适的按钮样式
+  - **主要操作** (`navigate_customer_*`, `export_*`): 默认样式（蓝色背景）
+  - **次要操作** (`add_*`, `copy_*`): 轮廓样式（透明背景，蓝色边框）
+  - **其他操作**: 幽灵样式（透明背景，悬停时变色）
+
+#### 2. 链接样式 (link)
+- **外观**: 蓝色下划线文字，类似超链接
+- **使用场景**: 轻量级操作、补充功能、不希望过于突出的操作
+- **交互效果**: 悬停时文字颜色变深，保持下划线样式
+
+### 样式指定方式
+在第四段样式参数中指定：
+```
+[BUTTON:按钮名称|命令|业务参数|style=link]     # 链接样式
+[BUTTON:按钮名称|命令|业务参数|style=button]   # 按钮样式
+[BUTTON:按钮名称|命令|业务参数|]              # 按钮样式（默认）
+```
 
 ### 图标映射
 每种命令都有对应的图标：
@@ -145,6 +206,7 @@ frontend/src/features/shared/
 - 查看详情: 眼睛图标
 - 添加操作: 加号图标
 - 复制操作: 复制图标
+- README查看: 眼睛图标
 
 ## 自定义扩展
 

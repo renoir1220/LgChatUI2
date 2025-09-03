@@ -40,7 +40,8 @@ function getCommandIcon(command: string): React.ReactNode {
     navigate_add_site: <Plus className="h-4 w-4" />,
     navigate: <Navigation className="h-4 w-4" />,
     copy_text: <Copy className="h-4 w-4" />,
-    show_message: <MessageCircle className="h-4 w-4" />
+    show_message: <MessageCircle className="h-4 w-4" />,
+    showReadme: <Eye className="h-4 w-4" />
   };
   
   // 通用匹配规则
@@ -113,6 +114,21 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
         const icon = getCommandIcon(button.command);
         const customClassName = getButtonClassName(button.command);
         
+        // 如果指定了link样式，渲染为行内超链样式
+        if (button.style === 'link') {
+          return (
+            <button
+              key={`${button.command}-${index}`}
+              onClick={() => handleButtonClick(button)}
+              className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 underline text-sm font-medium transition-colors cursor-pointer bg-transparent border-none p-0"
+            >
+              {icon}
+              <span>{button.label}</span>
+            </button>
+          );
+        }
+        
+        // 默认按钮样式
         return (
           <Button
             key={`${button.command}-${index}`}

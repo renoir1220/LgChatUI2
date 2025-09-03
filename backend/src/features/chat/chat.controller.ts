@@ -91,6 +91,19 @@ export class ChatController {
           throw new BadRequestException('Conversation not found');
         }
         this.logger.debug('会话所有权验证通过', { conversationId, userId });
+
+        // 读取会话详情，用于回填知识库/模型等信息
+        const convo = await this.conversations.getById(conversationId);
+        if (convo) {
+          // 若请求体未传知识库，则回填为会话存储值
+          if (!body.knowledgeBaseId && convo.knowledgeBaseId) {
+            body.knowledgeBaseId = convo.knowledgeBaseId;
+          }
+          // 若请求体未传模型，则回填为会话存储值
+          if (!body.modelId && convo.modelId) {
+            body.modelId = convo.modelId;
+          }
+        }
       }
 
       // 设置流式响应headers（包含会话ID）

@@ -60,21 +60,82 @@ export class ReadmeSearchResponseDto {
 }
 
 /**
- * 搜索建议响应DTO
+ * README配置信息实体
  */
-export class SearchSuggestionsResponseDto {
+export interface ReadmeEntity {
+  /**
+   * README记录ID
+   */
+  id: string;
+
+  /**
+   * 功能标题/说明
+   */
+  title: string;
+
+  /**
+   * 站点类型
+   */
+  siteType?: string;
+
+  /**
+   * 模块名称
+   */
+  moduleName?: string;
+
+  /**
+   * 开关/参数配置
+   */
+  switch?: string;
+
+  /**
+   * 版本号
+   */
+  version?: number;
+
+  /**
+   * 版本日期
+   */
+  versionDate?: Date;
+
+  /**
+   * 客户名称
+   */
+  customerName?: string;
+
+  /**
+   * SQL语句
+   */
+  sql?: string;
+
+  /**
+   * 创建时间
+   */
+  createTime?: Date;
+
+  /**
+   * 序列号
+   */
+  seqNo?: number;
+}
+
+/**
+ * README根据ID查询响应DTO
+ */
+export class ReadmeByIdResponseDto {
   /**
    * 操作是否成功
    */
   success: boolean;
 
   /**
-   * 建议关键词列表
+   * README配置信息对象
    */
-  data: string[];
+  data: ReadmeEntity;
 
   /**
    * 响应消息
    */
   message: string;
 }
+

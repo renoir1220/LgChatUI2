@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CrmDatabaseService } from '../../shared/database/database.service';
 import { AppLoggerService } from '../../shared/services/logger.service';
+import { ReadmeEntity } from './dto/readme-search.dto';
 
 /**
  * README配置信息搜索服务
@@ -8,7 +9,8 @@ import { AppLoggerService } from '../../shared/services/logger.service';
  */
 @Injectable()
 export class ReadmeSearchService {
-  private readonly MAX_RESULT_LENGTH = 10000; // 最大返回结果长度限制
+  private readonly MAX_RESULT_LENGTH = 10000; // 最大返回结果长度限制（保留但不再使用二次查询）
+  private readonly MAX_RECORDS = 50; // 单次返回最大记录数
 
   constructor(
     private readonly databaseService: CrmDatabaseService,
@@ -21,12 +23,21 @@ export class ReadmeSearchService {
    * @returns 格式化的搜索结果或长度限制提示
    */
   async searchReadmeConfigs(keywords: string[]): Promise<string> {
-    // 构建动态WHERE条件
-    const whereConditions = keywords
-      .map((_, index) => `FUNCTION1 LIKE @p${index}`)
-      .join(' AND ');
+    // 构建动态WHERE条件：
+    // - 同一个字段内对多个关键词使用 AND（该字段需同时匹配所有关键词）
+    // - 各字段之间使用 OR（任一字段满足上面的 AND 条件即可）
+    // 形如：
+    // (FUNCTION1 LIKE @p0 AND FUNCTION1 LIKE @p1 ...) 
+    //   OR (SWITCH LIKE @p0 AND SWITCH LIKE @p1 ...)
+    //   OR (CUSTOMER_NAME LIKE @p0 AND ...)
+    const searchFields = ['FUNCTION1', 'SWITCH', 'CUSTOMER_NAME', 'SITE_TYPE', 'MODULE_NAME'];
+    const whereConditions = keywords.length === 0
+      ? '1=1'
+      : searchFields
+          .map((field) => `(${keywords.map((_, idx) => `${field} LIKE @p${idx}`).join(' AND ')})`)
+          .join(' OR ');
 
-    // 第一次查询：不过滤SWITCH
+    // 单次查询：按有SWITCH优先排序，并限制返回条数
     const basicSql = `
       SELECT 
         '## 说明:' + ISNULL(FUNCTION1, '') + CHAR(13) + CHAR(10) +
@@ -35,17 +46,25 @@ export class ReadmeSearchService {
         '参数:' + ISNULL(SWITCH, '') + CHAR(13) + CHAR(10) +
         '版本:' + ISNULL(CAST(VER AS NVARCHAR), '') + ' - ' + ISNULL(CONVERT(NVARCHAR, VER_DATE, 120), '') + CHAR(13) + CHAR(10) +
         '用户:' + ISNULL(CUSTOMER_NAME, '') + CHAR(13) + CHAR(10) +
-        'SQL:' + ISNULL(SQL, '') + CHAR(13) + CHAR(10) AS formatted_result,
+        'SQL:' + ISNULL(SQL, '') + CHAR(13) + CHAR(10) +
+        '原文链接：'+ '[BUTTON:查看|showReadme|readmeId='+convert(varchar(50),README_ID)+'|style=link]' + CHAR(13) + CHAR(10) 
+          AS formatted_result,
         README_ID,
         SEQ_NO
       FROM BUS_README_LIST
       WHERE ${whereConditions}
-      ORDER BY CREATE_TIME DESC, SEQ_NO DESC
+      ORDER BY 
+        CASE WHEN SWITCH IS NOT NULL AND SWITCH != '' THEN 0 ELSE 1 END,
+        CREATE_TIME DESC, SEQ_NO DESC
+      OFFSET 0 ROWS FETCH NEXT ${this.MAX_RECORDS} ROWS ONLY
     `;
 
     try {
       // 准备参数，使用数据库服务的query方法
       const params = keywords.map((keyword) => `%${keyword.trim()}%`);
+
+      console.log('Executing SQL:', basicSql);
+      console.log('With parameters:', params);
 
       // 执行第一次查询
       const result = await this.databaseService.queryWithErrorHandling(
@@ -64,89 +83,10 @@ export class ReadmeSearchService {
         '\n\n' + '='.repeat(50) + '\n\n',
       );
 
-      // 检查结果长度
-      if (combinedResult.length > this.MAX_RESULT_LENGTH) {
-        this.logger.warn('README搜索结果过大，尝试只查询有开关配置的记录', {
-          keywords,
-          resultLength: combinedResult.length,
-          maxLength: this.MAX_RESULT_LENGTH,
-          recordCount: result.length,
-        });
-
-        // 第二次查询：只查询SWITCH不为null的记录
-        const filteredSql = `
-          SELECT 
-            '## 说明:' + ISNULL(FUNCTION1, '') + CHAR(13) + CHAR(10) +
-            '站点名称:' + ISNULL(SITE_TYPE, '') + CHAR(13) + CHAR(10) +
-            '模块名称:' + ISNULL(MODULE_NAME, '') + CHAR(13) + CHAR(10) +
-            '参数:' + ISNULL(SWITCH, '') + CHAR(13) + CHAR(10) +
-            '版本:' + ISNULL(CAST(VER AS NVARCHAR), '') + ' - ' + ISNULL(CONVERT(NVARCHAR, VER_DATE, 120), '') + CHAR(13) + CHAR(10) +
-            '用户:' + ISNULL(CUSTOMER_NAME, '') + CHAR(13) + CHAR(10) +
-            'SQL:' + ISNULL(SQL, '') + CHAR(13) + CHAR(10) AS formatted_result,
-            README_ID,
-            SEQ_NO
-          FROM BUS_README_LIST
-          WHERE ${whereConditions}
-            AND SWITCH IS NOT NULL 
-            AND SWITCH != ''
-          ORDER BY CREATE_TIME DESC, SEQ_NO DESC
-        `;
-
-        // 执行过滤后的查询
-        const filteredResult =
-          await this.databaseService.queryWithErrorHandling(
-            filteredSql,
-            params,
-            'README过滤查询',
-          );
-
-        if (!filteredResult || filteredResult.length === 0) {
-          return '查询结果过大且没有找到带开关配置的项目，请使用更具体的关键词。';
-        }
-
-        // 格式化过滤后的结果
-        const filteredFormattedResults = filteredResult.map(
-          (row: any) => row.formatted_result,
-        );
-        const filteredCombinedResult = filteredFormattedResults.join(
-          '\n\n' + '='.repeat(50) + '\n\n',
-        );
-
-        // 再次检查长度
-        if (filteredCombinedResult.length > this.MAX_RESULT_LENGTH) {
-          this.logger.warn('过滤后结果仍然过大', {
-            keywords,
-            filteredRecordCount: filteredResult.length,
-          });
-          return '查询结果过大，请缩小查询范围';
-        }
-
-        this.logger.log('README搜索成功（已过滤）', {
-          keywords,
-          originalCount: result.length,
-          filteredCount: filteredResult.length,
-          resultLength: filteredCombinedResult.length,
-        });
-
-        return `${filteredCombinedResult}\n\n**注意**: 由于结果较多，已自动过滤为只显示有开关配置的 ${filteredResult.length} 条记录（原始匹配 ${result.length} 条）。`;
-      }
-
       this.logger.log('README搜索成功', {
         keywords,
         resultLength: combinedResult.length,
         recordCount: result.length,
-      });
-
-      // 添加详细调试日志
-      console.log('📊 README搜索详细结果:', {
-        查询到的记录数: result.length,
-        每条记录长度: result.map((row: any, index: number) => ({
-          index: index + 1,
-          length: row.formatted_result.length,
-          preview: row.formatted_result.substring(0, 100) + '...',
-        })),
-        合并后总长度: combinedResult.length,
-        分隔符数量: (combinedResult.match(/={50}/g) || []).length,
       });
 
       return combinedResult;
@@ -159,67 +99,70 @@ export class ReadmeSearchService {
     }
   }
 
+
   /**
-   * 获取搜索建议关键词
-   * @returns 常用关键词建议列表
+   * 根据README_ID查询单条README配置信息
+   * @param readmeId README记录的ID
+   * @returns README配置信息对象
    */
-  async getSearchSuggestions(): Promise<string[]> {
+  async getReadmeById(readmeId: string): Promise<ReadmeEntity | null> {
     const sql = `
-      SELECT TOP 20
-        VALUE as keyword,
-        COUNT(*) as usage_count
-      FROM (
-        SELECT DISTINCT 
-          CASE 
-            WHEN CHARINDEX('切片', FUNCTION1) > 0 THEN '切片'
-            WHEN CHARINDEX('报告', FUNCTION1) > 0 THEN '报告'
-            WHEN CHARINDEX('列表', FUNCTION1) > 0 THEN '列表'
-            WHEN CHARINDEX('打印', FUNCTION1) > 0 THEN '打印'
-            WHEN CHARINDEX('查询', FUNCTION1) > 0 THEN '查询'
-            WHEN CHARINDEX('登记', FUNCTION1) > 0 THEN '登记'
-            WHEN CHARINDEX('工作站', FUNCTION1) > 0 THEN '工作站'
-            WHEN CHARINDEX('状态', FUNCTION1) > 0 THEN '状态'
-            WHEN CHARINDEX('设置', FUNCTION1) > 0 THEN '设置'
-            WHEN CHARINDEX('导出', FUNCTION1) > 0 THEN '导出'
-          END as VALUE
-        FROM BUS_README_LIST
-        WHERE FUNCTION1 IS NOT NULL AND LEN(FUNCTION1) > 0
-      ) keywords
-      WHERE VALUE IS NOT NULL
-      GROUP BY VALUE
-      ORDER BY COUNT(*) DESC
+      SELECT 
+        README_ID,
+        FUNCTION1,
+        SITE_TYPE,
+        MODULE_NAME,
+        SWITCH,
+        VER,
+        VER_DATE,
+        CUSTOMER_NAME,
+        SQL,
+        CREATE_TIME,
+        SEQ_NO
+      FROM BUS_README_LIST
+      WHERE README_ID = @p0
     `;
 
     try {
-      const result = await this.databaseService.queryWithErrorHandling(
+      const result: any[] = await this.databaseService.queryWithErrorHandling(
         sql,
-        [],
-        '获取搜索建议关键词',
+        [readmeId],
+        'README根据ID查询',
       );
 
-      const suggestions = result.map((row: any) => row.keyword);
+      if (!result || result.length === 0) {
+        return null;
+      }
 
-      this.logger.log('获取搜索建议成功', {
-        suggestionCount: suggestions.length,
+      const readmeData: any = result[0];
+
+      this.logger.log('README根据ID查询成功', {
+        readmeId,
+        hasData: !!readmeData,
+        function1Length: readmeData.FUNCTION1?.length || 0,
       });
 
-      return suggestions;
-    } catch (error) {
-      this.logger.error('获取搜索建议失败', error);
+      // 将数据库结果转换为ReadmeEntity格式
+      const readmeEntity: ReadmeEntity = {
+        id: readmeData.README_ID as string,
+        title: readmeData.FUNCTION1 || '无标题',
+        siteType: readmeData.SITE_TYPE as string | undefined,
+        moduleName: readmeData.MODULE_NAME as string | undefined,
+        switch: readmeData.SWITCH as string | undefined,
+        version: readmeData.VER as number | undefined,
+        versionDate: readmeData.VER_DATE as Date | undefined,
+        customerName: readmeData.CUSTOMER_NAME as string | undefined,
+        sql: readmeData.SQL as string | undefined,
+        createTime: readmeData.CREATE_TIME as Date | undefined,
+        seqNo: readmeData.SEQ_NO as number | undefined,
+      };
 
-      // 返回默认建议
-      return [
-        '切片',
-        '报告',
-        '列表',
-        '打印',
-        '查询',
-        '登记',
-        '工作站',
-        '状态',
-        '设置',
-        '导出',
-      ];
+      return readmeEntity;
+    } catch (error: any) {
+      this.logger.error('README根据ID查询失败', error, {
+        readmeId,
+      });
+      throw new Error(`根据ID查询README失败: ${error.message}`);
     }
   }
 

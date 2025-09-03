@@ -4,7 +4,9 @@ import {
   Post,
   Body,
   Query,
+  Param,
   BadRequestException,
+  NotFoundException,
   Req,
 } from '@nestjs/common';
 import { ReadmeSearchService } from './readme-search.service';
@@ -98,24 +100,48 @@ export class ReadmeSearchController {
     }
   }
 
+
   /**
-   * 获取搜索建议（可选功能）
-   * @returns 常用搜索关键词建议
+   * 根据ID查询单条README配置信息
+   * @param id README记录的ID
+   * @returns README配置信息对象
    */
-  @Get('suggestions')
-  async getSearchSuggestions() {
+  @Get(':id')
+  async getReadmeById(@Param('id') id: string) {
+    this.logger.log('README根据ID查询请求', { readmeId: id });
+
+    // 验证ID参数
+    if (!id || id.trim().length === 0) {
+      throw new BadRequestException('README ID不能为空');
+    }
+
     try {
-      const suggestions = await this.readmeSearchService.getSearchSuggestions();
+      const result = await this.readmeSearchService.getReadmeById(id);
+
+      if (!result) {
+        throw new NotFoundException(`未找到ID为 ${id} 的README配置信息`);
+      }
+
+      this.logger.log('README根据ID查询完成', {
+        readmeId: id,
+        hasResult: !!result,
+      });
 
       return {
         success: true,
-        data: suggestions,
-        message: '获取搜索建议成功',
+        data: result,
+        message: '获取README配置信息成功',
       };
     } catch (error) {
-      this.logger.error('获取搜索建议失败', error);
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
 
-      throw new BadRequestException(`获取搜索建议失败: ${error.message}`);
+      this.logger.error('README根据ID查询失败', error, {
+        readmeId: id,
+      });
+
+      throw new BadRequestException(`查询失败: ${error.message}`);
     }
   }
 
