@@ -151,12 +151,15 @@ POST /api/suggestions            # 建议管理
 GET  /api/infofeed               # 信息流
 GET  /api/crm-customer/sites/:id # CRM客户信息
 GET  /api/requirements/search    # 需求多关键词搜索
+GET  /api/questions/search       # 常见问题多关键词搜索
 
 # 后台管理
 GET  /api/admin/*                # 后台管理（AdminGuard保护）
 ```
 
-> 📖 **API详细文档**: 完整的API使用说明请参考 [`../docs/REQUIREMENTS_API.md`](../docs/REQUIREMENTS_API.md)
+> 📖 **API详细文档**: 
+> - Requirements API: [`../docs/REQUIREMENTS_API.md`](../docs/REQUIREMENTS_API.md)
+> - Questions API: [`../docs/QUESTIONS_API.md`](../docs/QUESTIONS_API.md)
 
 ## 开发规范
 

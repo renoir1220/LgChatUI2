@@ -14,6 +14,7 @@ import { FilesModule } from './features/files/files.module';
 import { ReadmeSearchModule } from './features/readme-search/readme-search.module';
 import { CustomerDictModule } from './features/customer-dict/customer-dict.module';
 import { RequirementsModule } from './features/requirements/requirements.module';
+import { QuestionsModule } from './features/questions/questions.module';
 import { SuggestionsModule } from './features/suggestions/suggestions.module';
 import { BugsModule } from './features/bugs/bugs.module';
 import { InfoFeedModule } from './features/infofeed/infofeed.module';
@@ -36,6 +37,7 @@ import { CrmCustomerModule } from './features/crm-customer/crm-customer.module';
     ReadmeSearchModule,
     CustomerDictModule,
     RequirementsModule,
+    QuestionsModule,
     SuggestionsModule,
     BugsModule,
     InfoFeedModule,
