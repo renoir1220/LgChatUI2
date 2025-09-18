@@ -14,6 +14,7 @@ interface LoginScreenProps {
 
 export default function LoginScreen({ onLogin }: LoginScreenProps) {
   const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
@@ -26,9 +27,14 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
       setError('请输入用户名')
       return
     }
-    
+
     if (trimmedUsername.length < 2) {
       setError('用户名至少需要2个字符')
+      return
+    }
+
+    if (!password.trim()) {
+      setError('请输入密码')
       return
     }
 
@@ -36,12 +42,15 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
     setError(null)
     
     try {
-      const loginRequest: LoginRequest = { username: trimmedUsername }
+      const loginRequest: LoginRequest = {
+        username: trimmedUsername,
+        password: password.trim()
+      }
       const response = await apiPost<LoginResponse>('/api/auth/login', loginRequest)
       
-      if (response?.access_token) {
-        // 保存认证信息到localStorage
-        setAuth(response.access_token, trimmedUsername)
+      if (response?.access_token && response?.user) {
+        // 保存认证信息到localStorage，使用后端返回的用户信息
+        setAuth(response.access_token, response.user.username)
         
         // 执行回调并跳转
         onLogin?.()
@@ -90,7 +99,7 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
           <Card className="border-0 bg-white/80 shadow-xl ring-1 ring-black/5 backdrop-blur-md">
             <CardHeader className="space-y-1">
               <CardTitle className="text-center text-xl">欢迎回来</CardTitle>
-              <CardDescription className="text-center">输入用户名开始聊天</CardDescription>
+              <CardDescription className="text-center">输入用户名和密码开始聊天</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-5">
@@ -110,6 +119,22 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
                   />
                 </div>
 
+                <div className="space-y-2">
+                  <label htmlFor="password" className="text-sm font-medium text-gray-800">
+                    密码
+                  </label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="输入密码"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    maxLength={100}
+                    disabled={loading}
+                    required
+                  />
+                </div>
+
                 {error && (
                   <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">
                     {error}
@@ -119,7 +144,7 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
                 <Button
                   type="submit"
                   className="w-full transition-transform hover:-translate-y-0.5 active:translate-y-0"
-                  disabled={loading || !username.trim()}
+                  disabled={loading || !username.trim() || !password.trim()}
                 >
                   {loading ? '登录中…' : '开始聊天'}
                 </Button>

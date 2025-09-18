@@ -18,6 +18,7 @@ export interface AuthToken {
 // 认证相关的 Zod 模式和类型定义
 export const LoginRequestSchema = z.object({
   username: z.string().min(2, '用户名至少2个字符').max(50, '用户名最多50个字符').trim(),
+  password: z.string().min(1, '密码不能为空').max(100, '密码最多100个字符'),
 })
 
 export const LoginResponseSchema = z.object({
