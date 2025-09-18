@@ -116,7 +116,7 @@ export function useConversations(
     if (conversationKey && conversationKey !== 'new') {
       // 从会话详细信息中获取知识库ID，只在不同时才设置
       const conversationDetail = conversationDetails[conversationKey];
-      if (conversationDetail && conversationDetail.knowledgeBaseId && 
+      if (conversationDetail && conversationDetail.knowledgeBaseId &&
           conversationDetail.knowledgeBaseId !== currentKnowledgeBase) {
         setCurrentKnowledgeBase(conversationDetail.knowledgeBaseId);
       }

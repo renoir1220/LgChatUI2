@@ -470,14 +470,19 @@ const ChatScreenRefactored: React.FC = () => {
     await handleSubmit(message);
   };
 
-  // 监听知识库变化，自动更新当前会话的知识库ID（增加去抖）
+  // 监听知识库变化，仅在用户主动切换知识库时更新当前会话的知识库ID
+  // 避免在页面刷新时错误覆盖已有对话的知识库设置
   useEffect(() => {
-    // 只有在真实会话（有conversationId）且知识库存在时才更新
+    // 只有在真实会话（有conversationId）且知识库存在时才考虑更新
     if (conversationId && currentKnowledgeBase) {
       const conversationDetail = conversationDetails[conversationId];
       const currentKbId = conversationDetail?.knowledgeBaseId;
       const needsUpdate = currentKbId !== currentKnowledgeBase;
-      if (needsUpdate) {
+
+      // 关键修复：只有当会话已有消息时才允许更新知识库ID
+      // 这样可以避免刷新页面时错误覆盖已有对话的知识库设置
+      // 新对话会在发送第一条消息时自动保存当前选中的知识库
+      if (needsUpdate && messages.length > 0) {
         const timer = setTimeout(() => {
           void conversationApi
             .updateConversation(conversationId, { knowledgeBaseId: currentKnowledgeBase })
@@ -498,7 +503,7 @@ const ChatScreenRefactored: React.FC = () => {
         return () => clearTimeout(timer);
       }
     }
-  }, [currentKnowledgeBase, conversationId, conversationDetails, setConversationDetails]);
+  }, [currentKnowledgeBase, conversationId, conversationDetails, setConversationDetails, messages.length]);
 
   // 保存消息历史到本地状态
   useEffect(() => {

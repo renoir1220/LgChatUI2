@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { feedbackService, MessageFeedbackType, type MessageFeedback } from '../services/feedbackService';
+import { feedbackService, MessageFeedbackType, type MessageFeedback as MessageFeedbackData } from '../services/feedbackService';
 import { showApiError } from '../../shared/services/api';
 
 interface MessageFeedbackProps {
@@ -16,7 +16,7 @@ export const MessageFeedback: React.FC<MessageFeedbackProps> = ({
   messageId,
   className = ''
 }) => {
-  const [currentFeedback, setCurrentFeedback] = useState<MessageFeedback | null>(null);
+  const [currentFeedback, setCurrentFeedback] = useState<MessageFeedbackData | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 组件挂载时加载用户已有的反馈
