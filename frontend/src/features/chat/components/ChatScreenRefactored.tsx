@@ -182,6 +182,16 @@ const ChatScreenRefactored: React.FC = () => {
   // 控制输入框聚焦到末尾的信号
   const [focusAtEndSignal, setFocusAtEndSignal] = useState(0);
 
+  // 新建会话或欢迎模式时，自动将焦点移动到输入框
+  useEffect(() => {
+    // 对于非真实会话（如 'new' 或默认欢迎态），聚焦输入框
+    if (!isValidUUID(curConversation)) {
+      // 下一帧触发，确保输入框已渲染
+      const t = setTimeout(() => setFocusAtEndSignal((s) => s + 1), 0);
+      return () => clearTimeout(t);
+    }
+  }, [curConversation]);
+
   // 重新生成消息
   const handleRegenerate = async (messageIndex: number) => {
     // 找到对应的用户消息
