@@ -12,10 +12,11 @@ LgChatUI2 是一个现代化的全栈聊天应用，采用独立项目架构：
 - **类型系统**：前后端各自维护独立的TypeScript类型定义
 - **语音服务**：集成火山引擎 TTS API（WebSocket 实时语音合成）
 
-### 项目状态（更新于 2025-08-31）
-- **代码规模**：约 12,000+ 行核心代码
+### 项目状态（更新于 2025-09-18）
+- **代码规模**：约 14,000+ 行核心代码
 - **架构状态**：独立项目架构，Feature模块化完成，组件架构重构完成
-- **新增功能**：BUG管理、建议管理、后台管理、PWA离线支持
+- **认证系统**：已集成CRM登录验证，支持密码认证和AES加密
+- **新增功能**：BUG管理、建议管理、后台管理、PWA离线支持、CRM用户管理
 - **质量状态**：TabsFramework组件重构完成，类型安全和开发效率持续改进
 
 ## 项目结构
@@ -122,12 +123,14 @@ npm run ports         # 查看端口占用情况
 
 ### 🔄 数据流
 ```
-Frontend (React) 
+Frontend (React)
     ↓ HTTP/SSE
-Backend (NestJS) 
+Backend (NestJS)
+    ↓ AES加密Token
+CRM系统 (认证验证)
     ↓ SQL
 Database (MSSQL)
-    ↓ WebSocket  
+    ↓ WebSocket
 External AI (Dify)
 ```
 
@@ -245,6 +248,54 @@ npm run build:fe      # 验证前端构建
 
 ---
 
+## CRM登录验证系统
+
+### 概述
+项目已集成完整的CRM登录验证系统，实现了从简单用户名认证到基于密码的CRM认证的平滑过渡。
+
+### 核心特性
+- **AES-128-CBC加密**: 严格按照CRM文档实现的Token加密算法
+- **CRM用户管理**: 使用CRM_USER_ID作为主键，从CRM.VIEW_EMPLOYEE获取用户信息
+- **密码验证**: 集成CRM AICheckLogin API进行实时密码验证
+- **错误处理**: 完整的错误代码映射和友好错误消息
+- **兼容性**: 现有聊天、信息流等功能无缝支持新用户ID格式
+
+### 技术实现
+```typescript
+// AES加密实现 (backend/src/shared/utils/aes.util.ts)
+static generateCrmToken(account: string, password: string): string {
+  const timestamp = AESHelper.generateTimestamp();
+  const plainText = `${account}|${password}|${timestamp}`;
+  return AESHelper.encrypt(plainText);
+}
+
+// CRM验证流程 (backend/src/shared/services/crm.service.ts)
+async validateLogin(loginRequest: ExtendedLoginRequest): Promise<CrmLoginResponse> {
+  const token = AESHelper.generateCrmToken(username, password);
+  // 调用CRM API验证...
+}
+```
+
+### 数据流转
+1. **前端登录**: 用户输入用户名和密码
+2. **Token生成**: 后端使用AES加密生成CRM Token
+3. **CRM验证**: 调用CRM AICheckLogin API验证凭据
+4. **用户查询**: 使用CRM_USER_ID查询CRM.VIEW_EMPLOYEE获取用户详情
+5. **JWT签发**: 生成包含CRM_USER_ID的JWT Token
+
+### 关键文件
+- `backend/src/shared/utils/aes.util.ts` - AES加密工具
+- `backend/src/shared/services/crm.service.ts` - CRM API集成
+- `backend/src/features/auth/auth.service.ts` - 认证服务
+- `backend/src/features/auth/repositories/users.repository.ts` - 用户仓储
+- `frontend/src/features/auth/components/LoginScreen.tsx` - 登录界面
+
+### 配置说明
+- **CRM API地址**: 192.168.200.114:8777/api/User/AICheckLogin
+- **AES密钥**: 'l1o2g3e4nE1234@!'
+- **AES向量**: '4s3c2a1p$llogene'
+- **数据源**: CRM.VIEW_EMPLOYEE (替换原lgchatui.VIEW_EMPLOYEE)
+
 ## 重要提醒
 
 - **架构平衡**: 本项目面向小团队，优先功能实现和代码质量，避免过度设计
@@ -252,8 +303,8 @@ npm run build:fe      # 验证前端构建
 - **类型一致**: 确保前后端类型定义通过API接口约定保持一致
 - **测试覆盖**: 核心业务逻辑必须有对应的单元或集成测试
 
-**当前版本**: 组件架构重构完成版本  
-**最后更新**: 2025-08-31  
+**当前版本**: CRM登录验证系统集成完成版本
+**最后更新**: 2025-09-18
 **维护者**: 开发团队
 
 **重要提醒**：
