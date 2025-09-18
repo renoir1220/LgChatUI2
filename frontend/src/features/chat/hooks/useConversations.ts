@@ -70,6 +70,9 @@ export function useConversations(
    * 加载指定会话的消息历史
    */
   const loadConversationMessages = async (conversationId: string) => {
+    if (!isValidUUID(conversationId)) {
+      return;
+    }
     try {
       const msgs = await apiGet<MessageRecord[]>(`/api/conversations/${conversationId}`);
       const cachedCitations = getCitationsFromCache(conversationId);

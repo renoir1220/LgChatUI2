@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+﻿import { Injectable, Logger } from '@nestjs/common';
 import { LgChatUIDatabaseService } from '../../../shared/database/database.service';
 import {
   MessageFeedback,
@@ -48,39 +48,31 @@ export class FeedbackRepository {
       `
       DECLARE @currentTime datetime = GETDATE();
 
-      -- 使用 MERGE 语句确保原子性操作，解决并发问题
-      MERGE AI_MESSAGE_FEEDBACK AS target
-      USING (SELECT
-        @p0 AS MESSAGE_ID,
-        @p1 AS USER_ID,
-        @p2 AS CONVERSATION_ID,
-        @p3 AS FEEDBACK_TYPE,
-        @p4 AS RATING,
-        @p5 AS FEEDBACK_TEXT,
-        @p6 AS FEEDBACK_TAGS
-      ) AS source
-      ON target.MESSAGE_ID = source.MESSAGE_ID
-         AND target.USER_ID = source.USER_ID
-         AND target.IS_DELETED = 0
-      WHEN MATCHED THEN
-        UPDATE SET
-          FEEDBACK_TYPE = source.FEEDBACK_TYPE,
-          RATING = source.RATING,
-          FEEDBACK_TEXT = source.FEEDBACK_TEXT,
-          FEEDBACK_TAGS = source.FEEDBACK_TAGS,
+      IF EXISTS (SELECT 1 FROM AI_MESSAGE_FEEDBACK WHERE MESSAGE_ID = @p0 AND USER_ID = @p1)
+      BEGIN
+        UPDATE AI_MESSAGE_FEEDBACK
+        SET
+          FEEDBACK_TYPE = @p3,
+          RATING = @p4,
+          FEEDBACK_TEXT = @p5,
+          FEEDBACK_TAGS = @p6,
+          IS_DELETED = 0,
           UPDATED_AT = @currentTime
-      WHEN NOT MATCHED THEN
-        INSERT (
+        WHERE MESSAGE_ID = @p0 AND USER_ID = @p1;
+      END
+      ELSE
+      BEGIN
+        INSERT INTO AI_MESSAGE_FEEDBACK (
           FEEDBACK_ID, MESSAGE_ID, USER_ID, CONVERSATION_ID,
           FEEDBACK_TYPE, RATING, FEEDBACK_TEXT, FEEDBACK_TAGS,
           CREATED_AT, UPDATED_AT, IS_DELETED
         ) VALUES (
-          NEWID(), source.MESSAGE_ID, source.USER_ID, source.CONVERSATION_ID,
-          source.FEEDBACK_TYPE, source.RATING, source.FEEDBACK_TEXT, source.FEEDBACK_TAGS,
+          NEWID(), @p0, @p1, @p2,
+          @p3, @p4, @p5, @p6,
           @currentTime, @currentTime, 0
         );
+      END
 
-      -- 返回操作后的记录
       SELECT
         CONVERT(varchar(36), FEEDBACK_ID) AS feedbackId,
         CONVERT(varchar(36), MESSAGE_ID) AS messageId,
@@ -103,7 +95,6 @@ export class FeedbackRepository {
       feedbackText,
       tagsJson,
     );
-
     const result = rows[0];
     return {
       id: result.feedbackId,
@@ -490,3 +481,4 @@ export class FeedbackRepository {
     return isAuthorized;
   }
 }
+

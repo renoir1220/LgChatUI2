@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/features/shared/utils/utils';
@@ -37,17 +37,7 @@ export const MessageFeedback: React.FC<MessageFeedbackProps> = ({
   const promptTimerRef = useRef<number | null>(null);
 
   // 组件挂载时加载用户已有的反馈
-  useEffect(() => {
-    loadUserFeedback();
-    return () => {
-      if (promptTimerRef.current) {
-        window.clearTimeout(promptTimerRef.current);
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [messageId]);
-
-  const loadUserFeedback = async () => {
+  const loadUserFeedback = useCallback(async () => {
     try {
       const feedback = await feedbackService.getUserFeedback(messageId);
       setCurrentFeedback(feedback);
@@ -58,7 +48,16 @@ export const MessageFeedback: React.FC<MessageFeedbackProps> = ({
       setCurrentFeedback(null);
       setSelectedTags([]);
     }
-  };
+  }, [messageId]);
+
+  useEffect(() => {
+    loadUserFeedback();
+    return () => {
+      if (promptTimerRef.current) {
+        window.clearTimeout(promptTimerRef.current);
+      }
+    };
+  }, [loadUserFeedback]);
 
   const ensureTagOptions = useCallback(async (): Promise<TagOptions> => {
     const cached = tagCacheRef.current;
@@ -233,7 +232,7 @@ export const MessageFeedback: React.FC<MessageFeedbackProps> = ({
                 <Button
                   key={tag}
                   variant={active ? 'secondary' : 'outline'}
-                  size="xs"
+                  size="sm"
                   className={cn('rounded-full px-2 py-1 text-xs', active ? 'shadow-sm' : '')}
                   disabled={isUpdatingTags}
                   onClick={() => handleTagToggle(tag)}
@@ -247,7 +246,7 @@ export const MessageFeedback: React.FC<MessageFeedbackProps> = ({
             <span className="text-[10px] text-muted-foreground">可多选，随时调整</span>
             <Button
               variant="link"
-              size="xs"
+              size="sm"
               className="h-auto px-0 text-xs text-muted-foreground hover:text-foreground"
               onClick={() => setTagPromptType(null)}
             >

@@ -125,6 +125,7 @@ const ChatScreenRefactored: React.FC = () => {
 
   // 会话管理
   const { 
+    initializeConversations, 
     switchConversation, 
     createNewConversation, 
     refreshConversations 
