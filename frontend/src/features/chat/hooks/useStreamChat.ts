@@ -169,6 +169,16 @@ export function useStreamChat() {
               }));
             }
 
+            // 处理消息保存事件，设置消息ID
+            if (streamResponse.event === 'message_saved' && streamResponse.messageId) {
+              setMessages(prev => prev.map((msg, index) => {
+                if (index === botMessageIndex && msg.role === 'assistant') {
+                  return { ...msg, id: streamResponse.messageId };
+                }
+                return msg;
+              }));
+            }
+
             // 处理知识库引用数据
             const retrieverResources = jsonData?.metadata?.retriever_resources;
             if (retrieverResources && Array.isArray(retrieverResources) && retrieverResources.length > 0) {

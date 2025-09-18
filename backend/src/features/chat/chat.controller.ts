@@ -14,7 +14,6 @@ import { MessagesRepository } from './repositories/messages.repository';
 import { DifyService } from '../../shared/services/dify.service';
 import { AppLoggerService } from '../../shared/services/logger.service';
 import { ZodValidationPipe } from '../../shared/pipes/zod-validation.pipe';
-import { extractUserIdFromRequest } from '../../shared/utils/user.utils';
 import { StreamingCitationParser } from '../../shared/utils/citation-parser.util';
 import { ErrorHandlerUtil } from '../../shared/utils/error-handler.util';
 import { ChatRequestSchema, ChatRole } from '../../types';
@@ -52,7 +51,7 @@ export class ChatController {
       messageLength: body.message.length,
     });
 
-    const userId = extractUserIdFromRequest(req);
+    const userId = req.user.id;
 
     this.logger.debug('用户信息处理完成', {
       username: req.user.username,
@@ -351,15 +350,23 @@ export class ChatController {
         contentLength: assistantMessage.length,
       });
 
-      // 发送结束标记
-      res.write(`data: [DONE]\n\n`);
-
       // 保存完整的助手消息到数据库
       const savedMessage = await this.messages.append(
         conversationId,
         ChatRole.Assistant,
         assistantMessage,
       );
+
+      // 发送最终的消息ID给前端，用于反馈功能
+      res.write(
+        `data: ${JSON.stringify({
+          event: 'message_saved',
+          messageId: savedMessage.id,
+        })}\n\n`,
+      );
+
+      // 发送结束标记
+      res.write(`data: [DONE]\n\n`);
 
       // 如果捕获到新的Dify对话ID，且与数据库中的不同，则更新数据库
       if (

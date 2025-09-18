@@ -10,14 +10,9 @@ export function generateUserId(username: string): string {
   return `user_${username}`;
 }
 
-/**
- * 从认证请求中提取用户ID
- */
-export function extractUserIdFromRequest(req: {
-  user: { username: string };
-}): string {
-  return generateUserId(req.user.username);
-}
+// extractUserIdFromRequest 方法已删除
+// 现在统一在 JWT 策略中处理用户ID格式
+// 业务代码直接使用 req.user.id
 
 /**
  * 将用户名稳定映射为一个非负的32位整数ID

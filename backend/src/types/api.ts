@@ -63,6 +63,7 @@ export interface JwtPayload {
 
 export interface AuthenticatedRequest {
   user: {
+    id: string;        // 统一的用户ID，格式为 user_${username}
     username: string;
   };
 }

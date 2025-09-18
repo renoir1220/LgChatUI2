@@ -29,6 +29,7 @@ export interface MessageRecord {
 }
 
 export interface BubbleDataType {
+  id?: string; // 消息ID，用于反馈功能
   role: ClientRole;
   content: string;
   citations?: Citation[];
@@ -37,11 +38,13 @@ export interface BubbleDataType {
 
 export interface StreamResponse {
   // 服务端可能发送 'error' 事件用于 SSE 错误传播
-  event: 'agent_message' | 'message' | 'error';
+  event: 'agent_message' | 'message' | 'error' | 'message_saved';
   answer?: string;
   // 错误事件兼容字段
   error?: string;
   message?: string;
+  // 消息ID，用于反馈功能
+  messageId?: string;
   metadata?: {
     retriever_resources?: Array<{
       document_name?: string;

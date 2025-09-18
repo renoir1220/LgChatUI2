@@ -18,7 +18,7 @@ export class ConversationsController {
     @Query('pageSize') pageSize = '20',
     @Request() req: AuthenticatedRequest,
   ): Promise<PaginatedResponse<Conversation>> {
-    const userId = extractUserIdFromRequest(req);
+    const userId = req.user.id;
     const p = Math.max(1, Number(page) || 1);
     const ps = Math.min(100, Math.max(1, Number(pageSize) || 20));
     
@@ -40,7 +40,7 @@ export class ConversationsController {
     @Body(new ZodValidationPipe(CreateConversationSchema)) body: CreateConversationRequest,
     @Request() req: AuthenticatedRequest,
   ): Promise<Conversation> {
-    const userId = extractUserIdFromRequest(req);
+    const userId = req.user.id;
     
     this.logger.log('创建新会话', { 
       userId, 
@@ -62,7 +62,7 @@ export class ConversationsController {
     @Body(new ZodValidationPipe(UpdateConversationSchema)) body: UpdateConversationRequest,
     @Request() req: AuthenticatedRequest,
   ): Promise<Conversation> {
-    const userId = extractUserIdFromRequest(req);
+    const userId = req.user.id;
     
     // 验证所有权
     const owned = await this.messagesRepository.isConversationOwnedByUser(id, userId);
@@ -79,7 +79,7 @@ export class ConversationsController {
     @Param('id') id: string,
     @Request() req: AuthenticatedRequest,
   ): Promise<{ success: boolean }> {
-    const userId = extractUserIdFromRequest(req);
+    const userId = req.user.id;
     
     // 验证所有权
     const owned = await this.messagesRepository.isConversationOwnedByUser(id, userId);
@@ -107,7 +107,7 @@ export class ChatController {
     @Request() req: AuthenticatedRequest,
     @Res() res: Response,
   ): Promise<void> {
-    const userId = extractUserIdFromRequest(req);
+    const userId = req.user.id;
     
     this.logger.log('开始处理聊天请求', {
       userId,

@@ -15,7 +15,6 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ConversationsRepository } from './repositories/conversations.repository';
 import { MessagesRepository } from './repositories/messages.repository';
-import { extractUserIdFromRequest } from '../../shared/utils/user.utils';
 import type {
   Conversation,
   ChatMessage,
@@ -39,7 +38,7 @@ export class ChatHistoryController {
     @Query('page') page = '1',
     @Query('pageSize') pageSize = '20',
   ): Promise<Conversation[]> {
-    const userId = extractUserIdFromRequest(req);
+    const userId = req.user.id;
     const p = Math.max(1, Number(page) || 1);
     const ps = Math.min(100, Math.max(1, Number(pageSize) || 20));
     return await this.conversations.listByUser(userId, p, ps);
@@ -53,7 +52,7 @@ export class ChatHistoryController {
     @Query('page') page = '1',
     @Query('pageSize') pageSize = '50',
   ): Promise<ChatMessage[]> {
-    const userId = extractUserIdFromRequest(req);
+    const userId = req.user.id;
     const owned = await this.messages.isConversationOwnedByUser(id, userId);
     if (!owned) {
       throw new NotFoundException('Conversation not found');
@@ -80,7 +79,7 @@ export class ChatHistoryController {
     @Param('id') id: string,
     @Request() req: AuthenticatedRequest,
   ): Promise<{ success: boolean }> {
-    const userId = extractUserIdFromRequest(req);
+    const userId = req.user.id;
 
     // 检查会话是否属于该用户
     const owned = await this.messages.isConversationOwnedByUser(id, userId);
@@ -99,7 +98,7 @@ export class ChatHistoryController {
     @Body() body: CreateConversationRequest,
     @Request() req: AuthenticatedRequest,
   ): Promise<Conversation> {
-    const userId = extractUserIdFromRequest(req);
+    const userId = req.user.id;
 
     const title = body.title || '新对话';
     return await this.conversations.createConversation(
@@ -116,7 +115,7 @@ export class ChatHistoryController {
     @Body() body: UpdateConversationRequest,
     @Request() req: AuthenticatedRequest,
   ): Promise<{ success: boolean }> {
-    const userId = extractUserIdFromRequest(req);
+    const userId = req.user.id;
 
     // 检查会话是否属于该用户
     const owned = await this.messages.isConversationOwnedByUser(id, userId);
@@ -138,7 +137,7 @@ export class ChatHistoryController {
     @Body() body: { title: string },
     @Request() req: AuthenticatedRequest,
   ): Promise<Conversation> {
-    const userId = extractUserIdFromRequest(req);
+    const userId = req.user.id;
 
     // 检查会话是否属于该用户
     const owned = await this.messages.isConversationOwnedByUser(id, userId);

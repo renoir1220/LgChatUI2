@@ -32,7 +32,6 @@ import {
   ReplyCommentDto,
 } from './dto/infofeed.dto';
 import { InfoFeedApiResponse } from '../../types/infofeed';
-import { extractUserIdFromRequest } from '../../shared/utils/user.utils';
 
 @Controller('api/infofeed')
 export class InfoFeedController {
@@ -49,9 +48,7 @@ export class InfoFeedController {
   ): Promise<InfoFeedApiResponse> {
     try {
       // 获取当前用户ID（如果已登录）
-      const currentUserId = req?.user?.username
-        ? extractUserIdFromRequest(req)
-        : undefined;
+      const currentUserId = req?.user?.id || undefined;
 
       const result = await this.infoFeedService.getInfoFeedList(
         query,
@@ -85,9 +82,7 @@ export class InfoFeedController {
     @Request() req?: any,
   ): Promise<InfoFeedApiResponse> {
     try {
-      const currentUserId = req?.user?.username
-        ? extractUserIdFromRequest(req)
-        : undefined;
+      const currentUserId = req?.user?.id || undefined;
 
       const result = await this.infoFeedService.getInfoFeedDetail(
         params.id,
@@ -126,7 +121,7 @@ export class InfoFeedController {
     @Request() req: any,
   ): Promise<InfoFeedApiResponse> {
     try {
-      const authorId = extractUserIdFromRequest(req);
+      const authorId = req.user.id;
 
       const result = await this.infoFeedService.createInfoFeed(
         createDto,
@@ -162,7 +157,7 @@ export class InfoFeedController {
     @Request() req: any,
   ): Promise<InfoFeedApiResponse> {
     try {
-      const currentUserId = extractUserIdFromRequest(req);
+      const currentUserId = req.user.id;
 
       const result = await this.infoFeedService.updateInfoFeed(
         params.id,
@@ -202,7 +197,7 @@ export class InfoFeedController {
     @Request() req: any,
   ): Promise<InfoFeedApiResponse> {
     try {
-      const currentUserId = extractUserIdFromRequest(req);
+      const currentUserId = req.user.id;
 
       const result = await this.infoFeedService.deleteInfoFeed(
         params.id,
@@ -241,7 +236,7 @@ export class InfoFeedController {
     @Request() req: any,
   ): Promise<InfoFeedApiResponse> {
     try {
-      const userId = extractUserIdFromRequest(req);
+      const userId = req.user.id;
 
       const result = await this.infoFeedService.toggleInfoFeedLike(
         params.id,
@@ -316,7 +311,7 @@ export class InfoFeedController {
     @Request() req: any,
   ): Promise<InfoFeedApiResponse> {
     try {
-      const userId = extractUserIdFromRequest(req);
+      const userId = req.user.id;
       const fullCreateDto: CreateCommentDto = {
         ...createDto,
         feed_id: params.id,
@@ -355,7 +350,7 @@ export class InfoFeedController {
     @Request() req: any,
   ): Promise<InfoFeedApiResponse> {
     try {
-      const userId = extractUserIdFromRequest(req);
+      const userId = req.user.id;
 
       const result = await this.infoFeedService.toggleCommentLike(
         params.comment_id,

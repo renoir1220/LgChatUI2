@@ -10,28 +10,6 @@ window.APP_CONFIG = {
   // 图片服务配置
   IMAGE_BASE_URL: '',  // 留空使用默认逻辑
   
-  // 知识库配置列表
-  KNOWLEDGE_BASES: [
-    {
-      id: 'kb_1',
-      name: '仅聊天',
-      apiKey: 'app-X7tF0TdanZdZG0qmQ9OFou13',
-      apiUrl: 'http://localhost/v1'
-    },
-    {
-      id: 'kb_2', 
-      name: '集成知识库',
-      apiKey: 'app-UR9z1ZFbHFtAFgF4wtP76CBX',
-      apiUrl: 'http://localhost/v1'
-    },
-    {
-      id: 'kb_3',
-      name: '技术文档库', 
-      apiKey: 'app-tech-key-example',
-      apiUrl: 'https://custom.dify.ai/v1'
-    }
-  ],
-  
   // 其他配置
   DEBUG_MODE: false,
   VERSION: '1.0.0',

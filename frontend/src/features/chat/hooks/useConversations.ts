@@ -87,6 +87,7 @@ export function useConversations(
         }
         
         return {
+          id: m.id, // 保留消息ID用于反馈功能
           role,
           content: m.content,
           citations

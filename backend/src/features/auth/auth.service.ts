@@ -31,50 +31,84 @@ export class AuthService {
       passwordLength: password.length
     });
 
-    // 第一步：CRM验证用户凭据
-    const crmResponse = await this.crmService.validateLogin({
-      username,
-      password
-    });
+    // 检查是否为降级模式
+    const isDevelopmentMode = process.env.NODE_ENV === 'development';
+    const bypassEnabled = process.env.CRM_BYPASS_ENABLED === 'true';
 
-    // 检查CRM验证结果
-    if (!crmResponse.Success) {
-      const friendlyMessage = CrmService.mapCodeToMessage(crmResponse.Code);
-      this.logger.warn('CRM登录验证失败', {
+    let user: User | null;
+
+    if (isDevelopmentMode && bypassEnabled) {
+      // 降级模式：模拟真实登录，直接用真实CRM_USER_ID查询
+      this.logger.log('使用降级模式登录', { username });
+
+      // 降级用户映射：登录用户名 -> 真实CRM_USER_ID
+      const userMapping: Record<string, string> = {
+        'ldy': 'DF63B19F-9991-4BEE-8E72-0A68EB6F7A02', // ldy对应的真实CRM用户ID
+        'dev': 'DEV_USER_DEV_001',     // 测试用户
+        'admin': 'DEV_USER_ADMIN_001', // 测试管理员
+      };
+
+      const realCrmUserId = userMapping[username.toLowerCase()];
+      if (!realCrmUserId) {
+        throw new UnauthorizedException('降级模式下不支持该用户');
+      }
+
+      // 使用真实CRM_USER_ID查询，完全模拟真实登录流程
+      user = await this.usersRepository.findByCrmUserId(realCrmUserId);
+      if (!user) {
+        throw new UnauthorizedException('用户信息获取失败');
+      }
+    } else {
+      // 正常模式：走CRM API验证
+      const crmResponse = await this.crmService.validateLogin({
         username,
-        code: crmResponse.Code,
-        message: crmResponse.Message,
-        friendlyMessage
+        password
       });
-      throw new UnauthorizedException(friendlyMessage);
-    }
 
-    // 提取CRM_USER_ID
-    const crmUserId = crmResponse.Content?.CRM_USER_ID;
-    if (!crmUserId) {
-      this.logger.error('CRM验证成功但未返回CRM_USER_ID', undefined, {
-        username,
-        response: crmResponse
-      });
-      throw new UnauthorizedException('登录验证失败，请联系管理员');
-    }
+      // 检查CRM验证结果
+      if (!crmResponse.Success) {
+        const friendlyMessage = CrmService.mapCodeToMessage(crmResponse.Code);
+        this.logger.warn('CRM登录验证失败', {
+          username,
+          code: crmResponse.Code,
+          message: crmResponse.Message,
+          friendlyMessage
+        });
+        throw new UnauthorizedException(friendlyMessage);
+      }
 
-    this.logger.log('CRM验证成功，使用CRM_USER_ID查询用户信息', {
-      username,
-      crmUserId: crmUserId.substring(0, 8) + '...'
-    });
+      // 提取CRM_USER_ID
+      const crmUserId = crmResponse.Content?.CRM_USER_ID;
+      if (!crmUserId) {
+        this.logger.error('CRM验证成功但未返回CRM_USER_ID', undefined, {
+          username,
+          response: crmResponse
+        });
+        throw new UnauthorizedException('登录验证失败，请联系管理员');
+      }
 
-    // 第二步：使用CRM_USER_ID查询用户详细信息
-    const user = await this.usersRepository.findByCrmUserId(crmUserId);
-    if (!user) {
-      this.logger.warn('CRM_USER_ID在员工数据库中不存在', {
+      this.logger.log('CRM验证成功，使用CRM_USER_ID查询用户信息', {
         username,
         crmUserId: crmUserId.substring(0, 8) + '...'
       });
-      throw new UnauthorizedException('用户信息不完整，请联系管理员');
+
+      // 使用CRM_USER_ID查询用户详细信息
+      user = await this.usersRepository.findByCrmUserId(crmUserId);
+      if (!user) {
+        this.logger.warn('CRM_USER_ID在员工数据库中不存在', {
+          username,
+          crmUserId: crmUserId.substring(0, 8) + '...'
+        });
+        throw new UnauthorizedException('用户信息不完整，请联系管理员');
+      }
     }
 
-    // 第三步：生成JWT token
+    // 确保用户存在
+    if (!user) {
+      throw new UnauthorizedException('用户信息获取失败');
+    }
+
+    // 生成JWT token（降级和正常模式使用相同结构）
     const payload = {
       sub: user.id,
       username: user.username,
@@ -86,7 +120,8 @@ export class AuthService {
       username,
       userId: user.id,
       crmUserId: user.crmUserId?.substring(0, 8) + '...',
-      displayName: user.displayName
+      displayName: user.displayName,
+      mode: isDevelopmentMode && bypassEnabled ? 'degraded' : 'normal'
     });
 
     return {

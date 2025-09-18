@@ -11,6 +11,7 @@ import './ChatMessage.css';
 import { CitationList } from '../../knowledge-base/components/CitationList';
 import { VoicePlayer } from './VoicePlayer';
 import { RequirementMessage } from './RequirementMessage';
+import { MessageFeedback } from './MessageFeedback';
 import type { RequirementItem } from '@/types/requirement';
 import { detectMessageType, MessageType } from '../../shared/utils/messageTypeDetector';
 import { getUsername } from '../../auth/utils/auth';
@@ -313,13 +314,13 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
                     flexDirection: 'column', 
                     gap: 8 
                   }}>
-                    <div className="message-actions" style={{ 
-                      display: 'flex', 
-                      gap: 4, 
-                      alignItems: 'center' 
+                    <div className="message-actions" style={{
+                      display: 'flex',
+                      gap: 4,
+                      alignItems: 'center'
                     }}>
                       <VoicePlayer text={finalText || msg.content} />
-                      
+
                       <Button
                         variant="ghost"
                         size="sm"
@@ -329,7 +330,7 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
                       >
                         <Copy className="h-4 w-4" />
                       </Button>
-                      
+
                       <Button
                         variant="ghost"
                         size="sm"
@@ -339,6 +340,14 @@ export const ChatMessageList: React.FC<ChatMessageListProps> = ({
                       >
                         <RotateCcw className="h-4 w-4" />
                       </Button>
+
+                      {/* 消息反馈功能 */}
+                      {msg.id && (
+                        <MessageFeedback
+                          messageId={msg.id}
+                          className="ml-2"
+                        />
+                      )}
                     </div>
                   </div>
                 )
