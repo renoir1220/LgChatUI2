@@ -116,23 +116,34 @@ export const API_BASE = (import.meta.env?.VITE_API_BASE as string) || ''
 export async function apiFetch(path: string, options: RequestInit = {}) {
   const token = getToken();
   const apiBase = await getApiBase();
-  
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string> || {}),
   };
-  
+
   // 自动添加Bearer token
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
   try {
-    const resp = await fetch(`${apiBase}${path}`, { 
-      ...options, 
-      headers 
+    const startTime = performance.now();
+    console.log(`🌐 [FETCH] 开始请求 ${options.method || 'GET'} ${path}`, { startTime });
+
+    const resp = await fetch(`${apiBase}${path}`, {
+      ...options,
+      headers
     });
-    
+
+    const endTime = performance.now();
+    const duration = endTime - startTime;
+    console.log(`🌐 [FETCH] 请求完成 ${options.method || 'GET'} ${path}`, {
+      duration: `${duration.toFixed(2)}ms`,
+      status: resp.status,
+      ok: resp.ok
+    });
+
     return resp;
   } catch (error) {
     // 在开发环境下，如果是SSL证书错误，提供友好的错误信息

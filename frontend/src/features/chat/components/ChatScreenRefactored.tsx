@@ -267,18 +267,25 @@ const ChatScreenRefactored: React.FC = () => {
     setSearchParams(next, { replace: true });
   };
 
-  // 初次加载：若URL包含会话ID，主动加载消息，避免欢迎界面闪烁
+  // 依赖控制的初始化：先等待知识库加载完成，再初始化会话
   useEffect(() => {
-    if (initialConversationFromUrl && curConversation === initialConversationFromUrl) {
-      setMessagesLoading(true);
+    // 只有当知识库加载完成（不管成功还是失败）后，才开始初始化会话
+    if (!kbLoading) {
       void (async () => {
-        await switchConversation(initialConversationFromUrl);
-        setMessagesLoading(false);
+        // 先初始化会话列表
+        await initializeConversations();
+
+        // 如果URL包含会话ID，再切换到指定会话
+        if (initialConversationFromUrl && curConversation === initialConversationFromUrl) {
+          setMessagesLoading(true);
+          await switchConversation(initialConversationFromUrl);
+          setMessagesLoading(false);
+        }
       })();
     }
-    // 仅在首次挂载时执行
+    // 依赖知识库加载状态，确保知识库先加载完成
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [kbLoading]);
 
   // 初始加载模型列表
   useEffect(() => {
@@ -469,6 +476,16 @@ const ChatScreenRefactored: React.FC = () => {
     const message = `我刚才拍了一张照片，请查看。`;
     await handleSubmit(message);
   };
+
+  // 为新对话设置默认知识库（在依赖控制的初始化完成后）
+  useEffect(() => {
+    // 只有当知识库列表已加载、当前没有选中知识库、且处于真正的新对话状态时
+    // 由于现在有了依赖控制的初始化，这个逻辑主要处理用户手动创建新对话的情况
+    if (knowledgeBases.length > 0 && !kbLoading && !currentKnowledgeBase &&
+        (curConversation === 'new' || curConversation === 'default-0')) {
+      setCurrentKnowledgeBase(knowledgeBases[0].id);
+    }
+  }, [knowledgeBases, kbLoading, currentKnowledgeBase, curConversation, setCurrentKnowledgeBase]);
 
   // 监听知识库变化，仅在用户主动切换知识库时更新当前会话的知识库ID
   // 避免在页面刷新时错误覆盖已有对话的知识库设置

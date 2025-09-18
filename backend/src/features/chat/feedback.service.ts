@@ -1,5 +1,6 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+﻿import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { FeedbackRepository } from './repositories/feedback.repository';
+import { FeedbackConfigService } from './feedback.config.service';
 import { AppLoggerService } from '../../shared/services/logger.service';
 import {
   MessageFeedback,
@@ -14,6 +15,7 @@ import {
 export class FeedbackService {
   constructor(
     private readonly feedbackRepository: FeedbackRepository,
+    private readonly feedbackConfigService: FeedbackConfigService,
     private readonly logger: AppLoggerService,
   ) {}
 
@@ -26,7 +28,8 @@ export class FeedbackService {
     conversationId: string,
     feedbackData: CreateFeedbackDto,
   ): Promise<MessageFeedback> {
-    this.logger.log('用户提交消息反馈', {
+    const startTime = Date.now();
+    this.logger.log(`🔍 [${feedbackData.feedbackType}] 后端开始处理反馈`, {
       messageId,
       userId,
       conversationId,
@@ -34,31 +37,45 @@ export class FeedbackService {
       hasRating: !!feedbackData.rating,
       hasText: !!feedbackData.feedbackText,
       tagsCount: feedbackData.feedbackTags?.length || 0,
+      startTime,
     });
 
     try {
       // 验证用户是否有权限对此消息提供反馈
+      const authCheckStart = Date.now();
       const isAuthorized = await this.feedbackRepository.isUserAuthorizedForMessage(
         messageId,
         userId,
       );
+      const authCheckDuration = Date.now() - authCheckStart;
+      this.logger.log(`🔍 [${feedbackData.feedbackType}] 权限检查完成`, {
+        duration: `${authCheckDuration}ms`,
+        isAuthorized
+      });
 
       if (!isAuthorized) {
         throw new ForbiddenException('您没有权限对此消息提供反馈');
       }
 
+      const dbOpStart = Date.now();
       const feedback = await this.feedbackRepository.createOrUpdate(
         messageId,
         userId,
         conversationId,
         feedbackData,
       );
+      const dbOpDuration = Date.now() - dbOpStart;
+      this.logger.log(`🔍 [${feedbackData.feedbackType}] 数据库操作完成`, {
+        duration: `${dbOpDuration}ms`
+      });
 
-      this.logger.log('消息反馈提交成功', {
+      const duration = Date.now() - startTime;
+      this.logger.log(`🔍 [${feedbackData.feedbackType}] 消息反馈提交成功`, {
         feedbackId: feedback.id,
         messageId,
         userId,
         feedbackType: feedback.feedbackType,
+        duration: `${duration}ms`,
       });
 
       return feedback;
@@ -293,29 +310,16 @@ export class FeedbackService {
     });
   }
 
-  /**
+    /**
    * 获取预定义的反馈标签
    */
   getAvailableTags(): { problemTags: string[]; positiveTags: string[] } {
     return {
-      problemTags: [
-        '事实错误',
-        '信息不完整',
-        '无关回答',
-        '知识源问题',
-        '理解错误',
-        '响应速度',
-        '格式问题',
-      ],
-      positiveTags: [
-        '准确详细',
-        '切中要害',
-        '资料丰富',
-        '举一反三',
-        '逻辑清晰',
-      ],
+      problemTags: this.feedbackConfigService.getNotHelpfulTags(),
+      positiveTags: this.feedbackConfigService.getHelpfulTags(),
     };
   }
+
 
   /**
    * 验证反馈数据
@@ -334,3 +338,12 @@ export class FeedbackService {
     }
   }
 }
+
+
+
+
+
+
+
+
+

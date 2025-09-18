@@ -143,10 +143,10 @@ export function useConversations(
     await loadConversations(false); // 传入 false 表示不要选择第一个会话
   };
 
-  // 初始化时加载会话
-  useEffect(() => {
-    initializeConversations();
-  }, []); // 空依赖数组，只在组件挂载时执行一次
+  // 移除自动初始化，改为外部控制初始化时机
+  // useEffect(() => {
+  //   initializeConversations();
+  // }, []); // 空依赖数组，只在组件挂载时执行一次
 
   return {
     loadConversations,

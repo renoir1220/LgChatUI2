@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+﻿import { Module } from '@nestjs/common';
 import { ChatController } from './chat.controller';
 import { MessagesController } from './messages.controller';
 import { ChatHistoryController } from './chat-history.controller';
@@ -6,6 +6,8 @@ import { FeedbackController, AdminFeedbackController } from './feedback.controll
 import { ConversationsRepository } from './repositories/conversations.repository';
 import { MessagesRepository } from './repositories/messages.repository';
 import { FeedbackRepository } from './repositories/feedback.repository';
+
+import { FeedbackConfigService } from './feedback.config.service';
 import { FeedbackService } from './feedback.service';
 import { DifyService } from '../../shared/services/dify.service';
 import { SharedModule } from '../../shared/shared.module';
@@ -25,6 +27,7 @@ import { AdminModule } from '../admin/admin.module';
     ConversationsRepository,
     MessagesRepository,
     FeedbackRepository,
+    FeedbackConfigService,
     FeedbackService,
     DifyService,
   ],
@@ -32,7 +35,11 @@ import { AdminModule } from '../admin/admin.module';
     ConversationsRepository,
     MessagesRepository,
     FeedbackRepository,
+    FeedbackConfigService,
     FeedbackService,
   ],
 })
 export class ChatModule {}
+
+
+

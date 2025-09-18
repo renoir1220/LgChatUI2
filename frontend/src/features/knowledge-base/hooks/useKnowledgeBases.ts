@@ -23,10 +23,8 @@ export function useKnowledgeBases() {
         if (!mounted) return;
         const list = Array.isArray(data) ? data : [];
         setKnowledgeBases(list);
-        // 只在初始化时设置默认知识库，避免覆盖用户选择
-        if (list.length && currentKnowledgeBase === undefined) {
-          setCurrentKnowledgeBase(list[0].id);
-        }
+        // 移除自动设置默认知识库的逻辑，避免覆盖历史会话的知识库
+        // 知识库的初始选择应该由会话管理逻辑负责，而不是在这里强制设置
       } catch (e) {
         // 后端暂未实现时，保持空列表，不阻塞聊天功能
         if (!mounted) return;
