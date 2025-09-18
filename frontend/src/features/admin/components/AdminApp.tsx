@@ -1,15 +1,14 @@
 import React from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { getAdminMenus, getIsAdmin, type AdminMenuItem } from '../services/adminApi';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Settings, Shield } from 'lucide-react';
 import AdminSidebar from './AdminSidebar';
 import NewsListPage from './news/NewsListPage';
 import NewsEditorPage from './news/NewsEditorPage';
-
-// 移除占位，改为实际页面
+import KnowledgeBaseListPage from './knowledge-base/KnowledgeBaseListPage';
+import KnowledgeBaseEditorPage from './knowledge-base/KnowledgeBaseEditorPage';
 
 const AdminShell: React.FC = () => {
   const [isAdmin, setIsAdmin] = React.useState<boolean | null>(null);
@@ -90,6 +89,9 @@ const AdminShell: React.FC = () => {
             <Route path="news" element={<NewsListPage />} />
             <Route path="news/new" element={<NewsEditorPage />} />
             <Route path="news/edit/:id" element={<NewsEditorPage />} />
+            <Route path="knowledge-bases" element={<KnowledgeBaseListPage />} />
+            <Route path="knowledge-bases/new" element={<KnowledgeBaseEditorPage />} />
+            <Route path="knowledge-bases/edit/:id" element={<KnowledgeBaseEditorPage />} />
             <Route path="*" element={<Navigate to="news" replace />} />
           </Routes>
         </main>

@@ -29,6 +29,7 @@ export class AdminController {
   menus() {
     return [
       { key: 'news', label: '新闻管理' },
+      { key: 'knowledge-bases', label: '知识库管理' },
     ];
   }
 

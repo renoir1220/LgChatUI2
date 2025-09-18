@@ -19,6 +19,8 @@ export interface CrmLoginResponse {
   Code: string;
   Content: {
     CRM_USER_ID?: string;
+    DISPLAY_NAME?: string;
+    IS_DEV_MODE?: boolean;
   } | null;
 }
 

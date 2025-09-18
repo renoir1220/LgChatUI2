@@ -9,7 +9,12 @@
     "build:be": "cd backend && npm run build",
     "build": "npm run build:be && npm run build:fe",
     "health": "curl -f http://localhost:3000/health || echo 'Backend not ready' && curl -f http://localhost:5173 || echo 'Frontend not ready'",
-    "ports": "lsof -i :3000,:5173 | grep LISTEN || echo 'No services running on default ports'"
+    "ports": "lsof -i :3000,:5173 | grep LISTEN || echo 'No services running on default ports'",
+    "crm:status": "cd backend && node scripts/crm-fallback.js status",
+    "crm:test": "cd backend && node scripts/crm-fallback.js test",
+    "crm:enable": "cd backend && node scripts/crm-fallback.js enable",
+    "crm:auto": "cd backend && node scripts/crm-fallback.js auto",
+    "crm:disable": "cd backend && node scripts/crm-fallback.js disable"
   },
   "engines": {
     "node": ">=18"

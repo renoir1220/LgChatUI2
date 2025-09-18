@@ -1,11 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Newspaper, ChevronRight, Home, BarChart3, Settings, Users } from 'lucide-react';
+import { Newspaper, BarChart3, Settings, Users, BookOpen } from 'lucide-react';
 
 export interface SidebarItem {
   key: string;
@@ -21,17 +16,18 @@ interface AdminSidebarProps {
 // 菜单图标映射
 const getMenuIcon = (key: string) => {
   const iconMap: Record<string, React.ReactNode> = {
-    'news': <Newspaper className="h-4 w-4" />,
-    'analytics': <BarChart3 className="h-4 w-4" />,
-    'users': <Users className="h-4 w-4" />,
-    'settings': <Settings className="h-4 w-4" />
+    news: <Newspaper className="h-4 w-4" />,
+    analytics: <BarChart3 className="h-4 w-4" />,
+    users: <Users className="h-4 w-4" />,
+    settings: <Settings className="h-4 w-4" />,
+    'knowledge-bases': <BookOpen className="h-4 w-4" />,
   };
   return iconMap[key] || <Newspaper className="h-4 w-4" />;
 };
 
 const AdminSidebar: React.FC<AdminSidebarProps> = ({ items }) => {
   const location = useLocation();
-  
+
   return (
     <div className="hidden border-r bg-muted/40 md:block">
       <div className="flex h-full max-h-screen flex-col gap-2">
@@ -52,8 +48,8 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ items }) => {
                   key={item.key}
                   to={item.to}
                   className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary ${
-                    active 
-                      ? 'bg-muted text-primary' 
+                    active
+                      ? 'bg-muted text-primary'
                       : 'text-muted-foreground hover:bg-muted/50'
                   }`}
                 >
@@ -78,4 +74,3 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ items }) => {
 };
 
 export default AdminSidebar;
-

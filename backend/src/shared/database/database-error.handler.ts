@@ -35,21 +35,24 @@ export class DatabaseErrorHandler {
   static analyzeError(error: any): DatabaseErrorType {
     if (!error) return DatabaseErrorType.UNKNOWN;
 
-    const errorMessage = error.message || '';
+    const errorMessage = typeof error?.message === 'string' ? error.message : '';
+    const normalizedMessage = errorMessage.toLowerCase();
     const errorCode = error.code;
+    const errorNumber: number | undefined =
+      typeof error?.number === 'number' ? error.number : undefined;
 
     // 连接相关错误
     if (
-      errorMessage.includes('timeout') ||
-      errorMessage.includes('connection') ||
-      errorMessage.includes('ECONNREFUSED') ||
-      errorMessage.includes('ENOTFOUND') ||
-      errorMessage.includes('ETIMEDOUT') ||
+      normalizedMessage.includes('timeout') ||
+      normalizedMessage.includes('connection') ||
+      normalizedMessage.includes('econnrefused') ||
+      normalizedMessage.includes('enotfound') ||
+      normalizedMessage.includes('etimedout') ||
       errorCode === 'ECONNRESET' ||
       errorCode === 'ECONNREFUSED' ||
       errorCode === 'ETIMEOUT'
     ) {
-      return errorMessage.includes('timeout') ||
+      return normalizedMessage.includes('timeout') ||
         errorCode === 'ETIMEOUT' ||
         errorCode === 'ETIMEDOUT'
         ? DatabaseErrorType.TIMEOUT
@@ -58,20 +61,24 @@ export class DatabaseErrorHandler {
 
     // 认证错误
     if (
-      errorMessage.includes('Login failed') ||
-      errorMessage.includes('authentication') ||
-      errorMessage.includes('login') ||
+      normalizedMessage.includes('login failed') ||
+      normalizedMessage.includes('authentication') ||
+      normalizedMessage.includes('login') ||
       errorCode === 18456 // SQL Server 登录失败错误码
     ) {
       return DatabaseErrorType.AUTHENTICATION_FAILED;
     }
 
-    // SQL查询错误
+    // SQL查询错误（包含唯一约束、语法等问题）
     if (
-      errorMessage.includes('syntax') ||
-      errorMessage.includes('Invalid object name') ||
-      errorMessage.includes('Cannot insert') ||
-      errorMessage.includes('violation')
+      normalizedMessage.includes('syntax') ||
+      normalizedMessage.includes('invalid object name') ||
+      normalizedMessage.includes('cannot insert') ||
+      normalizedMessage.includes('violation') ||
+      normalizedMessage.includes('duplicate') ||
+      normalizedMessage.includes('conflict') ||
+      errorNumber === 2627 ||
+      errorNumber === 2601
     ) {
       return DatabaseErrorType.QUERY_ERROR;
     }
