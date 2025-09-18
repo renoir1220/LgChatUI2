@@ -8,6 +8,7 @@ export interface User {
   avatarUrl?: string;
   roles?: string[];
   createdAt?: string; // ISO timestamp
+  crmUserId?: string; // CRM用户ID
 }
 
 export interface AuthToken {
@@ -22,6 +23,10 @@ export const LoginRequestSchema = z.object({
     .min(2, '用户名至少2个字符')
     .max(50, '用户名最多50个字符')
     .trim(),
+  password: z
+    .string()
+    .min(1, '密码不能为空')
+    .max(100, '密码最多100个字符'),
 });
 
 export const LoginResponseSchema = z.object({

@@ -6,6 +6,7 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './guards/jwt.strategy';
 import { UsersRepository } from './repositories/users.repository';
+import { CrmService } from '../../shared/services/crm.service';
 
 @Module({
   imports: [
@@ -24,7 +25,7 @@ import { UsersRepository } from './repositories/users.repository';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, UsersRepository],
+  providers: [AuthService, JwtStrategy, UsersRepository, CrmService],
   exports: [AuthService],
 })
 export class AuthModule {}

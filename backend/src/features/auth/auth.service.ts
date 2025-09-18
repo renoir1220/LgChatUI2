@@ -2,9 +2,11 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersRepository } from './repositories/users.repository';
 import { AppLoggerService } from '../../shared/services/logger.service';
+import { CrmService } from '../../shared/services/crm.service';
 import { LoginResponse } from '../../types';
 import type { LoginRequest } from '../../types';
 import type { User } from '../../types';
+import { CrmLoginCode } from '../../types/crm';
 
 @Injectable()
 export class AuthService {
@@ -16,22 +18,76 @@ export class AuthService {
   constructor(
     private usersRepository: UsersRepository,
     private jwtService: JwtService,
+    private crmService: CrmService,
   ) {
     this.logger.setContext('AuthService');
   }
 
   async login(loginRequest: LoginRequest): Promise<LoginResponse> {
-    const { username } = loginRequest;
+    const { username, password } = loginRequest;
 
-    // 验证：检查用户名是否在员工数据库中存在
-    const user = await this.validateUser(username);
-    if (!user) {
-      throw new UnauthorizedException('用户名不存在，请使用有效的员工姓名');
+    this.logger.log('开始用户登录验证', {
+      username,
+      passwordLength: password.length
+    });
+
+    // 第一步：CRM验证用户凭据
+    const crmResponse = await this.crmService.validateLogin({
+      username,
+      password
+    });
+
+    // 检查CRM验证结果
+    if (!crmResponse.Success) {
+      const friendlyMessage = CrmService.mapCodeToMessage(crmResponse.Code);
+      this.logger.warn('CRM登录验证失败', {
+        username,
+        code: crmResponse.Code,
+        message: crmResponse.Message,
+        friendlyMessage
+      });
+      throw new UnauthorizedException(friendlyMessage);
     }
 
-    // 生成JWT token
-    const payload = { sub: user.id, username: user.username };
+    // 提取CRM_USER_ID
+    const crmUserId = crmResponse.Content?.CRM_USER_ID;
+    if (!crmUserId) {
+      this.logger.error('CRM验证成功但未返回CRM_USER_ID', undefined, {
+        username,
+        response: crmResponse
+      });
+      throw new UnauthorizedException('登录验证失败，请联系管理员');
+    }
+
+    this.logger.log('CRM验证成功，使用CRM_USER_ID查询用户信息', {
+      username,
+      crmUserId: crmUserId.substring(0, 8) + '...'
+    });
+
+    // 第二步：使用CRM_USER_ID查询用户详细信息
+    const user = await this.usersRepository.findByCrmUserId(crmUserId);
+    if (!user) {
+      this.logger.warn('CRM_USER_ID在员工数据库中不存在', {
+        username,
+        crmUserId: crmUserId.substring(0, 8) + '...'
+      });
+      throw new UnauthorizedException('用户信息不完整，请联系管理员');
+    }
+
+    // 第三步：生成JWT token
+    const payload = {
+      sub: user.id,
+      username: user.username,
+      crmUserId: user.crmUserId
+    };
     const access_token = this.jwtService.sign(payload);
+
+    this.logger.log('用户登录成功', {
+      username,
+      userId: user.id,
+      crmUserId: user.crmUserId?.substring(0, 8) + '...',
+      displayName: user.displayName
+    });
 
     return {
       access_token,
@@ -57,7 +113,10 @@ export class AuthService {
     try {
       user = await this.usersRepository.findByUsername(username);
     } catch (e: any) {
-      this.logger.error(`validateUser 查询失败: ${e?.message || e}`);
+      this.logger.error('validateUser 查询失败', e?.stack, {
+        username,
+        error: e?.message || e
+      });
       return null;
     }
 
