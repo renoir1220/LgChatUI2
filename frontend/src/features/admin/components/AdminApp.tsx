@@ -9,6 +9,8 @@ import NewsListPage from './news/NewsListPage';
 import NewsEditorPage from './news/NewsEditorPage';
 import KnowledgeBaseListPage from './knowledge-base/KnowledgeBaseListPage';
 import KnowledgeBaseEditorPage from './knowledge-base/KnowledgeBaseEditorPage';
+import ConversationViewerPage from './conversations/ConversationViewerPage';
+import DashboardPage from './dashboard/DashboardPage';
 
 const AdminShell: React.FC = () => {
   const [isAdmin, setIsAdmin] = React.useState<boolean | null>(null);
@@ -85,14 +87,16 @@ const AdminShell: React.FC = () => {
         </header>
         <main className="flex-1 space-y-4 p-8 pt-6">
           <Routes>
-            <Route path="" element={<NewsListPage />} />
+            <Route path="" element={<DashboardPage />} />
+            <Route path="dashboard" element={<DashboardPage />} />
             <Route path="news" element={<NewsListPage />} />
             <Route path="news/new" element={<NewsEditorPage />} />
             <Route path="news/edit/:id" element={<NewsEditorPage />} />
             <Route path="knowledge-bases" element={<KnowledgeBaseListPage />} />
             <Route path="knowledge-bases/new" element={<KnowledgeBaseEditorPage />} />
             <Route path="knowledge-bases/edit/:id" element={<KnowledgeBaseEditorPage />} />
-            <Route path="*" element={<Navigate to="news" replace />} />
+            <Route path="conversations" element={<ConversationViewerPage />} />
+            <Route path="*" element={<Navigate to="dashboard" replace />} />
           </Routes>
         </main>
       </div>

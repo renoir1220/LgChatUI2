@@ -5,7 +5,7 @@ import { cn } from '@/features/shared/utils/utils';
 import {
   feedbackService,
   MessageFeedbackType,
-  type MessageFeedback,
+  type MessageFeedback as MessageFeedbackData,
 } from '../services/feedbackService';
 import { showApiError } from '../../shared/services/api';
 
@@ -26,7 +26,7 @@ export const MessageFeedback: React.FC<MessageFeedbackProps> = ({
   messageId,
   className = '',
 }) => {
-  const [currentFeedback, setCurrentFeedback] = useState<MessageFeedback | null>(null);
+  const [currentFeedback, setCurrentFeedback] = useState<MessageFeedbackData | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUpdatingTags, setIsUpdatingTags] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -42,9 +42,12 @@ export const MessageFeedback: React.FC<MessageFeedbackProps> = ({
       const feedback = await feedbackService.getUserFeedback(messageId);
       setCurrentFeedback(feedback);
       setSelectedTags(feedback?.feedbackTags ?? []);
-    } catch (error) {
+    } catch (error: any) {
       // 静默处理错误，不显示错误信息（用户可能没有反馈）
-      console.warn('获取用户反馈失败:', error);
+      // 只有在非404错误时才记录警告（404表示用户没有反馈，这是正常情况）
+      if (error?.status !== 404) {
+        console.warn('获取用户反馈失败:', error);
+      }
       setCurrentFeedback(null);
       setSelectedTags([]);
     }

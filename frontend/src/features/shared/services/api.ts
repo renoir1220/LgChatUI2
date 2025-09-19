@@ -162,7 +162,19 @@ export async function apiGet<T = unknown>(path: string): Promise<T> {
     const errorMessage = await getErrorMessage(resp);
     throw new ApiError(resp.status, errorMessage, path);
   }
-  return resp.json() as Promise<T>;
+
+  // 处理空响应体的情况
+  const text = await resp.text();
+  if (!text || text.trim() === '') {
+    return {} as T;
+  }
+
+  try {
+    return JSON.parse(text) as T;
+  } catch (e) {
+    console.warn('JSON解析失败，返回空对象:', { text, error: e });
+    return {} as T;
+  }
 }
 
 export async function apiPost<T = unknown>(path: string, body?: unknown): Promise<T> {
@@ -174,7 +186,19 @@ export async function apiPost<T = unknown>(path: string, body?: unknown): Promis
     const errorMessage = await getErrorMessage(resp);
     throw new ApiError(resp.status, errorMessage, path);
   }
-  return resp.json() as Promise<T>;
+
+  // 处理空响应体的情况
+  const text = await resp.text();
+  if (!text || text.trim() === '') {
+    return {} as T;
+  }
+
+  try {
+    return JSON.parse(text) as T;
+  } catch (e) {
+    console.warn('JSON解析失败，返回空对象:', { text, error: e });
+    return {} as T;
+  }
 }
 
 export async function apiPut<T = unknown>(path: string, body?: unknown): Promise<T> {
@@ -198,5 +222,17 @@ export async function apiDelete<T = unknown>(path: string): Promise<T> {
     const errorMessage = await getErrorMessage(resp);
     throw new ApiError(resp.status, errorMessage, path);
   }
-  return resp.json() as Promise<T>;
+
+  // 处理空响应体的情况
+  const text = await resp.text();
+  if (!text || text.trim() === '') {
+    return {} as T;
+  }
+
+  try {
+    return JSON.parse(text) as T;
+  } catch (e) {
+    console.warn('JSON解析失败，返回空对象:', { text, error: e });
+    return {} as T;
+  }
 }

@@ -123,13 +123,27 @@ src/
 - **连接池**: 自动管理连接生命周期
 - **事务支持**: 关键操作的ACID保证
 
-### 核心表结构
+### 表结构文档
+**重要**: 完整的数据库表结构、列名、类型、约束等详细信息请参考：
+📖 **[数据库Schema文档](./docs/database-schema.md)**
+
+### 核心表结构概览
 所有AI相关表以`AI_`开头：
-- **AI_CONVERSATIONS**: 会话信息
-- **AI_MESSAGES**: 消息记录  
-- **AI_USER**: 用户信息
-- **AI_BUGS**: BUG管理信息
-- **AI_SUGGESTIONS**: 建议管理信息
+- **AI_CONVERSATIONS**: 会话信息 (主键: CONVERSATION_ID)
+- **AI_MESSAGES**: 消息记录 (主键: MESSAGE_ID)
+- **AI_MESSAGE_FEEDBACK**: 消息反馈 (主键: FEEDBACK_ID)
+- **AI_KNOWLEDGE_BASES**: 知识库配置 (主键: ID)
+- **AI_SUGGESTIONS**: 建议管理 (主键: SUGGESTION_ID)
+- **AI_InfoFeed**: 信息流内容 (主键: id)
+- **AI_MODEL**: AI模型配置 (主键: ID)
+
+### 重要注意事项
+- **列名约定**: 所有列名使用大写 (如: CONVERSATION_ID, USER_ID, CREATED_AT)
+- **🚨 主键格式**: **严格禁止使用 uniqueidentifier 类型**，所有GUID主键统一使用 `varchar(50)` 存储GUID字符串
+- **GUID格式**: 标准36字符格式 (如: '12345678-1234-1234-1234-123456789abc')
+- **时间字段**: 统一使用 CREATED_AT, UPDATED_AT
+- **软删除**: 部分表使用 IS_DELETED 字段
+- **类型安全**: 避免SQL类型转换错误，所有GUID操作使用字符串比较
 
 ## API设计
 

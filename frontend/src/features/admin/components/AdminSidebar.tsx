@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Newspaper, BarChart3, Settings, Users, BookOpen } from 'lucide-react';
+import { Newspaper, BarChart3, Settings, Users, BookOpen, MessageSquare } from 'lucide-react';
 
 export interface SidebarItem {
   key: string;
@@ -21,6 +21,7 @@ const getMenuIcon = (key: string) => {
     users: <Users className="h-4 w-4" />,
     settings: <Settings className="h-4 w-4" />,
     'knowledge-bases': <BookOpen className="h-4 w-4" />,
+    conversations: <MessageSquare className="h-4 w-4" />,
   };
   return iconMap[key] || <Newspaper className="h-4 w-4" />;
 };

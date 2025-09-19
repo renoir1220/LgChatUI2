@@ -28,8 +28,10 @@ export class AdminController {
   @Get('menus')
   menus() {
     return [
+      { key: 'dashboard', label: '数据统计看板' },
       { key: 'news', label: '新闻管理' },
       { key: 'knowledge-bases', label: '知识库管理' },
+      { key: 'conversations', label: '会话记录' },
     ];
   }
 
