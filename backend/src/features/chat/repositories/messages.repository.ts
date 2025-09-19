@@ -50,7 +50,13 @@ export class MessagesRepository {
     conversationId: string,
     role: ChatRole,
     content: string,
-    userId?: string,
+    userId: string | undefined,
+    clientInfo: {
+      clientType?: string;
+      clientPlatform?: string;
+      clientBrowser?: string;
+      userAgent?: string;
+    },
   ): Promise<ChatMessage> {
     const dbRole = role === ChatRole.User ? 'USER' : 'BOT';
     const rows = await this.db.query<{
@@ -61,8 +67,8 @@ export class MessagesRepository {
       createdAt: string;
     }>(
       `DECLARE @id uniqueidentifier = NEWID();
-       INSERT INTO AI_MESSAGES (MESSAGE_ID, CONVERSATION_ID, ROLE, CONTENT, CREATED_AT)
-       VALUES (@id, @p0, @p1, @p2, GETDATE());
+       INSERT INTO AI_MESSAGES (MESSAGE_ID, CONVERSATION_ID, ROLE, CONTENT, CREATED_AT, CLIENT_TYPE, CLIENT_PLATFORM, CLIENT_BROWSER, USER_AGENT)
+       VALUES (@id, @p0, @p1, @p2, GETDATE(), @p3, @p4, @p5, @p6);
        SELECT CONVERT(varchar(36), @id) AS id,
               CONVERT(varchar(36), @p0) AS conversationId,
               @p1 AS role,
@@ -71,6 +77,10 @@ export class MessagesRepository {
       conversationId,
       dbRole,
       content,
+      clientInfo?.clientType,
+      clientInfo?.clientPlatform,
+      clientInfo?.clientBrowser,
+      clientInfo?.userAgent,
     );
     const r = rows[0];
     return {

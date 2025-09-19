@@ -126,6 +126,12 @@ export class ChatController {
         ChatRole.User,
         body.message,
         userId,
+        {
+          clientType: body.clientType,
+          clientPlatform: body.clientPlatform,
+          clientBrowser: body.clientBrowser,
+          userAgent: body.userAgent,
+        },
       );
       this.logger.log('用户消息保存成功', {
         messageId: userMessage.id,
@@ -355,6 +361,8 @@ export class ChatController {
         conversationId,
         ChatRole.Assistant,
         assistantMessage,
+        undefined, // userId is not required for assistant messages
+        {}, // clientInfo is not applicable for assistant messages
       );
 
       // 发送最终的消息ID给前端，用于反馈功能

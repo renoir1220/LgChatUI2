@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { apiFetch } from '../../shared/services/api';
 import { saveCitationsToCache, saveAssistantCitationsToCache } from '../utils/messageCache';
 import type { BubbleDataType, StreamResponse } from './useChatState';
+import { getClientInfo } from '@/utils/client-info';
 
 /**
  * 流式聊天处理Hook
@@ -29,7 +30,13 @@ export function useStreamChat() {
     abortController.current?.abort();
     abortController.current = new AbortController();
 
-    const baseBody = { message, knowledgeBaseId: currentKnowledgeBase, ...(modelId ? { modelId } : {}) } as any;
+    const clientInfo = getClientInfo();
+    const baseBody = {
+      message,
+      knowledgeBaseId: currentKnowledgeBase,
+      ...(modelId ? { modelId } : {}),
+      ...clientInfo,
+    } as any;
     const sentConvId = isValidUUID(conversationId) ? conversationId : undefined;
     const makeBody = (withConv: boolean) => JSON.stringify(
       withConv && sentConvId ? { ...baseBody, conversationId: sentConvId } : baseBody

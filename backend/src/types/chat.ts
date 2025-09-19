@@ -64,6 +64,10 @@ export interface ChatRequest {
   knowledgeBaseId?: string;
   userId?: string;
   modelId?: string;
+  clientType?: string;
+  clientPlatform?: string;
+  clientBrowser?: string;
+  userAgent?: string;
 }
 
 // Streaming event shape aligned with Dify-like responses used in LgChatUI
@@ -103,6 +107,11 @@ export const ChatRequestSchema = z.object({
   knowledgeBaseId: z.string().optional(),
   userId: z.string().optional(),
   modelId: z.string().optional(),
+  // 客户端信息
+  clientType: z.string().optional(),
+  clientPlatform: z.string().optional(),
+  clientBrowser: z.string().optional(),
+  userAgent: z.string().optional(),
 });
 
 export const MessageCreateSchema = z.object({

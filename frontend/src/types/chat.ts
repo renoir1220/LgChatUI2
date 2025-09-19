@@ -64,6 +64,10 @@ export interface ChatRequest {
   knowledgeBaseId?: string;
   userId?: string;
   modelId?: string;
+  clientType?: string;
+  clientPlatform?: string;
+  clientBrowser?: string;
+  userAgent?: string;
 }
 
 // Streaming event shape aligned with Dify-like responses used in LgChatUI
