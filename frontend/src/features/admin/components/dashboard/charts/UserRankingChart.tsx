@@ -21,7 +21,7 @@ echarts.use([
 
 // 状态管理
 let globalLimit = '10';
-let globalSetLimit: (value: string) => void;
+let globalSetLimit: ((value: string) => void) | undefined;
 
 // TOP选择器组件
 const TopSelector: React.FC = () => {
@@ -51,7 +51,11 @@ const TopSelector: React.FC = () => {
   );
 };
 
-const UserRankingChart: React.FC = () => {
+type UserRankingChartComponent = React.FC & {
+  TopSelector: React.FC;
+};
+
+const UserRankingChart: UserRankingChartComponent = () => {
   const [data, setData] = useState<UserRankingData[]>([]);
   const [loading, setLoading] = useState(true);
   const [limit, setLimit] = useState<string>('10');

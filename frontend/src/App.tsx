@@ -1,15 +1,16 @@
-import React from 'react'
+import React, { Suspense } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import LoginScreen from './features/auth/components/LoginScreen'
 import ChatScreenRefactored from './features/chat/components/ChatScreenRefactored'
-import InfoFeedPage from './features/infofeed/pages/InfoFeedPage'
-import CustomerInfoPage from './features/customer/pages/CustomerInfoPage'
-import AdminApp from './features/admin/components/AdminApp'
 import RequireAuth from './features/auth/components/RequireAuth'
 import { NotificationProvider } from './features/shared/contexts/NotificationContext'
 import { SettingsProvider } from './features/shared/contexts/SettingsContext'
 import UpdatePrompt from './components/UpdatePrompt'
 import { setNavigator } from './features/shared/services/navigation'
+
+const AdminApp = React.lazy(() => import('./features/admin/components/AdminApp'))
+const InfoFeedPage = React.lazy(() => import('./features/infofeed/pages/InfoFeedPage'))
+const CustomerInfoPage = React.lazy(() => import('./features/customer/pages/CustomerInfoPage'))
 
 function NavBinder() {
   const navigate = useNavigate();
@@ -17,6 +18,14 @@ function NavBinder() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   React.useEffect(() => { setNavigator(navigate); }, [navigate]);
   return null;
+}
+
+function RouteFallback() {
+  return (
+    <div className="h-full w-full flex items-center justify-center">
+      <span className="text-sm text-muted-foreground">加载中...</span>
+    </div>
+  );
 }
 
 function App() {
@@ -57,9 +66,11 @@ function App() {
                 path="/admin/*" 
                 element={
                   <div className="h-full flex-1">
-                    <RequireAuth>
-                      <AdminApp />
-                    </RequireAuth>
+                    <Suspense fallback={<RouteFallback />}>
+                      <RequireAuth>
+                        <AdminApp />
+                      </RequireAuth>
+                    </Suspense>
                   </div>
                 } 
               />
@@ -67,9 +78,11 @@ function App() {
                 path="/feeds" 
                 element={
                   <div className="h-full flex-1">
-                    <RequireAuth>
-                      <InfoFeedPage />
-                    </RequireAuth>
+                    <Suspense fallback={<RouteFallback />}>
+                      <RequireAuth>
+                        <InfoFeedPage />
+                      </RequireAuth>
+                    </Suspense>
                   </div>
                 }
               />
@@ -77,9 +90,11 @@ function App() {
                 path="/customer" 
                 element={
                   <div className="h-full flex-1">
-                    <RequireAuth>
-                      <CustomerInfoPage />
-                    </RequireAuth>
+                    <Suspense fallback={<RouteFallback />}>
+                      <RequireAuth>
+                        <CustomerInfoPage />
+                      </RequireAuth>
+                    </Suspense>
                   </div>
                 }
               />
