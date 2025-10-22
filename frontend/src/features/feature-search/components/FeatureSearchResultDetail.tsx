@@ -1,6 +1,6 @@
 import React from 'react';
-import { Tag } from 'antd';
 import DOMPurify from 'dompurify';
+import { Badge } from '@/components/ui/badge';
 import type { FeatureSearchResult } from '../types';
 
 interface FeatureSearchResultDetailProps {
@@ -13,8 +13,8 @@ const DetailRow: React.FC<{ label: string; value?: React.ReactNode }> = ({ label
   if (!value) return null;
   return (
     <div className="flex items-start gap-2 text-sm text-slate-600">
-      <span className="w-20 shrink-0 text-slate-500">{label}</span>
-      <span className="flex-1 break-words whitespace-pre-wrap">{value}</span>
+      <span className="w-16 shrink-0 text-xs font-medium text-slate-400">{label}</span>
+      <span className="flex-1 break-words whitespace-pre-wrap text-slate-700">{value}</span>
     </div>
   );
 };
@@ -33,15 +33,6 @@ const toAbsoluteImageSrc = (src: string) => {
     return `${IMAGE_BASE_URL.replace(/\/$/g, '')}${cleaned}`;
   }
   return `${IMAGE_BASE_URL.replace(/\/$/g, '')}/${cleaned}`;
-};
-
-const HEADING_STYLES: Record<string, string> = {
-  h1: 'font-size:20px;font-weight:600;color:#111827;margin:18px 0 10px;padding-left:8px;border-left:3px solid #2563eb;',
-  h2: 'font-size:18px;font-weight:600;color:#1f2937;margin:16px 0 8px;padding-left:6px;border-left:3px solid rgba(37,99,235,0.65);',
-  h3: 'font-size:16px;font-weight:600;color:#1f2937;margin:14px 0 8px;padding-left:6px;border-left:2px solid rgba(37,99,235,0.35);',
-  h4: 'font-size:15px;font-weight:600;color:#374151;margin:12px 0 6px;',
-  h5: 'font-size:14px;font-weight:600;color:#4b5563;margin:10px 0 6px;',
-  h6: 'font-size:13px;font-weight:600;color:#6b7280;margin:8px 0 4px;',
 };
 
 const sanitizeRichText = (content: string | null | undefined, keywords: string[] = []) => {
@@ -115,26 +106,6 @@ const sanitizeRichText = (content: string | null | undefined, keywords: string[]
     }
   });
 
-  container.querySelectorAll('h1, h2, h3, h4, h5, h6').forEach((heading) => {
-    const tagName = heading.tagName.toLowerCase();
-    const existingStyle = heading.getAttribute('style') || '';
-    const additionalStyle = HEADING_STYLES[tagName] || '';
-    heading.setAttribute('style', `${existingStyle};${additionalStyle}`);
-  });
-
-  container.querySelectorAll('p').forEach((paragraph) => {
-    const existingStyle = paragraph.getAttribute('style') || '';
-    paragraph.setAttribute(
-      'style',
-      `${existingStyle};margin:8px 0;color:#374151;line-height:1.65;`,
-    );
-  });
-
-  container.querySelectorAll('ul, ol').forEach((list) => {
-    const existingStyle = list.getAttribute('style') || '';
-    list.setAttribute('style', `${existingStyle};margin:8px 0 8px 20px;`);
-  });
-
   // 高亮关键字
   const effectiveKeywords = Array.from(
     new Set(keywords.filter(Boolean).map((keyword) => keyword.trim())),
@@ -169,7 +140,7 @@ const sanitizeRichText = (content: string | null | undefined, keywords: string[]
           mark.textContent = textValue.slice(offset, offset + match.length);
           mark.setAttribute(
             'style',
-            'background:rgba(250,204,21,0.35);padding:0 2px;border-radius:2px;',
+            'background:rgba(219,234,254,0.9);padding:0 2px;border-radius:2px;color:#1d4ed8;font-weight:600;',
           );
           fragment.appendChild(mark);
           lastIndex = offset + match.length;
@@ -183,10 +154,7 @@ const sanitizeRichText = (content: string | null | undefined, keywords: string[]
     }
   }
 
-  const html = container.innerHTML
-    .replace(/<div>&nbsp;<\/div>/g, '<div style="height:0.75rem;"></div>')
-    .trim();
-
+  const html = container.innerHTML.trim();
   return html || undefined;
 };
 
@@ -195,13 +163,6 @@ export const FeatureSearchResultDetail: React.FC<FeatureSearchResultDetailProps>
   highlight,
   keywords = [],
 }) => {
-  const formatDateTime = (value: string | null) => {
-    if (!value) return undefined;
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return value;
-    return date.toLocaleString();
-  };
-
   const releaseNoteHtml = React.useMemo(
     () => sanitizeRichText(item.releaseNote, keywords),
     [item.releaseNote, keywords],
@@ -238,90 +199,89 @@ export const FeatureSearchResultDetail: React.FC<FeatureSearchResultDetailProps>
     [item.requirementCode, item.requirementContent, item.requirementReview, item.requirementDesign],
   );
 
+const formatDate = (value: string | null) => {
+  if (!value) return undefined;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toISOString().split('T')[0];
+};
+
   return (
-    <div className="space-y-4 bg-slate-50/60 rounded-md p-4 mt-1">
-      <section className="space-y-2">
-        <header className="flex items-center gap-2 text-slate-700">
-          <h3 className="text-base font-semibold text-slate-900 flex items-center gap-2">
-            <span className="inline-block h-2.5 w-2.5 rounded-full bg-blue-500" />
-            发布说明
-          </h3>
-          {item.parameterSwitch && <Tag color="processing">参数开关</Tag>}
+    <div className="space-y-4 text-sm text-slate-700">
+      <section className="space-y-3">
+        <header className="flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full bg-blue-500" />
+          <span className="font-semibold text-slate-800">发布说明</span>
+          {item.parameterSwitch && (
+            <Badge variant="outline" className="rounded-full border-slate-300 bg-white px-3 text-xs">
+              参数开关
+            </Badge>
+          )}
         </header>
         {releaseNoteHtml ? (
           <div
-            className="text-sm leading-6 text-slate-700 space-y-4 richtext-content"
+            className="space-y-4 leading-6 text-slate-700"
             dangerouslySetInnerHTML={{ __html: releaseNoteHtml }}
           />
         ) : (
-          <p className="text-sm text-slate-500 italic">暂无发布说明</p>
+          <p className="italic text-slate-500">暂无发布说明</p>
         )}
         {parameterSwitchHtml && (
           <div
-            className="text-xs text-slate-500 richtext-content"
+            className="text-xs leading-relaxed text-slate-500"
             dangerouslySetInnerHTML={{ __html: parameterSwitchHtml }}
           />
         )}
       </section>
 
-      <section className="grid gap-2 md:grid-cols-2">
-        <DetailRow label="客户" value={highlight(item.customerName) ?? '—'} />
-        <DetailRow label="模块" value={highlight(item.moduleName) ?? '—'} />
-        <DetailRow label="站点" value={highlight(item.siteType) ?? '—'} />
-        <DetailRow label="版本" value={highlight(item.version) ?? '—'} />
-        <DetailRow label="产品类型" value={highlight(item.productType) ?? '—'} />
-        <DetailRow
-          label="来源"
-          value={highlight(item.sourceTable) ?? item.sourceTable ?? '—'}
-        />
-        <DetailRow
-          label="状态"
-          value={highlight(item.status) ?? (isRequirementSource ? '—' : undefined)}
-        />
+      <section className="grid gap-3 sm:grid-cols-2">
+        <DetailRow label="模块" value={highlight(item.moduleName)} />
+        <DetailRow label="站点" value={highlight(item.siteType)} />
+        <DetailRow label="版本" value={highlight(item.version)} />
+        <DetailRow label="状态" value={highlight(item.status)} />
         <DetailRow label="创建人" value={highlight(item.createdBy)} />
-        <DetailRow label="创建时间" value={formatDateTime(item.createdAt)} />
-        <DetailRow label="发布时间" value={formatDateTime(item.publishedAt)} />
+        <DetailRow label="发布日期" value={formatDate(item.publishedAt)} />
       </section>
 
       {(item.requirementContent || item.requirementReview || item.requirementDesign) && (
-        <section className="space-y-3">
+        <section className="space-y-4">
           {item.requirementCode && (
             <h4 className="text-sm font-semibold text-slate-800">
               需求编号：{highlight(item.requirementCode) ?? item.requirementCode}
             </h4>
           )}
           {requirementContentHtml && (
-            <div>
-              <div className="text-sm font-semibold text-slate-800 mb-2 flex items-center gap-2">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
                 <span className="inline-block h-2 w-2 rounded-full bg-blue-400" />
                 需求正文
               </div>
               <div
-                className="text-sm leading-6 text-slate-700 space-y-4 richtext-content"
+                className="space-y-4 leading-6 text-slate-700"
                 dangerouslySetInnerHTML={{ __html: requirementContentHtml }}
               />
             </div>
           )}
           {requirementReviewHtml && (
-            <div>
-              <div className="text-sm font-semibold text-slate-800 mb-2 flex items-center gap-2">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
                 <span className="inline-block h-2 w-2 rounded-full bg-blue-400" />
                 需求评估
               </div>
               <div
-                className="text-sm leading-6 text-slate-700 space-y-4 richtext-content"
+                className="space-y-4 leading-6 text-slate-700"
                 dangerouslySetInnerHTML={{ __html: requirementReviewHtml }}
               />
             </div>
           )}
           {requirementDesignHtml && (
-            <div>
-              <div className="text-sm font-semibold text-slate-800 mb-2 flex items-center gap-2">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
                 <span className="inline-block h-2 w-2 rounded-full bg-blue-400" />
                 需求设计
               </div>
               <div
-                className="text-sm leading-6 text-slate-700 space-y-4 richtext-content"
+                className="space-y-4 leading-6 text-slate-700"
                 dangerouslySetInnerHTML={{ __html: requirementDesignHtml }}
               />
             </div>

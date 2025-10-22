@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tooltip } from 'antd';
+import { cn } from '@/features/shared/utils/utils';
 import FeatureSearchIcon from './FeatureSearchIcon';
 
 interface FeatureSearchEntryProps {
@@ -7,7 +7,6 @@ interface FeatureSearchEntryProps {
 }
 
 export const FeatureSearchEntry: React.FC<FeatureSearchEntryProps> = ({ onClick }) => {
-  const [hover, setHover] = React.useState(false);
   const [isMobile, setIsMobile] = React.useState(false);
 
   React.useEffect(() => {
@@ -17,40 +16,21 @@ export const FeatureSearchEntry: React.FC<FeatureSearchEntryProps> = ({ onClick 
     return () => window.removeEventListener('resize', handler);
   }, []);
 
-  const color = hover ? '#2563EB' : '#6B7280';
-  const bg = hover ? '#EFF6FF' : 'transparent';
-
-  const content = (
-    <div
+  return (
+    <button
+      type="button"
       onClick={onClick}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 6,
-        borderRadius: 16,
-        padding: '6px 10px',
-        cursor: 'pointer',
-        color,
-        background: bg,
-        userSelect: 'none',
-      }}
+      className={cn(
+        'group inline-flex items-center gap-2 rounded-full border border-transparent px-3 py-2 text-xs font-medium text-slate-500 transition',
+        'bg-white/0 hover:border-blue-100 hover:bg-blue-50 hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60',
+      )}
+      title="功能查询"
+      aria-label="功能查询"
     >
       <FeatureSearchIcon />
-      {!isMobile && <span style={{ fontSize: 13, fontWeight: 500 }}>功能查询</span>}
-    </div>
+      {!isMobile && <span className="tracking-wide">功能查询</span>}
+    </button>
   );
-
-  if (isMobile) {
-    return (
-      <Tooltip title="功能查询" placement="bottom">
-        {content}
-      </Tooltip>
-    );
-  }
-
-  return content;
 };
 
 export default FeatureSearchEntry;
