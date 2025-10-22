@@ -227,6 +227,17 @@ export const FeatureSearchResultDetail: React.FC<FeatureSearchResultDetailProps>
     [item.requirementDesign, keywords],
   );
 
+  const isRequirementSource = React.useMemo(
+    () =>
+      Boolean(
+        item.requirementCode ||
+          item.requirementContent ||
+          item.requirementReview ||
+          item.requirementDesign,
+      ),
+    [item.requirementCode, item.requirementContent, item.requirementReview, item.requirementDesign],
+  );
+
   return (
     <div className="space-y-4 bg-slate-50/60 rounded-md p-4 mt-1">
       <section className="space-y-2">
@@ -261,14 +272,15 @@ export const FeatureSearchResultDetail: React.FC<FeatureSearchResultDetailProps>
         <DetailRow label="产品类型" value={highlight(item.productType) ?? '—'} />
         <DetailRow
           label="来源"
-          value={item.sourceTable === 'BUS_XQ' ? '需求库' : '发布说明'}
+          value={highlight(item.sourceTable) ?? item.sourceTable ?? '—'}
         />
         <DetailRow
           label="状态"
-          value={highlight(item.status) ?? (item.sourceTable === 'BUS_XQ' ? '—' : undefined)}
+          value={highlight(item.status) ?? (isRequirementSource ? '—' : undefined)}
         />
         <DetailRow label="创建人" value={highlight(item.createdBy)} />
         <DetailRow label="创建时间" value={formatDateTime(item.createdAt)} />
+        <DetailRow label="发布时间" value={formatDateTime(item.publishedAt)} />
       </section>
 
       {(item.requirementContent || item.requirementReview || item.requirementDesign) && (

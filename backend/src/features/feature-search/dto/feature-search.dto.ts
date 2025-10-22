@@ -56,6 +56,7 @@ export interface FeatureSearchResult {
   createdBy: string | null;
   createdAt: string | null;
   status: string | null;
+  publishedAt: string | null;
 }
 
 /**

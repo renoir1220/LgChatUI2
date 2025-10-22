@@ -1,12 +1,11 @@
-import { apiPost, ApiError } from '../../shared/services/api';
+import { apiPost, apiGet, ApiError } from '../../shared/services/api';
 import type {
   FeatureSearchResult,
   FeatureSearchResponse,
+  FeatureSearchHistoryItem,
+  FeatureSearchPopularItem,
+  SearchGroup,
 } from '../types';
-
-interface SearchGroup {
-  or: string[];
-}
 
 export function normalizeKeywords(input: string): SearchGroup[] {
   const andGroups = input
@@ -36,7 +35,7 @@ export async function searchFeatures(
 
   const response = await apiPost<FeatureSearchResponse>(
     '/api/feature-search',
-    { keywordGroups },
+    { keywordGroups, rawKeywords },
   );
 
   if (!response?.success) {
@@ -45,6 +44,45 @@ export async function searchFeatures(
       response?.message || '查询失败',
       '/api/feature-search',
     );
+  }
+
+  return response.data?.items ?? [];
+}
+
+export async function fetchUserHistory(limit = 10): Promise<FeatureSearchHistoryItem[]> {
+  const response = await apiGet<{ success: boolean; data: FeatureSearchHistoryItem[] }>(
+    `/api/feature-search/history?limit=${limit}`,
+  );
+  if (!response?.success) {
+    throw new ApiError(500, '获取常用查询失败', '/api/feature-search/history');
+  }
+  return response.data ?? [];
+}
+
+export async function fetchPopularQueries(
+  limit = 10,
+  days = 30,
+): Promise<FeatureSearchPopularItem[]> {
+  const response = await apiGet<{ success: boolean; data: FeatureSearchPopularItem[] }>(
+    `/api/feature-search/popular?limit=${limit}&days=${days}`,
+  );
+  if (!response?.success) {
+    throw new ApiError(500, '获取热门查询失败', '/api/feature-search/popular');
+  }
+  return response.data ?? [];
+}
+
+export async function fetchLatestFeatures(
+  days = 7,
+  limit = 50,
+): Promise<FeatureSearchResult[]> {
+  const response = await apiGet<{
+    success: boolean;
+    data: { items: FeatureSearchResult[] };
+  }>(`/api/feature-search/latest?days=${days}&limit=${limit}`);
+
+  if (!response?.success) {
+    throw new ApiError(500, '获取最新功能失败', '/api/feature-search/latest');
   }
 
   return response.data?.items ?? [];

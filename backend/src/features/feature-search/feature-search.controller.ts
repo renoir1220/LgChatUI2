@@ -4,14 +4,19 @@ import {
   Post,
   Body,
   Req,
+  UseGuards,
+  Get,
+  Query,
 } from '@nestjs/common';
 import { FeatureSearchService } from './feature-search.service';
 import { AppLoggerService } from '../../shared/services/logger.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 interface SearchGroup {
   or: string[];
 }
 
+@UseGuards(JwtAuthGuard)
 @Controller('api/feature-search')
 export class FeatureSearchController {
   constructor(
@@ -21,14 +26,15 @@ export class FeatureSearchController {
 
   @Post()
   async search(
-    @Body() body: { keywordGroups: SearchGroup[] },
+    @Body() body: { keywordGroups: SearchGroup[]; rawKeywords?: string },
     @Req() req?: any,
   ): Promise<any> {
-    const { keywordGroups } = body;
+    const { keywordGroups, rawKeywords } = body;
 
     this.logger.log('功能查询请求', {
       keywordGroups,
       userAgent: req?.headers?.['user-agent'] || 'unknown',
+      rawKeywords,
     });
 
     if (!keywordGroups || keywordGroups.length === 0) {
@@ -53,7 +59,10 @@ export class FeatureSearchController {
     }
 
     try {
-      const items = await this.featureSearchService.searchFeatures(keywordGroups);
+      const items = await this.featureSearchService.searchFeatures(keywordGroups, {
+        userId: req?.user?.id,
+        rawKeywords: rawKeywords,
+      });
       const message =
         items.length === 0
           ? '未找到匹配的功能记录'
@@ -73,5 +82,55 @@ export class FeatureSearchController {
       });
       throw new BadRequestException(`查询失败: ${error.message}`);
     }
+  }
+
+  @Get('history')
+  async getUserHistory(
+    @Req() req: any,
+    @Query('limit') limit = '10',
+  ) {
+    const parsedLimit = Math.min(Math.max(Number(limit) || 10, 1), 50);
+    const userId = req?.user?.id;
+    if (!userId) {
+      throw new BadRequestException('未获取到用户信息，无法查询历史记录');
+    }
+
+    const records = await this.featureSearchService.getUserHistory(userId, parsedLimit);
+    return {
+      success: true,
+      data: records,
+    };
+  }
+
+  @Get('popular')
+  async getPopularQueries(
+    @Query('limit') limit = '10',
+    @Query('days') days = '30',
+  ) {
+    const parsedLimit = Math.min(Math.max(Number(limit) || 10, 1), 50);
+    const parsedDays = Math.min(Math.max(Number(days) || 30, 1), 365);
+
+    const items = await this.featureSearchService.getPopularQueries(parsedLimit, parsedDays);
+    return {
+      success: true,
+      data: items,
+    };
+  }
+
+  @Get('latest')
+  async getLatestFeatures(
+    @Query('days') days = '7',
+    @Query('limit') limit = '50',
+  ) {
+    const parsedDays = Math.min(Math.max(Number(days) || 7, 1), 90);
+    const parsedLimit = Math.min(Math.max(Number(limit) || 50, 1), 200);
+
+    const items = await this.featureSearchService.getLatestFeatures(parsedDays, parsedLimit);
+    return {
+      success: true,
+      data: {
+        items,
+      },
+    };
   }
 }

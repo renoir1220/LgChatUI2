@@ -15,6 +15,7 @@ export interface FeatureSearchResult {
   createdBy: string | null;
   createdAt: string | null;
   status: string | null;
+  publishedAt: string | null;
 }
 
 export interface FeatureSearchResponse {
@@ -24,4 +25,19 @@ export interface FeatureSearchResponse {
     total: number;
   };
   message: string;
+}
+
+export interface FeatureSearchHistoryItem {
+  rawKeywords: string;
+  normalizedKeywords: SearchGroup[] | null;
+  resultCount: number | null;
+  lastUsedAt: string;
+}
+
+export interface FeatureSearchPopularItem extends FeatureSearchHistoryItem {
+  usageCount: number;
+}
+
+export interface SearchGroup {
+  or: string[];
 }

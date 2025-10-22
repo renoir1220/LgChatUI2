@@ -1,9 +1,19 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Input, Button, Collapse, Empty, Spin, Tag } from 'antd';
+import { Input, Button, Collapse, Empty, Spin, Tag, Modal, List, Radio } from 'antd';
 import { LeftOutlined, SearchOutlined } from '@ant-design/icons';
-import { searchFeatures, normalizeKeywords } from '../services/featureSearchApi';
-import type { FeatureSearchResult } from '../types';
+import {
+  searchFeatures,
+  normalizeKeywords,
+  fetchUserHistory,
+  fetchPopularQueries,
+  fetchLatestFeatures,
+} from '../services/featureSearchApi';
+import type {
+  FeatureSearchResult,
+  FeatureSearchHistoryItem,
+  FeatureSearchPopularItem,
+} from '../types';
 import { FeatureSearchResultDetail } from '../components/FeatureSearchResultDetail';
 import { showApiError } from '../../shared/services/api';
 
@@ -65,19 +75,90 @@ const compareFeatureVersionDesc = (
   return (b.featureName || '').localeCompare(a.featureName || '', 'zh-CN');
 };
 
+interface GroupedFeatureResults {
+  productType: string;
+  items: FeatureSearchResult[];
+}
+
+function buildGroupedResults(items: FeatureSearchResult[]): GroupedFeatureResults[] {
+  const map = new Map<string, FeatureSearchResult[]>();
+  items.forEach((item) => {
+    const key = item.productType?.trim() || '未分类';
+    if (!map.has(key)) {
+      map.set(key, []);
+    }
+    map.get(key)!.push(item);
+  });
+  return Array.from(map.entries()).map(([productType, list]) => ({
+    productType,
+    items: [...list].sort(compareFeatureVersionDesc),
+  }));
+}
+
 const FeatureSearchPage: React.FC = () => {
   const navigate = useNavigate();
-  const handleBack = React.useCallback(() => {
+  const handleBack = useCallback(() => {
     if (window.history.length > 1) {
       navigate(-1);
     } else {
       navigate('/');
     }
   }, [navigate]);
+
   const [keywordsInput, setKeywordsInput] = useState('');
   const [results, setResults] = useState<FeatureSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const [userHistory, setUserHistory] = useState<FeatureSearchHistoryItem[]>([]);
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [popularQueries, setPopularQueries] = useState<FeatureSearchPopularItem[]>([]);
+  const [latestFeatures, setLatestFeatures] = useState<FeatureSearchResult[]>([]);
+  const [latestLoading, setLatestLoading] = useState(false);
+  const [latestError, setLatestError] = useState<string | null>(null);
+  const [latestDays, setLatestDays] = useState<7 | 30>(7);
+
+  const loadUserHistory = useCallback(async () => {
+    try {
+      const records = await fetchUserHistory(10);
+      setUserHistory(records);
+    } catch (error) {
+      console.warn('加载常用查询失败', error);
+    }
+  }, []);
+
+  const loadPopularQueries = useCallback(async () => {
+    try {
+      const items = await fetchPopularQueries(8, 30);
+      setPopularQueries(items);
+    } catch (error) {
+      console.warn('加载热门查询失败', error);
+    }
+  }, []);
+
+  const loadLatestFeatures = useCallback(async (days: 7 | 30) => {
+    setLatestLoading(true);
+    try {
+      const data = await fetchLatestFeatures(days);
+      setLatestFeatures(data);
+      setLatestError(null);
+    } catch (error) {
+      console.warn('加载最新功能失败', error);
+      const message = error instanceof Error ? error.message : '加载最新功能失败';
+      setLatestError(message);
+      setLatestFeatures([]);
+    } finally {
+      setLatestLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadUserHistory();
+    void loadPopularQueries();
+  }, [loadUserHistory, loadPopularQueries]);
+
+  useEffect(() => {
+    void loadLatestFeatures(latestDays);
+  }, [loadLatestFeatures, latestDays]);
 
   const handleSearch = async (value?: string) => {
     const next = value !== undefined ? value : keywordsInput;
@@ -95,6 +176,7 @@ const FeatureSearchPage: React.FC = () => {
     try {
       const data = await searchFeatures(next);
       setResults(data);
+      void loadUserHistory();
     } catch (error) {
       showApiError(error, '查询失败，请稍后重试');
     } finally {
@@ -102,10 +184,32 @@ const FeatureSearchPage: React.FC = () => {
     }
   };
 
+  const handleApplySavedQuery = useCallback(
+    (rawKeywords: string) => {
+      setHistoryModalOpen(false);
+      setKeywordsInput(rawKeywords);
+      void handleSearch(rawKeywords);
+    },
+    [handleSearch],
+  );
+
+  const handleLatestDaysChange = useCallback((value: 7 | 30) => {
+    setLatestDays(value);
+  }, []);
+
+  const formatTimestamp = useCallback((value?: string | null) => {
+    if (!value) return '未知时间';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return value;
+    }
+    return date.toLocaleString();
+  }, []);
+
   const keywordGroups = useMemo(() => normalizeKeywords(keywordsInput), [keywordsInput]);
 
   const allKeywordsForHighlight = useMemo(() => {
-    return keywordGroups.flatMap(group => group.or).filter(Boolean);
+    return keywordGroups.flatMap((group) => group.or).filter(Boolean);
   }, [keywordGroups]);
 
   const highlight = useMemo(() => {
@@ -116,7 +220,7 @@ const FeatureSearchPage: React.FC = () => {
     if (unique.length === 0) {
       return (text?: string | null) => text ?? undefined;
     }
-    const validKeywords = unique.filter(k => typeof k === 'string' && k.length > 0);
+    const validKeywords = unique.filter((k) => typeof k === 'string' && k.length > 0);
     if (validKeywords.length === 0) {
       return (text?: string | null) => text ?? undefined;
     }
@@ -142,36 +246,22 @@ const FeatureSearchPage: React.FC = () => {
     };
   }, [allKeywordsForHighlight]);
 
-  const groupedResults = useMemo(() => {
-    const map = new Map<string, FeatureSearchResult[]>();
-    results.forEach((item) => {
-      const key = item.productType?.trim() || '未分类';
-      if (!map.has(key)) {
-        map.set(key, []);
-      }
-      map.get(key)!.push(item);
-    });
-    return Array.from(map.entries()).map(([productType, items]) => ({
-      productType,
-      items: [...items].sort(compareFeatureVersionDesc),
-    }));
-  }, [results]);
+  const groupedResults = useMemo(() => buildGroupedResults(results), [results]);
+  const latestGroupedResults = useMemo(
+    () => buildGroupedResults(latestFeatures),
+    [latestFeatures],
+  );
 
   const shouldExpandAll = results.length > 0 && results.length <= 10;
 
   const renderGroupLabel = (productType: string, count: number) => {
     const productTypeNode = highlight(productType) ?? productType;
     return (
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-slate-900">
-            {productTypeNode}
-          </span>
-          <Tag color="default">{count}</Tag>
-        </div>
-        <span className="text-xs text-slate-500">
-          点击展开查看功能明细
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-semibold text-slate-900">
+          {productTypeNode}
         </span>
+        <Tag color="default">{count}</Tag>
       </div>
     );
   };
@@ -242,7 +332,7 @@ const FeatureSearchPage: React.FC = () => {
           color="default"
           bordered={false}
         >
-          来源：{item.sourceTable === 'BUS_XQ' ? '需求(新)' : 'Readme'}
+          来源：{highlight(item.sourceTable) ?? item.sourceTable ?? '—'}
         </Tag>,
       );
 
@@ -299,7 +389,20 @@ const FeatureSearchPage: React.FC = () => {
     }));
   }, [groupedResults, renderGroupLabel, renderGroupBody]);
 
-  React.useEffect(() => {
+  const latestCollapseItems = useMemo(() => {
+    return latestGroupedResults.map(({ productType, items }) => ({
+      key: `latest-${productType}`,
+      label: (
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-sm font-semibold text-slate-900">{productType}</span>
+          <Tag color="default">{items.length}</Tag>
+        </div>
+      ),
+      children: renderGroupBody(items),
+    }));
+  }, [latestGroupedResults, renderGroupBody]);
+
+  useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault();
@@ -310,6 +413,8 @@ const FeatureSearchPage: React.FC = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleBack]);
+
+  const showInitialLanding = !initialized && results.length === 0;
 
   return (
     <div className="min-h-screen bg-white">
@@ -328,7 +433,7 @@ const FeatureSearchPage: React.FC = () => {
                 功能查询
               </h1>
               <p className="text-sm text-slate-500">
-                关键字用逗号隔开表示“同时满足”，同一段内用顿号分隔表示“任意一个即可”。
+                关键字用逗号隔开表示“同时满足”，同一段内用顿号或斜线表示“任意一个即可”。
               </p>
             </div>
           </div>
@@ -387,35 +492,162 @@ const FeatureSearchPage: React.FC = () => {
               ))}
             </div>
           )}
-        </section>
-
-        <section className="bg-white">
-          {loading ? (
-            <div className="flex flex-col items-center justify-center gap-3 py-16 text-sm text-slate-500">
-              <Spin />
-              <span>正在查询功能数据...</span>
-            </div>
-          ) : results.length > 0 ? (
-            <Collapse
-              items={groupedCollapseItems}
-              bordered={false}
-              style={{ background: 'transparent' }}
-              defaultActiveKey={
-                shouldExpandAll ? groupedCollapseItems.map((group) => group.key) : undefined
-              }
-            />
-          ) : initialized ? (
-            <Empty
-              description="未查询到相关功能，请尝试调整关键字"
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-            />
-          ) : (
-            <div className="rounded-md border border-dashed border-slate-200 bg-slate-50/60 p-8 text-center text-sm text-slate-500">
-              输入关键字并按下查询按钮，查看功能发布说明与需求资料
+          {userHistory.length > 0 && (
+            <div className="rounded-md border border-slate-200 bg-white/60 px-3 py-2">
+              <div className="text-xs font-medium text-slate-600">常用查询</div>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                {userHistory.slice(0, 3).map((item, index) => (
+                  <Button
+                    key={`${item.rawKeywords}-${index}`}
+                    size="small"
+                    onClick={() => handleApplySavedQuery(item.rawKeywords)}
+                    className="rounded-full"
+                  >
+                    {item.rawKeywords}
+                  </Button>
+                ))}
+                {userHistory.length > 3 && (
+                  <Button
+                    type="link"
+                    size="small"
+                    onClick={() => setHistoryModalOpen(true)}
+                    style={{ padding: 0, height: 'auto' }}
+                  >
+                    更多
+                  </Button>
+                )}
+              </div>
             </div>
           )}
         </section>
+
+        {showInitialLanding && (
+          <section className="mb-6 grid gap-4 md:grid-cols-[1.6fr_1fr]">
+            <div className="rounded-lg border border-slate-200 bg-white/80 p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-slate-800">最新功能</span>
+                <Radio.Group
+                  size="small"
+                  optionType="button"
+                  value={latestDays}
+                  onChange={(e) => handleLatestDaysChange(e.target.value as 7 | 30)}
+                >
+                  <Radio.Button value={7}>近7天</Radio.Button>
+                  <Radio.Button value={30}>近30天</Radio.Button>
+                </Radio.Group>
+              </div>
+              <div className="mt-3">
+                {latestLoading ? (
+                  <div className="py-10 text-center text-sm text-slate-500">
+                    <Spin />
+                  </div>
+                ) : latestError ? (
+                  <Empty description={latestError} />
+                ) : latestCollapseItems.length > 0 ? (
+                  <Collapse
+                    items={latestCollapseItems}
+                    bordered={false}
+                    style={{ background: 'transparent' }}
+                  />
+                ) : (
+                  <Empty description="暂无新功能" />
+                )}
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-slate-200 bg-white/80 p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-slate-800">热门查询</span>
+                <span className="text-xs text-slate-400">近30天</span>
+              </div>
+              <div className="mt-3">
+                {popularQueries.length > 0 ? (
+                  <div className="flex flex-col gap-2">
+                    {popularQueries.map((item) => (
+                      <button
+                        key={`${item.rawKeywords}-${item.lastUsedAt}`}
+                        type="button"
+                        onClick={() => handleApplySavedQuery(item.rawKeywords)}
+                        className="text-left text-sm text-slate-700 hover:text-blue-600 transition-colors"
+                        style={{ display: 'flex', justifyContent: 'space-between', gap: 16 }}
+                      >
+                        <span className="truncate">{item.rawKeywords}</span>
+                        <span className="text-xs text-slate-400 shrink-0">{item.usageCount} 次</span>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <Empty description="暂无热门查询" />
+                )}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {!showInitialLanding && (
+          <section className="bg-white">
+            {loading ? (
+              <div className="flex flex-col items-center justify-center gap-3 py-16 text-sm text-slate-500">
+                <Spin />
+                <span>正在查询功能数据...</span>
+              </div>
+            ) : results.length > 0 ? (
+              <Collapse
+                items={groupedCollapseItems}
+                bordered={false}
+                style={{ background: 'transparent' }}
+                defaultActiveKey={
+                  shouldExpandAll ? groupedCollapseItems.map((group) => group.key) : undefined
+                }
+              />
+            ) : initialized ? (
+              <Empty
+                description="未查询到相关功能，请尝试调整关键字"
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+              />
+            ) : (
+              <div className="rounded-md border border-dashed border-slate-200 bg-slate-50/60 p-8 text-center text-sm text-slate-500">
+                输入关键字并按下查询按钮，查看功能发布说明与需求资料
+              </div>
+            )}
+          </section>
+        )}
       </div>
+
+      <Modal
+        title="常用查询记录"
+        open={historyModalOpen}
+        onCancel={() => setHistoryModalOpen(false)}
+        footer={null}
+        width={520}
+      >
+        <List
+          size="small"
+          dataSource={userHistory}
+          locale={{ emptyText: '暂无查询记录' }}
+          rowKey={(item) => `${item.rawKeywords}-${item.lastUsedAt}`}
+          renderItem={(item) => (
+            <List.Item
+              actions={[
+                <Button
+                  key="apply-history"
+                  type="link"
+                  onClick={() => handleApplySavedQuery(item.rawKeywords)}
+                >
+                  立即查询
+                </Button>,
+              ]}
+            >
+              <List.Item.Meta
+                title={item.rawKeywords}
+                description={`${formatTimestamp(item.lastUsedAt)}${
+                  item.resultCount !== null ? ` · 返回 ${item.resultCount} 条` : ''
+                }`}
+              />
+            </List.Item>
+          )}
+        />
+      </Modal>
     </div>
   );
 };
