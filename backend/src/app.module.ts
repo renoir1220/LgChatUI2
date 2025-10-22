@@ -21,6 +21,7 @@ import { InfoFeedModule } from './features/infofeed/infofeed.module';
 import { ModelsModule } from './features/models/models.module';
 import { AdminModule } from './features/admin/admin.module';
 import { CrmCustomerModule } from './features/crm-customer/crm-customer.module';
+import { FeatureSearchModule } from './features/feature-search/feature-search.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { CrmCustomerModule } from './features/crm-customer/crm-customer.module';
     ModelsModule,
     AdminModule,
     CrmCustomerModule,
+    FeatureSearchModule,
   ],
   controllers: [AppController, HealthController],
   providers: [AppService],

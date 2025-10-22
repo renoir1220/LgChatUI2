@@ -21,15 +21,20 @@ export class CrmService {
 
   constructor() {
     // CRM配置
+    const rawApiUrl = process.env.CRM_API_URL || '192.168.200.114:8777';
+    const baseUrl = /^https?:\/\//.test(rawApiUrl)
+      ? rawApiUrl
+      : `https://${rawApiUrl}`;
+
     this.config = {
-      apiUrl: process.env.CRM_API_URL || '192.168.200.114:8777',
+      apiUrl: baseUrl,
       timeout: parseInt(process.env.CRM_TIMEOUT || '10000', 10), // 10秒超时
       retryAttempts: parseInt(process.env.CRM_RETRY_ATTEMPTS || '1', 10),
     };
 
     // 创建HTTP客户端
     this.httpClient = axios.create({
-      baseURL: `http://${this.config.apiUrl}`,
+      baseURL: this.config.apiUrl,
       timeout: this.config.timeout,
       headers: {
         'Content-Type': 'application/json',
@@ -106,16 +111,23 @@ export class CrmService {
       };
 
       // 打印详细的请求信息供CRM提供方检查
-      this.logger.log('=== CRM请求详细信息 ===', {
-        请求地址: `http://${this.config.apiUrl}/api/User/AICheckLogin`,
-        请求方法: 'POST',
-        请求头: {
+      const requestUrl = new URL(
+        '/api/User/AICheckLogin',
+        this.config.apiUrl,
+      ).toString();
+      const requestLog = {
+        url: requestUrl,
+        method: 'POST',
+        headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
+          Accept: 'application/json',
         },
-        请求体: crmRequest,
-        请求体JSON: JSON.stringify(crmRequest, null, 2),
-      });
+        body: crmRequest,
+      };
+
+      this.logger.log(
+        `CRM request payload: ${JSON.stringify(requestLog)}`,
+      );
 
       // 调用CRM登录接口
       const response = await this.callCrmLoginApi(crmRequest);

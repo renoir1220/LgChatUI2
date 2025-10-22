@@ -11,6 +11,7 @@ import { setNavigator } from './features/shared/services/navigation'
 const AdminApp = React.lazy(() => import('./features/admin/components/AdminApp'))
 const InfoFeedPage = React.lazy(() => import('./features/infofeed/pages/InfoFeedPage'))
 const CustomerInfoPage = React.lazy(() => import('./features/customer/pages/CustomerInfoPage'))
+const FeatureSearchPage = React.lazy(() => import('./features/feature-search/pages/FeatureSearchPage'))
 
 function NavBinder() {
   const navigate = useNavigate();
@@ -93,6 +94,18 @@ function App() {
                     <Suspense fallback={<RouteFallback />}>
                       <RequireAuth>
                         <CustomerInfoPage />
+                      </RequireAuth>
+                    </Suspense>
+                  </div>
+                }
+              />
+              <Route 
+                path="/feature-search" 
+                element={
+                  <div className="h-full flex-1">
+                    <Suspense fallback={<RouteFallback />}>
+                      <RequireAuth>
+                        <FeatureSearchPage />
                       </RequireAuth>
                     </Suspense>
                   </div>

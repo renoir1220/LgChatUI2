@@ -21,6 +21,7 @@ import { SuggestionListModal } from '../../suggestions/components/SuggestionList
 import { BugReportModal } from '../../bugs/components/BugReportModal';
 import InfoFeedEntry from '../../infofeed/components/InfoFeedEntry';
 import CustomerInfoEntry from '../../customer/components/CustomerInfoEntry';
+import FeatureSearchEntry from '../../feature-search/components/FeatureSearchEntry';
 import { isValidUUID } from '../../shared/utils/uuid';
 import { QUICK_ACTION_KB_NAME_MAP, KB_NAME_REQUIREMENTS } from '../constants';
 
@@ -327,6 +328,11 @@ const ChatScreenRefactored: React.FC = () => {
 
   // 快捷操作处理
   const handleQuickAction = async (action: string) => {
+    if (action === 'readme-query') {
+      navigate('/feature-search');
+      return;
+    }
+
     // 每个功能分别指定知识库（可按需扩展/修改）
     const QUICK_ACTION_KB_MAP = QUICK_ACTION_KB_NAME_MAP;
 
@@ -355,17 +361,10 @@ const ChatScreenRefactored: React.FC = () => {
       }
     }
 
-    let quickMessage = '';
     switch (action) {
       case 'open-infofeed':
         navigate('/feeds');
         return;
-      case 'readme-query':
-        quickMessage = '收费时核对蜡块号，查询参数：收费 接口';
-        // 设置后将焦点移动到输入末尾，便于继续输入
-        // 由于受控输入，先设值再触发聚焦信号
-        setTimeout(() => setFocusAtEndSignal((s) => s + 1), 0);
-        break;
       case 'requirement-progress':
         // 打开客户字典选择器（优先切换至目标知识库）
         setIsDictionarySelectorOpen(true);
@@ -383,7 +382,6 @@ const ChatScreenRefactored: React.FC = () => {
       default:
         return;
     }
-    setInputValue(quickMessage);
   };
 
   // 客户字典选择处理
@@ -599,6 +597,7 @@ const ChatScreenRefactored: React.FC = () => {
             
             {/* 右侧：功能入口按钮组 */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <FeatureSearchEntry onClick={() => navigate('/feature-search')} />
               <CustomerInfoEntry onClick={() => navigate('/customer')} />
               <InfoFeedEntry onClick={() => navigate('/feeds')} />
             </div>

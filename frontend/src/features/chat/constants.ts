@@ -2,7 +2,6 @@
 
 // 快捷操作 -> 默认目标知识库名 映射
 export const QUICK_ACTION_KB_NAME_MAP: Record<string, string> = {
-  'readme-query': '常见问题与需求',
   'requirement-progress': '常见问题与需求',
 };
 
