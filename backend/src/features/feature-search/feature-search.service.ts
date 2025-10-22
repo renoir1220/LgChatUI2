@@ -93,7 +93,7 @@ export class FeatureSearchService {
         FROM BUS_XQ x
       )
       SELECT TOP (${this.MAX_RECORDS})
-        src.source_table AS sourceTable,
+        src.source_label AS sourceTable,
         src.customer_name AS customerName,
         src.module_name AS moduleName,
         src.feature_name AS featureName,
@@ -112,6 +112,7 @@ export class FeatureSearchService {
       FROM (
         SELECT
           N'BUS_XQ' AS source_table,
+          N'需求(新)' AS source_label,
           customer_name,
           module_name,
           feature_name,
@@ -131,6 +132,7 @@ export class FeatureSearchService {
         UNION ALL
         SELECT
           N'BUS_README_LIST' AS source_table,
+          N'Readme' AS source_label,
           customer_name,
           module_name,
           feature_name,

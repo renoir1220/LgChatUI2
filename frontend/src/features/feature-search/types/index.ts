@@ -1,5 +1,5 @@
 export interface FeatureSearchResult {
-  sourceTable: 'BUS_XQ' | 'BUS_README_LIST';
+  sourceTable: string;
   customerName: string | null;
   moduleName: string | null;
   featureName: string | null;

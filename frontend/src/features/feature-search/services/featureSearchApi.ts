@@ -10,14 +10,14 @@ interface SearchGroup {
 
 export function normalizeKeywords(input: string): SearchGroup[] {
   const andGroups = input
-    .split(/[\s,，；;、]+/)
+    .split(/[\s,，；;]+/)
     .map((group) => group.trim())
     .filter((group) => group.length > 0);
 
   return andGroups
     .map((andGroup) => {
       const orKeywords = andGroup
-        .split(/[?？|｜]/)
+        .split(/[?？|｜/／、]+/)
         .map((keyword) => keyword.trim())
         .filter((keyword) => keyword.length > 0);
       return { or: orKeywords.length > 0 ? orKeywords : [andGroup] };

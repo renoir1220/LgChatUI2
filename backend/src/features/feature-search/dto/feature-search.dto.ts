@@ -40,7 +40,7 @@ export class FeatureSearchDto {
  * 功能查询结果项
  */
 export interface FeatureSearchResult {
-  sourceTable: 'BUS_XQ' | 'BUS_README_LIST';
+  sourceTable: string;
   customerName: string | null;
   moduleName: string | null;
   featureName: string | null;

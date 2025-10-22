@@ -67,6 +67,13 @@ const compareFeatureVersionDesc = (
 
 const FeatureSearchPage: React.FC = () => {
   const navigate = useNavigate();
+  const handleBack = React.useCallback(() => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/');
+    }
+  }, [navigate]);
   const [keywordsInput, setKeywordsInput] = useState('');
   const [results, setResults] = useState<FeatureSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -194,27 +201,30 @@ const FeatureSearchPage: React.FC = () => {
       const highlightedFeatureName = highlight(clippedFeatureName);
       if (item.customerName) {
         badges.push(
-          <Tag key="customer">{highlightedCustomer ?? item.customerName}</Tag>,
+          <Tag key="customer" color="default" bordered={false}>
+            客户：{highlightedCustomer ?? item.customerName}
+          </Tag>,
         );
       }
       if (item.moduleName) {
         badges.push(
-          <Tag key="module" color="blue">
-            {highlightedModule ?? item.moduleName}
+          <Tag key="module" color="default" bordered={false}>
+            模块：{highlightedModule ?? item.moduleName}
           </Tag>,
         );
       }
       if (item.siteType) {
         badges.push(
-          <Tag key="site" color="geekblue">
-            {highlightedSite ?? item.siteType}
+          <Tag key="site" color="default" bordered={false}>
+            站点：{highlightedSite ?? item.siteType}
           </Tag>,
         );
       }
       if (versionText) {
         const versionContent = highlightedVersion ?? versionText;
         badges.push(
-          <Tag key="version" color="gold">
+          <Tag key="version" color="default" bordered={false}>
+            版本：
             {versionHasPrefix ? (
               versionContent
             ) : (
@@ -229,9 +239,10 @@ const FeatureSearchPage: React.FC = () => {
       badges.push(
         <Tag
           key="source"
-          color={item.sourceTable === 'BUS_XQ' ? 'purple' : 'green'}
+          color="default"
+          bordered={false}
         >
-          {item.sourceTable === 'BUS_XQ' ? '需求库' : '发布说明'}
+          来源：{item.sourceTable === 'BUS_XQ' ? '需求(新)' : 'Readme'}
         </Tag>,
       );
 
@@ -239,11 +250,15 @@ const FeatureSearchPage: React.FC = () => {
         key,
         label: (
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-col gap-2">
               <span className="text-sm font-medium text-slate-800">
                 {highlightedFeatureName ?? item.featureName ?? '未命名功能'}
               </span>
-              {badges}
+              {badges.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                  {badges}
+                </div>
+              )}
             </div>
             {item.parameterSwitch && (
               <span className="text-xs text-slate-500">
@@ -252,7 +267,13 @@ const FeatureSearchPage: React.FC = () => {
             )}
           </div>
         ),
-        children: <FeatureSearchResultDetail item={item} highlight={highlight} />,
+        children: (
+          <FeatureSearchResultDetail
+            item={item}
+            highlight={highlight}
+            keywords={allKeywordsForHighlight}
+          />
+        ),
       };
     });
 
@@ -278,6 +299,18 @@ const FeatureSearchPage: React.FC = () => {
     }));
   }, [groupedResults, renderGroupLabel, renderGroupBody]);
 
+  React.useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        handleBack();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleBack]);
+
   return (
     <div className="min-h-screen bg-white">
       <div className="mx-auto w-full max-w-5xl px-4 py-6 md:px-8">
@@ -285,7 +318,7 @@ const FeatureSearchPage: React.FC = () => {
           <div className="flex items-center gap-3">
             <Button
               icon={<LeftOutlined />}
-              onClick={() => navigate('/')}
+              onClick={handleBack}
               type="default"
             >
               返回
@@ -295,7 +328,7 @@ const FeatureSearchPage: React.FC = () => {
                 功能查询
               </h1>
               <p className="text-sm text-slate-500">
-                支持多个关键字模糊匹配，示例：参数开关 发布说明
+                关键字用逗号隔开表示“同时满足”，同一段内用顿号分隔表示“任意一个即可”。
               </p>
             </div>
           </div>
@@ -313,7 +346,7 @@ const FeatureSearchPage: React.FC = () => {
             }
             size="large"
             allowClear
-            placeholder="输入关键字，使用空格或逗号分隔（例如：参数开关 发布说明）"
+            placeholder="输入关键字。例如：收费 接口, 参数开关/发布说明"
             onSearch={(value) => handleSearch(value)}
           />
           {keywordGroups.length > 0 && (
